@@ -53,13 +53,27 @@ commentary: Validate every asset in the manifest. Be precise about which dimensi
    - File exists and is readable
    - PNG format (not corrupted)
 
-5. **Check for missing formats** per platform:
-   - Meta: needs 4:5 (1080×1350) AND 9:16 (1080×1920) for full coverage
-   - Google: needs 1.91:1 (1200×628) AND 1:1 (1080×1080) at minimum
-   - LinkedIn: needs 1:1 (1080×1080)
-   - TikTok: needs 9:16 (1080×1920) only
+5. **Copy Zone Validation** (after dimension and file size checks):
+   After checking dimensions and file sizes, analyze image composition. Use Claude vision to check each generated image for clear copy zones:
 
-6. **Write format-report.md** to the current directory.
+   | Platform          | Copy zone requirement                                          |
+   |-------------------|----------------------------------------------------------------|
+   | Meta Feed         | Bottom 30% should be clear for text overlay                    |
+   | Meta Stories/Reels| Top 15% and bottom 25% should be clear                        |
+   | TikTok            | Top 15% (username) and bottom 25% (CTA) should be clear       |
+   | Google Display    | Center 60% is primary; edges can have text                     |
+
+   Flag violations as **WARNING** in format-report.md with suggested prompt adjustments (e.g., "Regenerate with stronger copy zone constraint: bottom 30% minimal").
+
+6. **Check for missing formats** per platform:
+   - Meta: needs 4:5 (1080x1350) AND 9:16 (1080x1920) for full coverage
+   - Google: needs 1.91:1 (1200x628) AND 1:1 (1080x1080) at minimum
+   - LinkedIn: needs 1:1 (1080x1080)
+   - TikTok: needs 9:16 (1080x1920) only
+
+7. **Cost tracking**: if banana cost data exists at `~/.banana/costs.json`, read it and include a campaign generation cost summary in format-report.md. Include total cost, cost per asset, and cost by platform.
+
+8. **Write format-report.md** to the current directory.
 
 ## format-report.md Structure
 
@@ -97,6 +111,25 @@ commentary: Validate every asset in the manifest. Be precise about which dimensi
 
 ### ✅ Passed
 [count of passing assets]
+
+## Copy Zone Compliance
+
+| Asset | Platform | Zone Check | Status |
+|-------|----------|------------|--------|
+| feed-1080x1350-v1.png | Meta Feed | Bottom 30% clear | ✅ PASS |
+| vertical-1080x1920-v1.png | TikTok | Top 15% / Bottom 25% clear | ⚠️ WARNING: bottom 25% has visual elements |
+
+[List prompt adjustment suggestions for any WARNING items]
+
+## Generation Cost Summary
+*(Included only when ~/.banana/costs.json is available)*
+
+| Metric | Value |
+|--------|-------|
+| Total assets generated | [N] |
+| Total cost | $[X.XX] |
+| Average cost per asset | $[X.XX] |
+| Cost by platform | Meta: $[X.XX], Google: $[X.XX], TikTok: $[X.XX] |
 
 ## Recommendations
 [1-3 specific next steps based on findings]

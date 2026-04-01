@@ -54,25 +54,54 @@ Ask (combine into one message; omit any already provided via flags):
 3. **Offer or brief**: Any specific offer, promotion, or message to highlight? (optional)
 4. **Number of concepts**: How many campaign concepts? (default: 3)
 
-### Step 4: Spawn Creative Agents in Sequence
+### Step 4: Select Copy Framework
+
+Read `ads/references/copy-frameworks.md` and recommend a framework based on
+campaign goal + platform + audience temperature:
+
+| Framework | Best For |
+|-----------|----------|
+| AIDA (Attention, Interest, Desire, Action) | Cold audiences, awareness campaigns |
+| PAS (Problem, Agitate, Solve) | Pain-point products, problem-aware audiences |
+| BAB (Before, After, Bridge) | Transformation offers, coaching, fitness |
+| 4P (Promise, Picture, Proof, Push) | Direct response, high-intent audiences |
+| FAB (Features, Advantages, Benefits) | Product-focused, comparison shoppers |
+| Star-Story-Solution | Brand storytelling, warm audiences |
+
+Include the selected framework name in campaign-brief.md for the copy-writer agent.
+
+### Step 5: Spawn Creative Agents in Sequence
 
 Agents must run **sequentially**; `copy-writer` reads the file that `creative-strategist`
 writes, so running them in parallel creates a race condition on `campaign-brief.md`.
 
-**Step 4a; Spawn `creative-strategist`** (Task tool):
+**Step 5a; Spawn `creative-strategist`** (Task tool):
 This agent creates `campaign-brief.md` and writes the strategic sections:
 `## Brand DNA Summary`, `## Campaign Concepts`, `## Image Generation Briefs`, `## Next Steps`.
 
+Additional instructions for `creative-strategist`:
+- For e-commerce businesses, also read `skills/ads-plan/assets/ecommerce-creative.md`
+  and select the appropriate creative playbook (Product Launch, Sale/Promotion,
+  Seasonal, Retargeting, Brand Awareness)
+- Include banana domain mode recommendations in each Image Generation Brief
+  (Product, Editorial, Cinema, UI/Web, or Portrait)
+
 Wait for `creative-strategist` to **fully complete** before continuing.
 
-**Step 4b; Spawn `copy-writer`** (Task tool):
+**Step 5b; Spawn `copy-writer`** (Task tool):
 After `creative-strategist` completes, spawn `copy-writer`. It reads the existing
 `campaign-brief.md` and appends the `## Copy Deck` section with platform-specific
 headlines, primary text, and CTAs.
 
-Wait for `copy-writer` to complete before proceeding to Step 5.
+Additional instructions for `copy-writer`:
+- Read `ads/references/copy-frameworks.md` and apply the selected framework
+  structure to all ad copy
+- Generate 2 framework variants per platform: primary (recommended framework)
+  + secondary (alternative for A/B testing)
 
-### Step 5: Review and Present
+Wait for `copy-writer` to complete before proceeding to Step 6.
+
+### Step 6: Review and Present
 
 After both agents complete, confirm `campaign-brief.md` exists and is complete.
 

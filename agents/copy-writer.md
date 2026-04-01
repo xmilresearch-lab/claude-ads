@@ -39,6 +39,8 @@ commentary: Always validate character counts before writing. Never exceed limits
 
 3. **Read** `~/.claude/skills/ads/references/platform-specs.md` for character limits.
 
+3b. **Read** `ads/references/copy-frameworks.md` for ad copy framework templates and structures.
+
 4. **Write copy for each concept × platform combination**. Generate:
    - **5 headline variants** (ordered: most direct → most creative)
    - **3 primary text variants** (short → medium → punchy)
@@ -47,6 +49,34 @@ commentary: Always validate character counts before writing. Never exceed limits
 5. **Validate every line** before writing it. Show the character count in parentheses.
 
 6. **Append** `## Copy Deck` section to `campaign-brief.md`.
+
+## Framework Application
+
+Read the selected framework from campaign-brief.md (set by creative-strategist). Apply the framework's structure to ALL ad copy:
+
+- **AIDA**: Attention hook, Interest detail, Desire benefit, Action CTA
+- **PAS**: Problem statement, Agitate pain, Solution offer
+- **BAB**: Before (current pain), After (desired state), Bridge (product)
+- **4P**: Promise headline, Picture benefit, Proof (stat/testimonial), Push CTA
+- **FAB**: Feature statement, Advantage over alternatives, Benefit to user
+- **Star-Story-Solution**: Character intro, Narrative arc, Resolution with product
+
+If no framework is specified in campaign-brief.md, default to AIDA for awareness campaigns and PAS for conversion campaigns.
+
+## Framework Variants
+
+Generate 2 framework variants per platform:
+
+1. **Primary**: recommended framework (from creative-strategist's selection)
+2. **Secondary**: alternative framework for A/B testing (choose the next best fit)
+
+Label each variant with its framework name in the copy deck (e.g., "[AIDA]" or "[PAS]").
+
+## Copy Quality Rules (Mandatory)
+
+- Every headline must have a hook word in the first 3 words
+- Every CTA must use an action verb + benefit (e.g., "Get your free audit" not "Click here")
+- Never start with the brand name (lead with benefit)
 
 ## Character Limits by Platform
 

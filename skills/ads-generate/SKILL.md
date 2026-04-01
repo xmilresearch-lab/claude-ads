@@ -1,13 +1,13 @@
 ---
 name: ads-generate
-description: "AI image generation for paid ad creatives. Reads campaign-brief.md and brand-profile.json to produce platform-sized ad images using Gemini (default) or a configured provider. Requires GOOGLE_API_KEY or ADS_IMAGE_PROVIDER + matching key. Triggers on: generate ads, create images, make ad creatives, generate visuals, create ad images, generate campaign images, make the images, generate from brief."
+description: "AI image generation for paid ad creatives. Reads campaign-brief.md and brand-profile.json to produce platform-sized ad images using banana-claude. Requires banana-claude (v1.4.1+) with nanobanana-mcp configured. Triggers on: generate ads, create images, make ad creatives, generate visuals, create ad images, generate campaign images, make the images, generate from brief."
 user-invokable: false
 ---
 
 # Ads Generate: AI Ad Image Generator
 
 Generates platform-sized ad creative images from your campaign brief and brand
-profile. Uses Gemini by default (`gemini-2.5-flash-image`, stable GA).
+profile. Uses banana-claude as the image generation provider.
 
 ## Quick Reference
 
@@ -16,52 +16,24 @@ profile. Uses Gemini by default (`gemini-2.5-flash-image`, stable GA).
 | `/ads generate` | Generate all images from campaign-brief.md |
 | `/ads generate --platform meta` | Generate Meta assets only |
 | `/ads generate --prompt "text" --ratio 9:16` | Standalone generation without brief |
-| `/ads generate --batch` | Use Gemini Batch API (50% cost, 24h turnaround) |
 
 ## Environment Setup
 
 **Required before running:**
 
-```bash
-# Gemini (default: recommended)
-export GOOGLE_API_KEY="your-key"
-# Get a key: console.cloud.google.com/apis/credentials
+- Requires banana-claude (v1.4.1+) with nanobanana-mcp configured
+- Run `/banana setup` to configure API key and MCP
+- Fallback: if banana is not available, use `scripts/generate_image.py` (deprecated)
 
-# Switch to a different provider (optional)
-export ADS_IMAGE_PROVIDER="openai"
-export OPENAI_API_KEY="your-key"
-
-export ADS_IMAGE_PROVIDER="stability"
-export STABILITY_API_KEY="your-key"
-
-export ADS_IMAGE_PROVIDER="replicate"
-export REPLICATE_API_TOKEN="your-token"
-```
-
-If the API key is not set, this skill will display the setup instructions above
+If banana-claude is not installed, this skill will display setup instructions
 and stop. It will never fail silently.
 
 ## Process
 
-### Step 1: Check API Key
+### Step 1: Verify banana-claude
 
-Verify the required environment variable is set before proceeding:
-
-```bash
-python3 -c "
-import os, sys
-provider = os.environ.get('ADS_IMAGE_PROVIDER', 'gemini')
-keys = {'gemini': 'GOOGLE_API_KEY', 'openai': 'OPENAI_API_KEY',
-        'stability': 'STABILITY_API_KEY', 'replicate': 'REPLICATE_API_TOKEN'}
-env_var = keys.get(provider, 'GOOGLE_API_KEY')
-if not os.environ.get(env_var):
-    print(f'Error: {env_var} not set (provider: {provider})', file=sys.stderr)
-    sys.exit(1)
-print(f'OK: {env_var} is set')
-"
-```
-
-If this exits with code 1, display the Environment Setup section above and stop.
+Verify banana-claude is installed (run `/banana setup` to check). If not installed,
+display setup instructions and exit.
 
 ### Step 2: Locate Source Files
 
@@ -100,23 +72,47 @@ For each platform in the campaign brief, load the relevant spec reference:
 - `~/.claude/skills/ads/references/youtube-creative-specs.md`
 - `~/.claude/skills/ads/references/microsoft-creative-specs.md`
 
-### Step 5: Spawn Visual Designer Agent
+### Step 5: Prepare banana Configuration
 
-Spawn the `visual-designer` agent using the Task tool with `context: fork`.
+Create banana brand preset from brand-profile.json if one does not already exist
+at `~/.banana/presets/{brand-slug}.json`.
+
+Select banana domain mode based on campaign brief content:
+- **Product**: e-commerce, packshots
+- **Editorial**: brand awareness, lifestyle
+- **Cinema**: video thumbnails, dramatic
+- **UI/Web**: app install, SaaS
+- **Portrait**: testimonials, people
+
+### Step 6: Spawn Visual Designer Agent
+
+Spawn the `visual-designer` agent using the Task tool with `context: fork`,
+passing the selected domain mode and preset name.
 
 The agent will:
 - Parse the image generation briefs from campaign-brief.md
 - Inject brand colors and mood from brand-profile.json
-- Call generate_image.py for each asset
+- Use banana-claude with the configured domain mode for each asset
 - Save to `./ad-assets/[platform]/[concept]/` directory structure
 - Write `generation-manifest.json`
 
-### Step 6: Validate with Format Adapter
+### Step 7: Validate with Format Adapter
 
 After the visual-designer completes, spawn the `format-adapter` agent
 with `context: fork` to validate dimensions and report missing formats.
 
-### Step 7: Report Results
+### Step 8: Quality Gate
+
+Use Claude vision to assess each generated image against the brief (score 1 to 10
+on brand alignment, composition, platform fit). If any image scores below 6,
+regenerate once with an adjusted prompt.
+
+### Step 9: Aggregate Costs
+
+Read banana cost data from `~/.banana/costs.json` and include total creative spend
+in generation-manifest.json.
+
+### Step 10: Report Results
 
 Present a summary:
 ```
@@ -129,7 +125,7 @@ Generation complete:
 
   Format validation: See format-report.md
 
-  Cost estimate: ~$[N] at $0.067/image (Gemini 1K)
+  Cost: $[N] total creative spend (from ~/.banana/costs.json)
 
   Next steps:
     1. Review assets in ./ad-assets/
@@ -141,8 +137,7 @@ Generation complete:
 
 Before generating, estimate and show the cost:
 - Count the number of image briefs in campaign-brief.md
-- Multiply by $0.067 (Gemini default 1K)
-- Show: "Estimated cost: [N] images × $0.067 = ~$[total]"
+- Show estimated cost based on banana pricing tiers
 - If >$1.00, ask for confirmation before proceeding
 
 ## Standalone Mode (No campaign-brief.md)
@@ -160,14 +155,7 @@ Platform target → dimensions used:
   youtube-short → 1080×1920 (9:16)
 ```
 
-Calls generate_image.py directly:
-```bash
-python ~/.claude/skills/ads/scripts/generate_image.py \
-  "[user prompt]" \
-  --size [WxH] \
-  --output [filename] \
-  --json
-```
+Use `/banana generate` directly with the specified prompt and aspect ratio.
 
 ## Reference Files
 

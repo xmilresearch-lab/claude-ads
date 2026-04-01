@@ -63,7 +63,7 @@ main() {
         cp "${TEMP_DIR}/claude-ads/requirements.txt" "${SKILL_DIR}/requirements.txt"
     fi
 
-    # Install Python dependencies (required for /ads generate, /ads dna screenshots)
+    # Install Python dependencies (landing page analysis, image validation)
     echo ""
     echo "→ Installing Python dependencies..."
     if command -v pip3 >/dev/null 2>&1 || command -v pip >/dev/null 2>&1; then
@@ -72,15 +72,19 @@ main() {
         ${PIP_CMD} install --break-system-packages -q -r "${SKILL_DIR}/requirements.txt" 2>/dev/null \
             || ${PIP_CMD} install -q -r "${SKILL_DIR}/requirements.txt" 2>/dev/null \
             && echo "  ✓ Python dependencies installed" \
-            || echo "  ⚠ pip install failed — run manually: pip3 install -r ${SKILL_DIR}/requirements.txt"
-
-        # Install Chromium for brand screenshot capture (/ads dna visual scan)
-        echo "→ Installing Chromium for brand screenshots..."
-        python3 -m playwright install chromium --with-deps 2>/dev/null \
-            && echo "  ✓ Chromium ready (brand screenshots enabled)" \
-            || echo "  ⚠ Playwright install failed — fix: python3 -m playwright install chromium"
+            || echo "  ⚠ pip install failed. Run manually: pip3 install -r ${SKILL_DIR}/requirements.txt"
     else
-        echo "  ⚠ pip not found — install deps manually: pip3 install -r ${SKILL_DIR}/requirements.txt"
+        echo "  ⚠ pip not found. Install deps manually: pip3 install -r ${SKILL_DIR}/requirements.txt"
+    fi
+
+    # Check for banana-claude (image generation provider)
+    echo ""
+    if [ -d "${HOME}/.claude/skills/banana" ] || [ -f "${HOME}/.claude/skills/banana/SKILL.md" ]; then
+        echo "  ✓ banana-claude detected (image generation ready)"
+    else
+        echo "  ⚠ banana-claude not installed. Image generation (/ads generate, /ads photoshoot) requires it."
+        echo "    Install: curl -fsSL https://raw.githubusercontent.com/AgriciDaniel/banana-claude/main/install.sh | bash"
+        echo "    Then run: /banana setup (to configure API key)"
     fi
 
     echo ""
@@ -90,7 +94,7 @@ main() {
     echo "    • 1 main skill (ads orchestrator)"
     echo "    • 17 sub-skills (platform + functional + creative)"
     echo "    • 10 agents (6 audit + 4 creative)"
-    echo "    • 21 reference files"
+    echo "    • 23 reference files"
     echo "    • 11 industry templates"
     echo ""
     echo "Usage:"

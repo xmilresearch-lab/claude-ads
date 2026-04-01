@@ -77,7 +77,7 @@ function Main {
             Copy-Item "$TempDir\claude-ads\requirements.txt" -Destination "$SkillDir\requirements.txt" -Force
         }
 
-        # Install Python dependencies (required for /ads generate, /ads dna screenshots)
+        # Install Python dependencies (landing page analysis, image validation)
         Write-Host ""
         Write-Host "Installing Python dependencies..."
         $ErrorActionPreference = "Continue"
@@ -87,16 +87,18 @@ function Main {
         } else {
             Write-Host "  Warning: pip install failed. Run manually: pip install -r $SkillDir\requirements.txt" -ForegroundColor Yellow
         }
-
-        # Install Chromium for brand screenshot capture (/ads dna visual scan)
-        Write-Host "Installing Chromium for brand screenshots..."
-        python -m playwright install chromium 2>$null
-        if ($LASTEXITCODE -eq 0) {
-            Write-Host "  OK Chromium ready (brand screenshots enabled)" -ForegroundColor Green
-        } else {
-            Write-Host "  Warning: Playwright install failed. Fix: python -m playwright install chromium" -ForegroundColor Yellow
-        }
         $ErrorActionPreference = "Stop"
+
+        # Check for banana-claude (image generation provider)
+        Write-Host ""
+        $BananaPath = Join-Path $env:USERPROFILE ".claude\skills\banana\SKILL.md"
+        if (Test-Path $BananaPath) {
+            Write-Host "  OK banana-claude detected (image generation ready)" -ForegroundColor Green
+        } else {
+            Write-Host "  Warning: banana-claude not installed. Image generation requires it." -ForegroundColor Yellow
+            Write-Host "    Install: https://github.com/AgriciDaniel/banana-claude"
+            Write-Host "    Then run: /banana setup (to configure API key)"
+        }
 
         Write-Host ""
         Write-Host "Claude Ads installed successfully!" -ForegroundColor Green
@@ -105,7 +107,7 @@ function Main {
         Write-Host "    - 1 main skill (ads orchestrator)"
         Write-Host "    - 17 sub-skills (platform + functional + creative)"
         Write-Host "    - 10 agents (6 audit + 4 creative)"
-        Write-Host "    - 21 reference files"
+        Write-Host "    - 23 reference files"
         Write-Host "    - 11 industry templates"
         Write-Host ""
         Write-Host "Usage:"

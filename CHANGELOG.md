@@ -5,6 +5,36 @@ All notable changes to claude-ads are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.4.0] - 2026-04-01
+
+### Added
+- **banana-claude integration**: Replaced generate_image.py with banana-claude (v1.4.1) as the default image generation provider. Uses MCP tools (`gemini_generate_image`, `set_aspect_ratio`), 5-component prompt formula, 9 domain modes, and brand presets.
+- **Voice-to-style mapping** (`voice-to-style.md`): Maps 6 brand voice axes to visual attributes for banana's [STYLE] prompt component. Used by creative-strategist and visual-designer agents.
+- **Ad copy frameworks** (`copy-frameworks.md`): 6 proven frameworks (AIDA, PAS, BAB, 4P, FAB, Star-Story-Solution) with platform-specific templates, character counts, and e-commerce/SaaS examples.
+- **E-commerce creative playbook** (`ecommerce-creative.md`): 5 campaign types (Product Launch, Sale/Promotion, Seasonal, Retargeting, Brand Awareness) with banana domain modes, aspect ratios, copy frameworks, and budget allocation.
+- **Visual consistency anchoring**: visual-designer generates a "hero" image first and passes it as a style reference to all subsequent campaign assets.
+- **3-variant A/B strategy**: visual-designer now generates 3 variants per brief (base, alternative angle, lighting/mood variation) instead of 2.
+- **Copy zone validation**: format-adapter uses Claude vision to check if generated images have clear space in platform-specific copy zones.
+- **Framework-driven copy**: copy-writer applies selected framework structure and generates 2 variants per platform (primary + A/B alternative).
+- **Multi-screenshot brand DNA**: ads-dna captures 3 screenshots (homepage, product page, about page) for richer brand anchoring.
+- **Brand preset auto-creation**: ads-generate creates a banana preset from brand-profile.json before generation.
+- **Campaign cost tracking**: reads banana's `~/.banana/costs.json` and aggregates per-campaign creative spend.
+- **Quality gate**: ads-generate scores each image 1-10 via Claude vision; auto-regenerates if score below 6.
+
+### Changed
+- **ads-generate**: banana MCP is primary; generate_image.py is deprecated fallback
+- **ads-photoshoot**: Uses banana Product mode (Studio, Floating, Ingredient) and Editorial mode (In Use, Lifestyle) at 2K resolution
+- **visual-designer agent**: 5-component banana formula replaces 7 preprocessing rules
+- **creative-strategist agent**: Reads voice-to-style.md, copy-frameworks.md, and ecommerce-creative.md; generates 2 visual direction variants per concept (photography + illustration)
+- **copy-writer agent**: Framework-based copy with hook word validation and action verb CTAs
+- **format-adapter agent**: Added copy zone validation and cost tracking
+- **requirements.txt**: google-genai moved to optional (banana handles image generation)
+- **install.sh / install.ps1**: Removed Playwright chromium install; added banana-claude dependency check
+- Reference file count: 21 to 23 (added voice-to-style.md, copy-frameworks.md)
+
+### Deprecated
+- `scripts/generate_image.py`: Kept as fallback for environments without banana-claude. Use banana MCP tools instead.
+
 ## [1.3.0] - 2026-04-01
 
 ### Added

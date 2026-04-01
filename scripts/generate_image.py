@@ -1,5 +1,12 @@
 #!/usr/bin/env python3
 """
+DEPRECATED: Use banana-claude MCP tools instead. This script is a fallback
+for environments where banana-claude is not installed.
+
+Preferred method: Install banana-claude and use `/banana generate` or
+the nanobanana-mcp tools (gemini_generate_image, set_aspect_ratio).
+See: https://github.com/AgriciDaniel/claude-banana
+
 Generate ad creative images using a pluggable image generation API.
 
 Supports Gemini (default), OpenAI, Stability AI, and Replicate.
@@ -11,8 +18,8 @@ Usage:
     python generate_image.py "prompt text" --ratio 16:9 --provider gemini --json
     python generate_image.py "prompt text" --size 1200x628 --output landscape.png
     python generate_image.py --batch prompts.json --output-dir ./ad-assets/
-    python generate_image.py --model gemini-3.1-flash-image-preview "prompt" --ratio 1:1  # preview upgrade
-    python generate_image.py "prompt" --ratio 4:5 --reference-image ./brand-screenshots/homepage_desktop.png  # style reference
+    python generate_image.py --model gemini-3.1-flash-image-preview "prompt" --ratio 1:1
+    python generate_image.py "prompt" --ratio 4:5 --reference-image ./brand-screenshots/homepage_desktop.png
 
 Environment variables:
     ADS_IMAGE_PROVIDER   Provider to use: gemini (default), openai, stability, replicate

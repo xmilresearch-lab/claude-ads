@@ -1,6 +1,6 @@
 ---
 name: ads-photoshoot
-description: "Product photography enhancement for ad creatives using AI image generation. Takes a product image and generates 5 professional photography styles for ad use: Studio, Floating, Ingredient, In Use, and Lifestyle. Requires GOOGLE_API_KEY or configured ADS_IMAGE_PROVIDER. Triggers on: product photo, product photography, photoshoot, enhance product image, product shoot, product photos for ads, generate product photos, studio shot, lifestyle photo."
+description: "Product photography enhancement for ad creatives using banana-claude image generation. Takes a product image and generates 5 professional photography styles for ad use: Studio, Floating, Ingredient, In Use, and Lifestyle. Requires banana-claude (v1.4.1+) with nanobanana-mcp. Triggers on: product photo, product photography, photoshoot, enhance product image, product shoot, product photos for ads, generate product photos, studio shot, lifestyle photo."
 user-invokable: false
 ---
 
@@ -21,10 +21,8 @@ and 9:16 (TikTok/Reels/Stories).
 
 ## Environment Setup
 
-```bash
-export GOOGLE_API_KEY="your-key"
-# See /ads generate for alternative providers
-```
+Requires banana-claude (v1.4.1+) with nanobanana-mcp configured.
+Run `/banana setup` to configure API key and MCP.
 
 ## Process
 
@@ -51,26 +49,10 @@ If found, extract for style injection:
 
 If not found, proceed with standard style templates.
 
-### Step 3: Check API Key
+### Step 3: Verify banana-claude
 
-Verify the required environment variable is set before generating:
-
-```bash
-python3 -c "
-import os, sys
-provider = os.environ.get('ADS_IMAGE_PROVIDER', 'gemini')
-keys = {'gemini': 'GOOGLE_API_KEY', 'openai': 'OPENAI_API_KEY',
-        'stability': 'STABILITY_API_KEY', 'replicate': 'REPLICATE_API_TOKEN'}
-env_var = keys.get(provider, 'GOOGLE_API_KEY')
-if not os.environ.get(env_var):
-    print(f'Error: {env_var} not set (provider: {provider})', file=sys.stderr)
-    sys.exit(1)
-print(f'OK: {env_var} is set')
-"
-```
-
-If this exits with code 1, show setup instructions from
-`~/.claude/skills/ads/references/image-providers.md` and stop.
+Verify banana-claude is installed (run `/banana setup` to check). If not installed,
+display setup instructions and exit.
 
 ### Step 4: Construct Prompts per Style
 
@@ -150,14 +132,18 @@ product clearly visible and prominent"
 
 ### Step 5: Generate Images
 
-For each style × size combination:
-```bash
-python ~/.claude/skills/ads/scripts/generate_image.py \
-  "[constructed prompt]" \
-  --size [WxH] \
-  --output ./product-photos/[style]/[product-slug]-[style]-[WxH].png \
-  --json
-```
+**Domain mode selection per style:**
+- Use banana **Product** mode for Studio, Floating, and Ingredient styles
+- Use banana **Editorial** mode for In Use and Lifestyle styles
+- Set resolution to 2K (default) for all generations
+
+**Aspect ratio setup:** Use banana MCP `set_aspect_ratio` before each generation:
+- For 1080x1080: set ratio to 1:1
+- For 1080x1920: set ratio to 9:16
+
+For each style x size combination, use `/banana generate` with the constructed
+prompt, selected domain mode, and correct aspect ratio. Save output to
+`./product-photos/[style]/[product-slug]-[style]-[WxH].png`.
 
 Track results. If a generation fails, retry once with a simplified prompt.
 
@@ -192,7 +178,7 @@ Track results. If a generation fails, retry once with a simplified prompt.
   In Use:     ./product-photos/in-use/ (2 sizes)
   Lifestyle:  ./product-photos/lifestyle/ (2 sizes)
 
-  Estimated cost: [N] images × $0.067 = ~$[total]
+  Cost: see ~/.banana/costs.json for total spend
 
   Best for:
   • Meta Feed → Studio (4:5) or Lifestyle (4:5)
@@ -206,8 +192,8 @@ Track results. If a generation fails, retry once with a simplified prompt.
 ## Cost Estimate
 
 Before generating, show:
-- Number of styles selected × 2 sizes = total images
-- "$[N] images × $0.067 = ~$[total] (Gemini default)"
+- Number of styles selected x 2 sizes = total images
+- Estimated cost based on banana pricing tiers
 - If >$0.50, ask for confirmation
 
 ## Platform Recommendations

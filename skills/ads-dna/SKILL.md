@@ -42,21 +42,32 @@ If a secondary page returns a 404 or redirect error, continue with fewer pages a
 
 ### Step 2b: Capture Brand Screenshots
 
-After fetching pages, capture desktop screenshots of the website. These serve as
-visual style references during `/ads generate`; the same approach Pomelli uses
-to anchor ad images to the actual brand aesthetic.
+After fetching pages, capture 3 screenshots for comprehensive brand anchoring.
+These serve as visual style references during `/ads generate`; the same approach
+Pomelli uses to anchor ad images to the actual brand aesthetic.
 
-Run for the homepage:
+Capture the following:
+
+1. **Homepage hero section** (above the fold):
 ```bash
 python ~/.claude/skills/ads/scripts/capture_screenshot.py [url]
 ```
+Saves: `./brand-screenshots/{domain}_homepage.png`
 
-This saves `./brand-screenshots/[domain]_desktop.png` (default naming from the script).
-
-Also attempt one secondary page (pricing or product page, whichever was accessible):
+2. **Product or services page**:
 ```bash
-python ~/.claude/skills/ads/scripts/capture_screenshot.py [url]/pricing
+python ~/.claude/skills/ads/scripts/capture_screenshot.py [url]/products
 ```
+Saves: `./brand-screenshots/{domain}_product.png`
+
+3. **About page** (brand personality):
+```bash
+python ~/.claude/skills/ads/scripts/capture_screenshot.py [url]/about
+```
+Saves: `./brand-screenshots/{domain}_about.png`
+
+If a page is not found or returns an error, skip it gracefully and continue
+with the remaining pages.
 
 **If `--quick` flag was provided**: skip screenshot capture entirely.
 
@@ -130,11 +141,14 @@ Write the JSON to `./brand-profile.json` in the current working directory
 If screenshots were captured successfully in Step 2b, include a `screenshots` field:
 ```json
 "screenshots": {
-  "homepage": "./brand-screenshots/[domain]_desktop.png",
-  "secondary": ["./brand-screenshots/[domain]_pricing_desktop.png"]
+  "homepage": "./brand-screenshots/{domain}_homepage.png",
+  "product": "./brand-screenshots/{domain}_product.png",
+  "about": "./brand-screenshots/{domain}_about.png"
 }
 ```
-Omit the `screenshots` field entirely if Step 2b was skipped or failed.
+Include only the screenshots that were successfully captured. If a page was not
+found or errored, omit that key. Omit the `screenshots` field entirely if Step 2b
+was skipped or all captures failed.
 
 ### Step 6: Confirm and Summarize
 
@@ -148,10 +162,17 @@ Brand DNA Summary:
   Primary Color: [hex]
   Typography: [heading_font] / [body_font]
   Target: [age_range] [profession]
-  Screenshots: [N captured → ./brand-screenshots/] OR [skipped]
+  Screenshots: [N captured (homepage, product, about) in ./brand-screenshots/] OR [skipped]
 
 Run `/ads create` to generate campaign concepts from this profile.
 ```
+
+## Visual Designer Integration
+
+The visual-designer agent uses the most relevant screenshot per concept as a style
+reference when generating images via banana. For example, a product-focused concept
+references the product page screenshot, while a brand awareness concept references
+the homepage or about page screenshot.
 
 ## Limitations
 

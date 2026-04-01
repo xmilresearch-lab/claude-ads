@@ -48,6 +48,9 @@ commentary: Always inform the user when working without audit data. The concepts
 3. **Read reference files** (load on-demand):
    - `~/.claude/skills/ads/references/brand-dna-template.md`: for voice axis interpretation
    - `~/.claude/skills/ads/references/benchmarks.md`: for platform copy benchmarks
+   - `ads/references/voice-to-style.md`: map brand voice axes to visual style attributes
+   - `ads/references/copy-frameworks.md`: select appropriate ad copy framework
+   - `skills/ads-plan/assets/ecommerce-creative.md`: e-commerce creative playbooks (when business type is e-commerce)
 
 4. **Generate 3-5 campaign concepts**. Each concept must include:
    ```
@@ -55,13 +58,34 @@ commentary: Always inform the user when working without audit data. The concepts
    **Hypothesis:** Why this will work (1 sentence grounded in brand or audit data)
    **Primary Message:** The single core message (1 sentence)
    **Tone:** Voice axis reading from brand-profile.json (e.g. "formal 7/10, bold 8/10")
-   **Visual Direction:** What the imagery should look like (2-3 sentences)
+   **Copy Framework:** [AIDA | PAS | BAB | 4P | FAB | Star-Story-Solution] (selected per step 5)
+   **Visual Direction A (Photography):** [banana Product or Portrait mode] (2-3 sentences)
+   **Visual Direction B (Illustration):** [banana UI/Web or Abstract mode] (2-3 sentences)
    **Target Platforms:** Which platforms this concept suits and why
    **CTA:** Primary call to action text
    **Addresses:** [Audit finding this targets, or "general brand awareness" if no audit]
    ```
 
-5. **Write the strategic section** to `campaign-brief.md` using this exact structure:
+5. **Select a copy framework** for the copy-writer agent. After defining campaign concepts, choose the best framework based on audience and goal:
+   - Cold audience + awareness goal: **AIDA** (Attention, Interest, Desire, Action)
+   - Pain-point product/service: **PAS** (Problem, Agitate, Solution)
+   - Transformation product (before/after): **BAB** (Before, After, Bridge)
+   - Direct response / lead gen: **4P** (Promise, Picture, Proof, Push)
+   - Product-focused e-commerce / B2B: **FAB** (Feature, Advantage, Benefit)
+   - Brand storytelling / video: **Star-Story-Solution**
+   - Include the selected framework name in campaign-brief.md under each concept
+
+6. **Provide 2 visual direction variants** for each concept:
+   - Direction A: photography-based (banana Product or Portrait mode)
+   - Direction B: illustration/graphic-based (banana UI/Web or Abstract mode)
+   - Specify the banana domain mode for each direction
+
+7. **E-Commerce Playbook** (when business type is e-commerce):
+   - Read `skills/ads-plan/assets/ecommerce-creative.md`
+   - Select creative playbook based on campaign goal: Product Launch, Sale/Promotion, Seasonal, Retargeting, Brand Awareness
+   - Include playbook-specific asset requirements and banana domain modes in briefs
+
+8. **Write the strategic section** to `campaign-brief.md` using this exact structure:
 
 ```markdown
 # Campaign Brief: [brand_name]
@@ -89,6 +113,9 @@ commentary: Always inform the user when working without audit data. The concepts
 ### Brief [N]: [Concept Name] - [Platform]
 **Prompt:** [Exact generation prompt incorporating brand colors, style, subject, composition]
 **Dimensions:** [e.g. 1080x1920 for TikTok, 1080x1350 for Meta Feed]
+**Aspect Ratio:** [e.g. 4:5, 9:16, 1:1, 16:9]
+**Banana domain mode:** [Product | Portrait | UI/Web | Abstract | Landscape]
+**Copy Framework:** [selected framework name]
 **Safe zone notes:** [Any composition constraints for this placement]
 
 ## Next Steps
@@ -112,6 +139,8 @@ The `## Image Generation Briefs` section is parsed programmatically by the visua
 ```
 **Prompt:** [prompt text here]
 **Dimensions:** [WxH, e.g. 1080x1920]
+**Aspect Ratio:** [e.g. 4:5, 9:16, 1:1, 16:9]
+**Banana domain mode:** [Product | Portrait | UI/Web | Abstract | Landscape]
 **Safe zone notes:** [text or "None"]
 ```
 

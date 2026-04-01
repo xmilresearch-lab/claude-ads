@@ -1,6 +1,6 @@
 {
   "name": "claude-ads",
-  "version": "1.3.0",
+  "version": "1.4.0",
   "description": "Comprehensive paid advertising audit, optimization, and AI creative generation skill for Claude Code. 225+ checks across Google, Meta, YouTube, LinkedIn, TikTok, Microsoft, and Apple Search Ads with weighted scoring, parallel agents, and industry templates.",
   "author": "AgriciDaniel",
   "repository": "https://github.com/AgriciDaniel/claude-ads",

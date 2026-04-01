@@ -135,6 +135,8 @@ When sub-skills or agents reference `ads/references/*.md`, resolve to
 - `references/youtube-creative-specs.md`: Skippable/Bumper/Shorts/Thumbnail
 - `references/microsoft-creative-specs.md`: Multimedia Ads + RSA subset
 - `references/gaql-notes.md`: GAQL field compatibility, deduplication patterns, filter scope best practices
+- `references/voice-to-style.md`: Brand voice axis to visual attribute mapping for image generation
+- `references/copy-frameworks.md`: 6 ad copy frameworks (AIDA, PAS, BAB, 4P, FAB, Star-Story-Solution)
 
 ## Scoring Methodology
 

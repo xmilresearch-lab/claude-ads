@@ -15,7 +15,7 @@ claude-ads/
   CLAUDE.md                          # Project instructions (this file)
   ads/                               # Main orchestrator skill
     SKILL.md                         # Entry point, routing table, core rules
-    references/                      # On-demand knowledge files (21 files)
+    references/                      # On-demand knowledge files (23 files)
     scripts/                         # Python execution scripts
   skills/                            # 17 specialized sub-skills
     ads-audit/SKILL.md              # Full multi-platform audit
