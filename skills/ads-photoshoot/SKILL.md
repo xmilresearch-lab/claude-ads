@@ -1,16 +1,10 @@
 ---
 name: ads-photoshoot
-description: >
-  Product photography enhancement for ad creatives using AI image generation.
-  Takes a product image and generates 5 professional photography styles for
-  ad use: Studio, Floating, Ingredient, In Use, and Lifestyle. Requires
-  GOOGLE_API_KEY or configured ADS_IMAGE_PROVIDER. Triggers on: "product
-  photo", "product photography", "photoshoot", "enhance product image",
-  "product shoot", "product photos for ads", "generate product photos",
-  "studio shot", "lifestyle photo".
+description: "Product photography enhancement for ad creatives using AI image generation. Takes a product image and generates 5 professional photography styles for ad use: Studio, Floating, Ingredient, In Use, and Lifestyle. Requires GOOGLE_API_KEY or configured ADS_IMAGE_PROVIDER. Triggers on: product photo, product photography, photoshoot, enhance product image, product shoot, product photos for ads, generate product photos, studio shot, lifestyle photo."
+user-invokable: false
 ---
 
-# Ads Photoshoot — AI Product Photography
+# Ads Photoshoot: AI Product Photography
 
 Transforms a product image or description into professional ad-ready photography
 in 5 distinct visual styles. Each style generates at two sizes: 1:1 (Meta/LinkedIn)
@@ -136,7 +130,7 @@ implied context, [brand.aesthetic.mood_keywords] atmosphere"
 ```
 
 **Composition:** Hands prominent, product clearly identifiable, background soft-focus.
-**Note:** Hands only — no full face (avoids model release complications).
+**Note:** Hands only; no full face (avoids model release complications).
 **Output sizes:** 1080×1080, 1080×1920
 
 #### Style 5: Lifestyle
@@ -194,7 +188,7 @@ Track results. If a generation fails, retry once with a simplified prompt.
 
   Studio:     ./product-photos/studio/ (2 sizes)
   Floating:   ./product-photos/floating/ (2 sizes)
-  Ingredient: ./product-photos/ingredient/ (1 size — square only)
+  Ingredient: ./product-photos/ingredient/ (1 size; square only)
   In Use:     ./product-photos/in-use/ (2 sizes)
   Lifestyle:  ./product-photos/lifestyle/ (2 sizes)
 
@@ -204,7 +198,7 @@ Track results. If a generation fails, retry once with a simplified prompt.
   • Meta Feed → Studio (4:5) or Lifestyle (4:5)
   • TikTok/Reels → Floating (9:16) or In Use (9:16)
   • LinkedIn → Studio (1:1) or Lifestyle (1:1)
-  • Google PMax → Studio (1:1) — crop to 1.91:1 after
+  • Google PMax → Studio (1:1); crop to 1.91:1 after
 
   Run `/ads generate` to use these in a full campaign.
 ```
@@ -228,7 +222,7 @@ Before generating, show:
 
 ## Reference Files
 
-- `~/.claude/skills/ads/references/image-providers.md` — API setup and pricing
-- `~/.claude/skills/ads/references/brand-dna-template.md` — Brand injection schema
-- `~/.claude/skills/ads/references/meta-creative-specs.md` — Safe zone for 9:16
-- `~/.claude/skills/ads/references/tiktok-creative-specs.md` — Safe zone constraints
+- `~/.claude/skills/ads/references/image-providers.md`: API setup and pricing
+- `~/.claude/skills/ads/references/brand-dna-template.md`: Brand injection schema
+- `~/.claude/skills/ads/references/meta-creative-specs.md`: Safe zone for 9:16
+- `~/.claude/skills/ads/references/tiktok-creative-specs.md`: Safe zone constraints

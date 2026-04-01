@@ -13,7 +13,7 @@
 | Creative & Formats | 20% | L10-L13 (4 checks) |
 | Lead Gen Forms | 15% | L14-L15 (2 checks) |
 | Bidding & Budget | 15% | L16-L17 (2 checks) |
-| Structure & Performance | — | L18-L25 (8 checks, scored across categories) |
+| Structure & Performance | N/A | L18-L25 (8 checks, scored across categories) |
 
 ---
 
@@ -31,12 +31,12 @@
 | ID | Check | Severity | Pass | Warning | Fail |
 |----|-------|----------|------|---------|------|
 | L03 | Job title targeting precision | High | Specific job titles matching ICP (not just functions) | Broad function targeting only | No job title targeting |
-| L04 | Company size filtering | Medium | Company size matches ICP | Includes all sizes | — |
+| L04 | Company size filtering | Medium | Company size matches ICP | Includes all sizes | N/A |
 | L05 | Seniority level targeting | High | Seniority appropriate for offer (C-suite for enterprise, Manager for mid-market) | Broad seniority targeting | Mismatched seniority level |
 | L06 | Matched Audiences | High | Website retargeting + contact list audiences active | One type active | No matched audiences |
 | L07 | ABM company lists | Medium | Target company lists uploaded (up to 300,000) for ABM | Partial list uploaded | No ABM lists for enterprise campaigns |
-| L08 | Audience expansion setting | Medium | OFF for precise targeting, ON for scale (intentional) | — | Default ON without review |
-| L09 | Predictive audiences | Medium | Predictive audiences tested (replaced Lookalikes Feb 2024) | — | Not tested for eligible campaigns |
+| L08 | Audience expansion setting | Medium | OFF for precise targeting, ON for scale (intentional) | N/A | Default ON without review |
+| L09 | Predictive audiences | Medium | Predictive audiences tested (replaced Lookalikes Feb 2024) | N/A | Not tested for eligible campaigns |
 
 ---
 
@@ -45,8 +45,8 @@
 | ID | Check | Severity | Pass | Warning | Fail |
 |----|-------|----------|------|---------|------|
 | L10 | Thought Leader Ads (TLAs) | High | TLAs active, receiving ≥30% of budget for B2B | TLAs tested but <30% budget | No TLAs (CPC $2.29-4.14 vs $13.23 standard) |
-| L11 | Ad format diversity | High | ≥2 formats tested (single image, video, document, carousel) | 1 format only | — |
-| L12 | Video ads present | Medium | Video ads tested | — | No video tested |
+| L11 | Ad format diversity | High | ≥2 formats tested (single image, video, document, carousel) | 1 format only | N/A |
+| L12 | Video ads present | Medium | Video ads tested | N/A | No video tested |
 | L13 | Creative refresh cadence | Medium | Creative refreshed every 4-6 weeks | Refreshed every 6-10 weeks | Same creative >10 weeks |
 
 ---
@@ -64,7 +64,7 @@
 
 | ID | Check | Severity | Pass | Warning | Fail |
 |----|-------|----------|------|---------|------|
-| L16 | Bid strategy appropriate | High | CPS for Message Ads; Maximum Delivery or Manual for Sponsored Content | — | Manual CPC without experience to manage |
+| L16 | Bid strategy appropriate | High | CPS for Message Ads; Maximum Delivery or Manual for Sponsored Content | N/A | Manual CPC without experience to manage |
 | L17 | Budget sufficiency | High | Daily budget ≥$50 for Sponsored Content | $25-$50/day | <$25/day ($10 minimum, insufficient for learning) |
 
 ---
@@ -73,7 +73,7 @@
 
 | ID | Check | Severity | Pass | Warning | Fail |
 |----|-------|----------|------|---------|------|
-| L18 | Campaign objective alignment | High | Objective matches funnel stage | — | Objective mismatched to goal |
+| L18 | Campaign objective alignment | High | Objective matches funnel stage | N/A | Objective mismatched to goal |
 | L19 | A/B testing active | Medium | Active A/B test on creative or audience | Test planned | No testing |
 | L20 | Frequency monitoring | High | Message frequency ≤1 per 30-45 days per user | 1 per 20-30 days | >1 per 20 days (inbox fatigue) |
 | L21 | CTR benchmark | High | Sponsored Content CTR ≥0.44% | CTR 0.30-0.44% | CTR <0.30% |
@@ -88,12 +88,12 @@
 
 | Check | Fix | Time |
 |-------|-----|------|
-| L01 — Insight Tag | Install/verify Insight Tag on all pages | 10 min |
-| L10 — Thought Leader Ads | Create TLA using employee organic posts | 10 min |
-| L14 — Lead Gen Form fields | Reduce form to ≤5 fields | 5 min |
-| L08 — Audience expansion | Review and set intentionally (OFF for precision) | 2 min |
-| L20 — Message frequency | Set frequency cap to 1 per 30-45 days | 2 min |
-| L24 — Attribution window | Configure 30-day click / 7-day view | 2 min |
+| L01: Insight Tag | Install/verify Insight Tag on all pages | 10 min |
+| L10: Thought Leader Ads | Create TLA using employee organic posts | 10 min |
+| L14: Lead Gen Form fields | Reduce form to ≤5 fields | 5 min |
+| L08: Audience expansion | Review and set intentionally (OFF for precision) | 2 min |
+| L20: Message frequency | Set frequency cap to 1 per 30-45 days | 2 min |
+| L24: Attribution window | Configure 30-day click / 7-day view | 2 min |
 
 ---
 

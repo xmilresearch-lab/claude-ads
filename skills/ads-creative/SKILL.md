@@ -1,11 +1,7 @@
 ---
 name: ads-creative
-description: >
-  Cross-platform creative quality audit covering ad copy, video, image, and
-  format diversity across all platforms. Detects creative fatigue, evaluates
-  platform-native compliance, and provides production priorities. Use when
-  user says "creative audit", "ad creative", "creative fatigue", "ad copy",
-  "ad design", or "creative review".
+description: "Cross-platform creative quality audit covering ad copy, video, image, and format diversity across all platforms. Detects creative fatigue, evaluates platform-native compliance, and provides production priorities. Use when user says creative audit, ad creative, creative fatigue, ad copy, ad design, or creative review."
+user-invokable: false
 ---
 
 # Cross-Platform Creative Quality Audit
@@ -135,7 +131,7 @@ Microsoft:  ████████░░  X/X checks passing
 ```
 
 ### Deliverables
-- `CREATIVE-AUDIT-REPORT.md` — Per-platform creative assessment
+- `CREATIVE-AUDIT-REPORT.md`: Per-platform creative assessment
 - Fatigue alerts (any creative past refresh cadence)
 - Format diversity gaps per platform
 - Production priority list (most impactful creative to produce next)

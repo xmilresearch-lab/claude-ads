@@ -26,11 +26,11 @@
 | T08 | Hook strategy | High | First 1-2 seconds have attention-grabbing hook | Decent hook but not optimized | No clear hook in opening |
 | T09 | Creative lifespan | High | No creative active >7 days with declining CTR | 7-14 days with minor decline | >14 days with significant CTR decline |
 | T10 | Spark Ads utilization | High | Spark Ads (creator content) tested and active | Tested but paused | No Spark Ads tested (~3% CTR vs ~2% standard) |
-| T20 | TikTok Shop integration | Medium | Shop catalog connected (for e-commerce) | — | Eligible but not connected |
-| T21 | Video Shopping Ads (VSA) | Medium | VSA tested for product catalog accounts | — | Not tested despite eligible catalog |
+| T20 | TikTok Shop integration | Medium | Shop catalog connected (for e-commerce) | N/A | Eligible but not connected |
+| T21 | Video Shopping Ads (VSA) | Medium | VSA tested for product catalog accounts | N/A | Not tested despite eligible catalog |
 | T22 | Caption SEO | High | Captions include high-intent keywords for search discovery | Some keywords in captions | No keyword optimization in captions |
 | T23 | Sound/music usage | Medium | Trending or engaging audio used | Licensed audio but not trending | Silent ads (TikTok is sound-on platform) |
-| T24 | CTA button | Medium | Appropriate CTA button selected (not default) | — | Default CTA without customization |
+| T24 | CTA button | Medium | Appropriate CTA button selected (not default) | N/A | Default CTA without customization |
 | T25 | Safe zone compliance | High | Key content within safe zone (X:40-940, Y:150-1470) | Minor elements outside safe zone | Key text/CTA in UI overlay zones |
 
 ---
@@ -56,7 +56,7 @@ Without ttclid, attribution breaks for many conversions. This is TikTok's key te
 
 | ID | Check | Severity | Pass | Warning | Fail |
 |----|-------|----------|------|---------|------|
-| T11 | Bid strategy | High | Lowest Cost for volume; Cost Cap for efficiency | — | Bid Cap set too aggressively (severe under-delivery) |
+| T11 | Bid strategy | High | Lowest Cost for volume; Cost Cap for efficiency | N/A | Bid Cap set too aggressively (severe under-delivery) |
 | T12 | Budget sufficiency | High | Daily budget ≥50x target CPA per ad group | 20-49x CPA | <20x CPA per ad group |
 | T13 | Learning phase | High | Ad groups achieving ≥50 conversions/week | 25-50 conversions/week | <25 conversions/week (stuck in learning) |
 
@@ -73,11 +73,11 @@ Without ttclid, attribution breaks for many conversions. This is TikTok's key te
 
 | ID | Check | Severity | Pass | Warning | Fail |
 |----|-------|----------|------|---------|------|
-| T03 | Campaign structure | High | Separate campaigns for prospecting vs retargeting | — | Prospecting and retargeting mixed |
-| T04 | Smart+ utilization | Medium | Smart+ campaigns tested with modular automation (per-module: targeting, budget, creative, placement) | — | Not tested (42% adoption, 1.41-1.67 median ROAS; modular since Oct 2025) |
-| T14 | Search Ads Toggle | High | Search Ads Toggle enabled for all campaigns | — | Search Ads Toggle OFF |
-| T15 | Placement selection | Medium | Appropriate placements selected (TikTok, Pangle, etc.) | Default placements without review | — |
-| T16 | Dayparting | Low | Ad schedule aligned with target audience activity | — | No schedule despite clear patterns |
+| T03 | Campaign structure | High | Separate campaigns for prospecting vs retargeting | N/A | Prospecting and retargeting mixed |
+| T04 | Smart+ utilization | Medium | Smart+ campaigns tested with modular automation (per-module: targeting, budget, creative, placement) | N/A | Not tested (42% adoption, 1.41-1.67 median ROAS; modular since Oct 2025) |
+| T14 | Search Ads Toggle | High | Search Ads Toggle enabled for all campaigns | N/A | Search Ads Toggle OFF |
+| T15 | Placement selection | Medium | Appropriate placements selected (TikTok, Pangle, etc.) | Default placements without review | N/A |
+| T16 | Dayparting | Low | Ad schedule aligned with target audience activity | N/A | No schedule despite clear patterns |
 
 ---
 
@@ -95,12 +95,12 @@ Without ttclid, attribution breaks for many conversions. This is TikTok's key te
 
 | Check | Fix | Time |
 |-------|-----|------|
-| T14 — Search Ads Toggle | Enable Search Ads Toggle in campaign settings | 2 min |
-| T06 — Vertical video | Convert existing assets to 9:16 format | 10 min |
-| T24 — CTA button | Select appropriate CTA (not default) | 2 min |
-| T10 — Spark Ads | Whitelist top creator/organic content as Spark Ads | 10 min |
-| T22 — Caption SEO | Add high-intent keywords to ad captions | 5 min |
-| T25 — Safe zone | Verify key content within X:40-940, Y:150-1470 | 5 min |
+| T14: Search Ads Toggle | Enable Search Ads Toggle in campaign settings | 2 min |
+| T06: Vertical video | Convert existing assets to 9:16 format | 10 min |
+| T24: CTA button | Select appropriate CTA (not default) | 2 min |
+| T10: Spark Ads | Whitelist top creator/organic content as Spark Ads | 10 min |
+| T22: Caption SEO | Add high-intent keywords to ad captions | 5 min |
+| T25: Safe zone | Verify key content within X:40-940, Y:150-1470 | 5 min |
 
 ---
 

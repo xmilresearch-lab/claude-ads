@@ -1,7 +1,7 @@
-# Google Deep Research 2 — Ad Optimization Tool Logic
+# Google Deep Research 2: Ad Optimization Tool Logic
 
 > Source: Google Deep Research PDF, "Ad Optimization Tool Logic Request", February 2026
-> 18 pages — Bidding decision engines, budget allocation frameworks, conversion tracking, attribution
+> 18 pages; Bidding decision engines, budget allocation frameworks, conversion tracking, attribution
 
 ---
 
@@ -152,14 +152,14 @@ IF daily_budget > $500:
 |--------------|------------|------------|------------|-------|-------------------|-------------|---------------|
 | SaaS B2B | LinkedIn 40% | Google 30% | Meta 20% | Other 10% | $5,000 | Pipeline ROI | 3-6 months |
 | E-commerce DTC | Meta 50% | Google PMax 30% | TikTok 15% | Email 5% | $3,000 | ROAS / MER | 0-2 months |
-| Local Service | Google LSA/Search 60% | Meta 30% | Bing 10% | — | $1,500 | Cost Per Lead | 1 month |
-| B2B Enterprise | LinkedIn 60% | Google 20% | ABM Display 20% | — | $10,000 | Pipeline / SQLs | 6-12 months |
-| Info Products | YouTube 40% | Meta 40% | Email 20% | — | $2,000 | ROAS / CPL | 1-3 months |
-| Mobile App | Apple Search 30% | Google App 30% | Meta/TikTok 40% | — | $5,000 | CPI / LTV | 3-6 months |
-| Real Estate | Meta Lead Forms 50% | Google Search 40% | LinkedIn 10% | — | $2,500 | Cost Per Lead | 2-4 months |
-| Healthcare | Google Search 70% | Meta Remarketing 30% | — | — | $4,000 | Cost Per Patient | 2-5 months |
-| Finance/Fintech | Google Search 50% | Affiliate/Native 30% | LinkedIn 20% | — | $8,000 | CAC / LTV | 4-8 months |
-| Agency (Own) | LinkedIn 50% | Meta 30% | Google 20% | — | $1,500 | Cost Per Lead | 1-3 months |
+| Local Service | Google LSA/Search 60% | Meta 30% | Bing 10% | N/A | $1,500 | Cost Per Lead | 1 month |
+| B2B Enterprise | LinkedIn 60% | Google 20% | ABM Display 20% | N/A | $10,000 | Pipeline / SQLs | 6-12 months |
+| Info Products | YouTube 40% | Meta 40% | Email 20% | N/A | $2,000 | ROAS / CPL | 1-3 months |
+| Mobile App | Apple Search 30% | Google App 30% | Meta/TikTok 40% | N/A | $5,000 | CPI / LTV | 3-6 months |
+| Real Estate | Meta Lead Forms 50% | Google Search 40% | LinkedIn 10% | N/A | $2,500 | Cost Per Lead | 2-4 months |
+| Healthcare | Google Search 70% | Meta Remarketing 30% | N/A |: | $4,000 | Cost Per Patient | 2-5 months |
+| Finance/Fintech | Google Search 50% | Affiliate/Native 30% | LinkedIn 20% | N/A | $8,000 | CAC / LTV | 4-8 months |
+| Agency (Own) | LinkedIn 50% | Meta 30% | Google 20% | N/A | $1,500 | Cost Per Lead | 1-3 months |
 
 ### Budget Scaling Decision Tree
 
@@ -295,7 +295,7 @@ Required Stack:
 4. Auto-tagging (MSCLKID) → ensure not stripped by CMS
 
 Note: If importing from Google, verify conversion tracking
-transferred correctly — goals often break during import
+transferred correctly; goals often break during import
 ```
 
 ---
@@ -317,7 +317,7 @@ transferred correctly — goals often break during import
 ```
 Source of Truth (best to worst):
 1. CRM Data (actual revenue, closed deals)
-2. MER (Marketing Efficiency Ratio — total rev / total spend)
+2. MER (Marketing Efficiency Ratio; total rev / total spend)
 3. Post-Purchase Surveys ("How did you hear about us?")
 4. Google Analytics 4 (cross-channel, multi-touch)
 5. Platform-Reported Data (always overclaims)

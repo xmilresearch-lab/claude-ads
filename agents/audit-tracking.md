@@ -36,9 +36,9 @@ commentary: TikTok attribution issues almost always trace back to missing ttclid
 When given ad account data:
 
 1. Read platform-specific audit checklists:
-   - `ads/references/linkedin-audit.md` — L01-L02 (Technical Setup)
-   - `ads/references/tiktok-audit.md` — T01-T02 (Technical Setup)
-   - `ads/references/microsoft-audit.md` — MS01-MS03 (Technical Setup)
+   - `ads/references/linkedin-audit.md`: L01-L02 (Technical Setup)
+   - `ads/references/tiktok-audit.md`: T01-T02 (Technical Setup)
+   - `ads/references/microsoft-audit.md`: MS01-MS03 (Technical Setup)
 2. Read `ads/references/conversion-tracking.md` for implementation details
 3. Evaluate each applicable check as PASS, WARNING, or FAIL
 4. Assess cross-platform tracking consistency

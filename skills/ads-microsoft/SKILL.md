@@ -1,11 +1,7 @@
 ---
 name: ads-microsoft
-description: >
-  Microsoft/Bing Ads deep analysis covering search, Performance Max, Audience
-  Network, and Copilot integration. Evaluates 20 checks with focus on Google
-  import validation, unique Microsoft features, and cost advantage assessment.
-  Use when user says "Microsoft Ads", "Bing Ads", "Bing PPC", "Copilot ads",
-  or "Microsoft campaign".
+description: "Microsoft/Bing Ads deep analysis covering search, Performance Max, Audience Network, and Copilot integration. Evaluates 20 checks with focus on Google import validation, unique Microsoft features, and cost advantage assessment. Use when user says Microsoft Ads, Bing Ads, Bing PPC, Copilot ads, or Microsoft campaign."
+user-invokable: false
 ---
 
 # Microsoft Ads Deep Analysis
@@ -31,18 +27,18 @@ description: >
 - Search partner network reviewed, low-performers excluded (MS04)
 - Audience Network enabled only if testing intentionally (MS05)
 - Bid targets 20-35% lower than Google (CPC advantage) (MS06)
-- Target New Customers enabled for PMax — Beta 2026 (MS07)
+- Target New Customers enabled for PMax, Beta 2026 (MS07)
 
 ### Campaign Structure (20% weight)
 - Campaign structure mirrors Google or follows best practices (MS08)
 - Budget proportional to Bing volume: typically 20-30% of Google (MS09)
-- LinkedIn profile targeting for B2B — unique advantage (MS10)
+- LinkedIn profile targeting for B2B (unique advantage) (MS10)
 
 ### Creative & Extensions (20% weight)
 - RSA: ≥8 headlines, ≥3 descriptions (MS11)
-- Multimedia Ads tested — unique rich format (MS12)
+- Multimedia Ads tested (unique rich format) (MS12)
 - Ad copy optimized for Bing demographics (MS13)
-- Action Extension utilized — unique to Microsoft (MS19)
+- Action Extension utilized (unique to Microsoft) (MS19)
 - Filter Link Extension tested (MS20)
 
 ### Settings & Performance (15% weight)
@@ -93,7 +89,7 @@ Microsoft's AI assistant creates unique ad opportunities:
 
 ## Microsoft-Unique Features
 
-These features are exclusive to Microsoft Ads — evaluate adoption:
+These features are exclusive to Microsoft Ads; evaluate adoption:
 
 | Feature | Description | Priority |
 |---------|-------------|----------|
@@ -142,7 +138,7 @@ Settings:          XX/100  ████████░░  (15%)
 ```
 
 ### Deliverables
-- `MICROSOFT-ADS-REPORT.md` — Full 20-check findings with pass/warning/fail
+- `MICROSOFT-ADS-REPORT.md`: Full 20-check findings with pass/warning/fail
 - Google import validation results
 - Copilot integration readiness assessment
 - Cost advantage analysis (CPC savings vs Google)

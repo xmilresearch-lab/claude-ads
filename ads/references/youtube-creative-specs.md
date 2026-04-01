@@ -1,4 +1,4 @@
-# YouTube Creative Specs — Generation Guide
+# YouTube Creative Specs: Generation Guide
 
 <!-- Updated: 2026-03-12 -->
 <!-- Source: platform-specs.md + Google Ads YouTube requirements -->
@@ -16,7 +16,7 @@ storyboard frame generation, and static companion assets.
 
 | Format | Ratio | Resolution | Duration | Skip |
 |--------|-------|-----------|----------|------|
-| Skippable In-Stream | 16:9 | 1920×1080 | 12s–3min (rec 15-30s) | After 5s |
+| Skippable In-Stream | 16:9 | 1920×1080 | 12s-3min (rec 15-30s) | After 5s |
 | Non-Skippable | 16:9 | 1920×1080 | 15-60s (expanded 2025) | No |
 | Bumper | 16:9 | 1920×1080 | ≤6s | No |
 | In-Feed Video | 16:9 | 1920×1080 | Any | N/A |
@@ -42,7 +42,7 @@ Thumbnails are the primary generation output for YouTube campaigns.
 - Face or product in center-left (text overlays typically placed right side)
 - Bright, saturated colors outperform muted palettes for CTR
 - Include human faces when relevant (psychological click-trigger)
-- Avoid cluttered backgrounds — viewer evaluates at 246×138px in search
+- Avoid cluttered backgrounds; viewer evaluates at 246×138px in search
 - Shock or curiosity gap increases CTR more than informational thumbnails
 
 ### Shorts Thumbnail
@@ -71,7 +71,7 @@ Thumbnails are the primary generation output for YouTube campaigns.
 └─────────────────────────────────┘ ← Bottom (Y:1920)
 ```
 
-**Safe zone:** Full width, Y:250–1670. Bottom 250px is UI overlay (subscribe, like).
+**Safe zone:** Full width, Y:250-1670. Bottom 250px is UI overlay (subscribe, like).
 
 ---
 

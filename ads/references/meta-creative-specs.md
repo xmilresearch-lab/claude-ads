@@ -1,4 +1,4 @@
-# Meta Creative Specs — Generation Guide
+# Meta Creative Specs: Generation Guide
 
 <!-- Updated: 2026-03-12 -->
 <!-- Source: platform-specs.md + Meta Ads Manager requirements -->
@@ -28,7 +28,7 @@ Always generate this first. Generate 9:16 for Stories/Reels campaigns.
 
 ---
 
-## Safe Zones — Reels and Stories (1080×1920)
+## Safe Zones: Reels and Stories (1080×1920)
 
 ```
 ┌─────────────────────────────────┐ ← Top (Y:0)
@@ -53,11 +53,11 @@ in the center 1080×1300px zone.
 **Generation instruction for 9:16 prompts:**
 - Subject and key visual elements in top 60% of frame
 - Bottom 450px should be background only (solid color or soft gradient)
-- Vertical composition only — horizontal crops are rejected at upload
+- Vertical composition only; horizontal crops are rejected at upload
 
 ---
 
-## Safe Zone — Feed (1080×1350, 4:5)
+## Safe Zone: Feed (1080×1350, 4:5)
 
 No hard safe zone required. The full frame is visible. However:
 - Bottom 120px may be covered by the like/comment bar on mobile
@@ -70,13 +70,13 @@ No hard safe zone required. The full frame is visible. However:
 | Component | Recommended | Platform Max |
 |-----------|------------|-------------|
 | Primary Text | 40-125 chars | 2,200 |
-| Headline | 27-40 chars | — |
-| Description | 20 chars (carousel) | — |
-| Reels Primary Text | 72 chars max visible | — |
-| CTA Button | Predefined list | — |
+| Headline | 27-40 chars | N/A |
+| Description | 20 chars (carousel) | N/A |
+| Reels Primary Text | 72 chars max visible | N/A |
+| CTA Button | Predefined list | N/A |
 
 **Copy generation rule:** Write primary text ≤125 chars. Anything over 125 chars
-gets truncated with "See More" on mobile — the critical message must land in 125.
+gets truncated with "See More" on mobile; the critical message must land in 125.
 
 ---
 

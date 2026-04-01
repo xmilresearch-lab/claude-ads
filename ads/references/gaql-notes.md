@@ -31,14 +31,14 @@ For active audits, filter to ENABLED resources only:
 - **Keywords:** ENABLED campaigns + non-removed groups + non-removed keywords
 - **Search terms:** Extended from `LAST_30_DAYS` to `LAST_90_DAYS` for deeper analysis, ordered by cost DESC
 
-**Why:** Including paused campaigns/ad groups causes false positives. Paused ad groups can have ENABLED keywords at criterion level but aren't visible in the UI — auditing them confuses users.
+**Why:** Including paused campaigns/ad groups causes false positives. Paused ad groups can have ENABLED keywords at criterion level but aren't visible in the UI; auditing them confuses users.
 
 ## Error Handling
 
 Track which data fetches failed and why. Report as a G-SYS1 diagnostic:
 - List all failed data sources with error messages
 - Provide per-check context on which checks were skipped due to missing data
-- Never silently skip checks — always explain why data is unavailable
+- Never silently skip checks; always explain why data is unavailable
 
 ## Legacy BMM (Broad Match Modified) Detection
 

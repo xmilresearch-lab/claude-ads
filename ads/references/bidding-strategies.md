@@ -187,7 +187,7 @@ Sponsored Content:
   → Minimum daily budget: $10/day (recommend $50+)
 
 Message Ads:
-  → CPS (Cost Per Send) — bid aggressively
+  → CPS (Cost Per Send): bid aggressively
   → Frequency cap: 1 per 30-45 days per user
   → Win the auction for limited inbox slot
 
@@ -196,7 +196,7 @@ Lead Gen Forms:
   → 13% CVR benchmark (3.25× landing pages)
 
 Conversation Ads:
-  → CPS — similar to Message Ads
+  → CPS: similar to Message Ads
   → 10-12% CTR benchmark
 
 TLA (Thought Leader Ads):

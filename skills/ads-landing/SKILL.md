@@ -1,11 +1,7 @@
 ---
 name: ads-landing
-description: >
-  Landing page quality assessment for paid advertising campaigns. Evaluates
-  message match, page speed, mobile experience, trust signals, form
-  optimization, and conversion rate potential. Use when user says "landing
-  page", "post-click experience", "landing page audit", "conversion rate",
-  or "landing page optimization".
+description: "Landing page quality assessment for paid advertising campaigns. Evaluates message match, page speed, mobile experience, trust signals, form optimization, and conversion rate potential. Use when user says landing page, post-click experience, landing page audit, conversion rate, or landing page optimization."
+user-invokable: false
 ---
 
 # Landing Page Quality for Ad Campaigns
@@ -21,7 +17,7 @@ description: >
 
 ## Message Match Assessment
 
-The #1 landing page issue in ad campaigns — does the page match the ad?
+The #1 landing page issue in ad campaigns: does the page match the ad?
 
 ### What to Check
 - **Headline match**: landing page H1 reflects ad copy headline/keyword
@@ -151,7 +147,7 @@ Form Quality:     ████████░░  XX/100
 ```
 
 ### Deliverables
-- `LANDING-PAGE-REPORT.md` — Per-page assessment with scores
+- `LANDING-PAGE-REPORT.md`: Per-page assessment with scores
 - Message match analysis per ad-to-page combination
 - Page speed improvement priorities
 - Mobile experience fixes

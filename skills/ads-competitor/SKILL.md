@@ -1,11 +1,7 @@
 ---
 name: ads-competitor
-description: >
-  Competitor ad intelligence analysis across Google, Meta, LinkedIn, TikTok,
-  and Microsoft. Analyzes competitor ad copy, creative strategy, keyword
-  targeting, estimated spend, and identifies competitive gaps and opportunities.
-  Use when user says "competitor ads", "ad spy", "competitive analysis",
-  "competitor PPC", or "ad intelligence".
+description: "Competitor ad intelligence analysis across Google, Meta, LinkedIn, TikTok, and Microsoft. Analyzes competitor ad copy, creative strategy, keyword targeting, estimated spend, and identifies competitive gaps and opportunities. Use when user says competitor ads, ad spy, competitive analysis, competitor PPC, or ad intelligence."
+user-invokable: false
 ---
 
 # Competitor Ad Intelligence
@@ -29,7 +25,7 @@ description: >
 | Meta Ad Library | Meta/Instagram | All active ads, creative, copy, spend range |
 | LinkedIn Ad Library | LinkedIn | Active ads from company pages |
 | TikTok Creative Center | TikTok | Top ads, trending creative, hashtags |
-| Microsoft Ads | Microsoft | Limited — use auction insights |
+| Microsoft Ads | Microsoft | Limited: use auction insights |
 
 ### Google Ads Auction Insights
 Available from the user's own Google Ads account:
@@ -59,7 +55,7 @@ Available from the user's own Google Ads account:
 #### TikTok
 - Creative Center: top-performing ads by industry, country, objective
 - Hashtag analytics: trending sounds and hashtags
-- No per-advertiser library — use Creative Center for industry trends
+- No per-advertiser library; use Creative Center for industry trends
 
 ## Competitive Analysis Framework
 
@@ -146,13 +142,13 @@ Categorize competitor messaging into themes:
 ## Output
 
 ### Deliverables
-- `COMPETITOR-INTELLIGENCE-REPORT.md` — Full competitive analysis
+- `COMPETITOR-INTELLIGENCE-REPORT.md`: Full competitive analysis
   - Per-competitor ad presence summary
   - Ad copy and messaging analysis
   - Creative strategy comparison
   - Estimated spend levels
   - Keyword overlap and gaps
-- `COMPETITIVE-GAPS.md` — Opportunities identified from competitor analysis
+- `COMPETITIVE-GAPS.md`: Opportunities identified from competitor analysis
   - Platform gaps
   - Messaging opportunities
   - Audience segments to target

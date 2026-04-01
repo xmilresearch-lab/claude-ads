@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - **marketplace.json** for plugin system discoverability and update mechanism (Issue #14)
-- **Validation gates** in 6 skills — cherry-picked from PR #12 (Tessl):
+- **Validation gates** in 6 skills; cherry-picked from PR #12 (Tessl):
   - `ads/SKILL.md`: Task tool orchestration clarity + subagent JSON score verification
   - `ads-audit`: Platform data availability check + subagent score field verification
   - `ads-budget`: 14-day minimum for kill/scale decisions + 20-click/$100 data sufficiency
@@ -25,13 +25,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - **G03**: False positives from zero-impression keywords, paused ad groups, match type duplication, and stopword-only keywords diluting coherence scores (~18% false positive reduction)
-- **G04**: False positives from multi-location campaign structures — now strips geographic identifiers before counting objectives
-- **G12**: Inverted Search Partners logic — flag OFF as missed opportunity (was incorrectly flagging ON)
+- **G04**: False positives from multi-location campaign structures; now strips geographic identifiers before counting objectives
+- **G12**: Inverted Search Partners logic; flag OFF as missed opportunity (was incorrectly flagging ON)
 - **G16/G-WS1**: Wasted spend threshold raised to >$10 spend + 0 conversions (was flagging all non-converting terms including long-tail exploration)
-- **G17/FL04**: Legacy BMM false positives — BROAD + Manual CPC is legacy BMM (not intentional broad). Only flags BROAD in Smart Bidding campaigns
+- **G17/FL04**: Legacy BMM false positives; BROAD + Manual CPC is legacy BMM (not intentional broad). Only flags BROAD in Smart Bidding campaigns
 - **G19**: Search term visibility calculated from ALL fetched terms before truncation (was computing from truncated subset)
 - **G48/CT-FL5**: False flags on Smart Campaign system-managed conversions excluded from DDA and counting-type checks
-- **G-CT1**: False duplicate detection on HIDDEN/REMOVED conversion actions — now only checks ENABLED actions
+- **G-CT1**: False duplicate detection on HIDDEN/REMOVED conversion actions; now only checks ENABLED actions
 - **Conversion tracking**: Added duplicate detection accuracy rules (exclude HIDDEN/REMOVED, exclude Smart Campaign system conversions)
 
 ### Changed
@@ -41,7 +41,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Community
 - Closed PRs #4, #5, #13 (out of scope: white-label rebrand, campaign system, FastAPI web app)
-- Cherry-picked validation improvements from PR #12 (Tessl) — 6 of 18 files
+- Cherry-picked validation improvements from PR #12 (Tessl); 6 of 18 files
 - Replied to Discussion #11 ("Does this really work?")
 - Closed Issue #14 (marketplace.json shipped)
 - GAQL accuracy fixes sourced from akarls-web fork (44 commits of audit engine improvements)
@@ -51,15 +51,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - **Apple Search Ads sub-skill** (`/ads apple`): 35 checks across campaign structure (BOFU/MOFU/Search Match), bid health (CPT vs install rate, CPA Goals), Creative Sets (Custom Product Pages), MMP attribution (AppsFlyer/Adjust/SKAdNetwork), budget pacing, TAP placement coverage (Today/Search/Product Pages), and goal CPA benchmarks by app category and country tier
-- **Context Intake** step in orchestrator: Claude now asks for industry, monthly ad spend, primary goal, and active platforms before any audit — ensures benchmarks and recommendations match the user's actual situation instead of defaulting to generic industry averages
+- **Context Intake** step in orchestrator: Claude now asks for industry, monthly ad spend, primary goal, and active platforms before any audit; ensures benchmarks and recommendations match the user's actual situation instead of defaulting to generic industry averages
 - **Google Ads MCP reference** in README: links to [google-ads-mcp](https://github.com/googleads/google-ads-mcp) for users who want live API-connected audits
 - **FAQ section** in README: addresses top community questions (API login, benchmark accuracy, manual ad posting, budget context, platform support)
 - **"How It Analyzes Your Ads"** section in README: clearly explains manual data input model and data export workflow
 
 ### Fixed
-- `install.ps1`: PowerShell 5.1 crash on git clone — git progress writes to stderr which PS 5.1 treated as a terminating error under `$ErrorActionPreference = "Stop"`. Fixed by temporarily setting `Continue` around clone call and using `2>&1 | Out-Null`
-- `uninstall.ps1`: Parse failure on non-UTF-8-BOM systems — Unicode `→` and `✓` characters in double-quoted strings caused `TerminatorExpectedAtEndOfString`. Replaced with ASCII equivalents
-- `ads-google/SKILL.md`: Negative keyword guidance now enforces Exact Match `[kw]` and Phrase Match `"kw"` types by default — never Broad Match negatives. Negatives must be sourced from Search Terms Report data and grouped into themed Shared Lists. Includes over-blocking review step
+- `install.ps1`: PowerShell 5.1 crash on git clone: git progress writes to stderr which PS 5.1 treated as a terminating error under `$ErrorActionPreference = "Stop"`. Fixed by temporarily setting `Continue` around clone call and using `2>&1 | Out-Null`
+- `uninstall.ps1`: Parse failure on non-UTF-8-BOM systems; Unicode `→` and `✓` characters in double-quoted strings caused `TerminatorExpectedAtEndOfString`. Replaced with ASCII equivalents
+- `ads-google/SKILL.md`: Negative keyword guidance now enforces Exact Match `[kw]` and Phrase Match `"kw"` types by default; never Broad Match negatives. Negatives must be sourced from Search Terms Report data and grouped into themed Shared Lists. Includes over-blocking review step
 - `ads/SKILL.md`: Removed unsupported `allowed-tools` frontmatter field per Anthropic skill spec
 - `ads/SKILL.md`: Added `apple` to `argument-hint` subcommand list
 - Install scripts: Updated sub-skill count from 12 → 13 to reflect new ads-apple addition

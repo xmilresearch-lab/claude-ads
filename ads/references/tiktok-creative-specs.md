@@ -1,4 +1,4 @@
-# TikTok Creative Specs — Generation Guide
+# TikTok Creative Specs: Generation Guide
 
 <!-- Updated: 2026-03-12 -->
 <!-- Source: platform-specs.md + TikTok Ads Manager requirements -->
@@ -8,7 +8,7 @@
 
 Generation-ready specifications for TikTok ad creative. TikTok is vertical-only and
 sound-on. Horizontal or square creatives are **rejected at upload**. Safe zone
-compliance is critical — UI elements cover significant portions of the frame.
+compliance is critical; UI elements cover significant portions of the frame.
 
 ---
 
@@ -33,7 +33,7 @@ rejected by TikTok Ads Manager. Always generate vertically.
 │  STATUS BAR + ACCOUNT INFO      │ ← Y:0-150 (AVOID)
 ├─────────────────────────────────┤
 │                      │LIKE      │ ← RIGHT EDGE: X:940-1080
-│                      │COMMENT   │    (AVOID — UI icons)
+│                      │COMMENT   │    (AVOID; UI icons)
 │   ██████████████████ │SHARE     │
 │   █                █ │PROFILE   │
 │   █  SAFE CONTENT  █ │          │
@@ -47,7 +47,7 @@ rejected by TikTok Ads Manager. Always generate vertically.
 └─────────────────────────────────┘ ← Bottom (Y:1920)
 ```
 
-**Safe Box: X:40–940, Y:150–1470 (900×1320px)**
+**Safe Box: X:40-940, Y:150-1470 (900×1320px)**
 
 All critical text, logos, faces, CTAs, and key product elements MUST be within
 the safe box. Anything outside this zone will be hidden behind UI overlays.
@@ -83,7 +83,7 @@ upper 60% of the safe zone (Y:150-900). This ensures visibility even on smaller 
 ### In-Feed Ads (Non-Spark)
 - Appears in For You Page (FYP) between organic videos
 - Duration: 5-60 seconds (rec 9-15s for highest completion)
-- Must have audio — silent video severely underperforms
+- Must have audio; silent video severely underperforms
 - Generate: static thumbnail at 1080×1920 within safe zone
 
 ### Spark Ads
@@ -107,9 +107,9 @@ upper 60% of the safe zone (Y:150-900). This ensures visibility even on smaller 
 - `"bold, eye-catching visual designed for mobile fullscreen"`
 
 **Forbidden in prompts:**
-- `"horizontal"`, `"landscape"`, `"widescreen"` — will generate wrong orientation
-- `"text in bottom third"` — will be covered by caption UI
-- `"logo in bottom corner"` — will be covered by TikTok navigation
+- `"horizontal"`, `"landscape"`, `"widescreen"`; will generate wrong orientation
+- `"text in bottom third"`: will be covered by caption UI
+- `"logo in bottom corner"`: will be covered by TikTok navigation
 
 **Text in safe zone only:** If asking for text rendered into the image (not ad copy),
 specify `"text in upper center of frame, within 900px wide safe zone"`.

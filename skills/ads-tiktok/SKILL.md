@@ -1,11 +1,7 @@
 ---
 name: ads-tiktok
-description: >
-  TikTok Ads deep analysis covering creative quality, tracking, bidding,
-  campaign structure, and TikTok Shop. Evaluates 25 checks with emphasis on
-  creative-first strategy, safe zone compliance, and Smart+ campaigns. Use
-  when user says "TikTok Ads", "TikTok marketing", "TikTok Shop", "Spark Ads",
-  "Smart+", or "TikTok campaign".
+description: "TikTok Ads deep analysis covering creative quality, tracking, bidding, campaign structure, and TikTok Shop. Evaluates 25 checks with emphasis on creative-first strategy, safe zone compliance, and Smart+ campaigns. Use when user says TikTok Ads, TikTok marketing, TikTok Shop, Spark Ads, Smart+, or TikTok campaign."
+user-invokable: false
 ---
 
 # TikTok Ads Deep Analysis
@@ -24,8 +20,8 @@ description: >
 ## What to Analyze
 
 ### Creative Quality (30% weight)
-- ≥6 creatives per ad group (T05) — Critical
-- All video 9:16 vertical 1080x1920 (T06) — Critical
+- ≥6 creatives per ad group (T05) [Critical]
+- All video 9:16 vertical 1080x1920 (T06) [Critical]
 - Native-looking content, not corporate/polished (T07)
 - Hook in first 1-2 seconds (T08)
 - No creative active >7 days with declining CTR (T09)
@@ -155,7 +151,7 @@ Performance:       XX/100  ████████░░  (10%)
 ```
 
 ### Deliverables
-- `TIKTOK-ADS-REPORT.md` — Full 25-check findings with pass/warning/fail
+- `TIKTOK-ADS-REPORT.md`: Full 25-check findings with pass/warning/fail
 - Creative scorecard per ad (hook quality, safe zone, native feel)
 - Smart+ vs manual performance comparison
 - TikTok Shop readiness assessment (if e-commerce)

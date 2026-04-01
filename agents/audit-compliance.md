@@ -30,15 +30,15 @@ assistant: I'll focus on L14 (form fields ≤5 for 13% CVR benchmark), L15 (CRM 
 [Reads linkedin-audit.md lead gen and performance sections]
 [Evaluates form field count, CRM integration, frequency, and CTR benchmarks]
 [Provides specific Lead Gen Form optimization recommendations]
-commentary: LinkedIn Lead Gen Form CVR benchmarks assume ≤5 fields. Each additional field drops CVR significantly. Check CRM sync timing — stale leads lose value fast.
+commentary: LinkedIn Lead Gen Form CVR benchmarks assume ≤5 fields. Each additional field drops CVR significantly. Check CRM sync timing, as stale leads lose value fast.
 </example>
 
 When given ad account data:
 
 1. Read platform-specific audit checklists:
-   - `ads/references/linkedin-audit.md` — L14-L15 (Lead Gen Forms), L18-L25 (Structure & Performance)
-   - `ads/references/tiktok-audit.md` — T17-T19 (Performance)
-   - `ads/references/microsoft-audit.md` — MS14-MS18 (Settings & Performance)
+   - `ads/references/linkedin-audit.md`: L14-L15 (Lead Gen Forms), L18-L25 (Structure & Performance)
+   - `ads/references/tiktok-audit.md`: T17-T19 (Performance)
+   - `ads/references/microsoft-audit.md`: MS14-MS18 (Settings & Performance)
 2. Read `ads/references/compliance.md` for full regulatory requirements
 3. Read `ads/references/benchmarks.md` for performance targets
 4. Evaluate each applicable check as PASS, WARNING, or FAIL

@@ -1,15 +1,10 @@
 ---
 name: ads-dna
-description: >
-  Brand DNA extractor for paid advertising. Scans a website URL to extract
-  visual identity, tone of voice, color palette, typography, and imagery style.
-  Outputs brand-profile.json to the current directory. Run before /ads create
-  or /ads generate for brand-consistent creative. Triggers on: "brand DNA",
-  "brand profile", "extract brand", "brand identity", "brand colors",
-  "what is the brand voice", "analyze brand", "brand style guide".
+description: "Brand DNA extractor for paid advertising. Scans a website URL to extract visual identity, tone of voice, color palette, typography, and imagery style. Outputs brand-profile.json to the current directory. Run before /ads create or /ads generate for brand-consistent creative. Triggers on: brand DNA, brand profile, extract brand, brand identity, brand colors, what is the brand voice, analyze brand, brand style guide."
+user-invokable: false
 ---
 
-# Ads DNA — Brand DNA Extractor
+# Ads DNA: Brand DNA Extractor
 
 Extracts brand identity from a website and saves it as `brand-profile.json`
 for use by `/ads create`, `/ads generate`, and `/ads photoshoot`.
@@ -37,18 +32,18 @@ Use the **WebFetch tool** to retrieve each page. For each URL, use this fetch pr
 
 Fetch in this order:
 1. **Homepage** (`<url>`)
-2. **About page** — try `<url>/about`, then `<url>/about-us`, then `<url>/our-story`
-3. **Product/Services page** — try `<url>/product`, then `<url>/products`, then `<url>/services`
+2. **About page**: try `<url>/about`, then `<url>/about-us`, then `<url>/our-story`
+3. **Product/Services page**: try `<url>/product`, then `<url>/products`, then `<url>/services`
 
-**If `--quick` flag was provided**: fetch the homepage only — skip steps 2 and 3.
+**If `--quick` flag was provided**: fetch the homepage only; skip steps 2 and 3.
 
 If a secondary page returns a 404 or redirect error, continue with fewer pages and note:
-"Secondary pages unavailable — extraction based on homepage only. Confidence may be lower."
+"Secondary pages unavailable; extraction based on homepage only. Confidence may be lower."
 
 ### Step 2b: Capture Brand Screenshots
 
 After fetching pages, capture desktop screenshots of the website. These serve as
-visual style references during `/ads generate` — the same approach Pomelli uses
+visual style references during `/ads generate`; the same approach Pomelli uses
 to anchor ad images to the actual brand aesthetic.
 
 Run for the homepage:
@@ -66,7 +61,7 @@ python ~/.claude/skills/ads/scripts/capture_screenshot.py [url]/pricing
 **If `--quick` flag was provided**: skip screenshot capture entirely.
 
 **If capture fails** (Playwright not installed, network error, JS-heavy SPA that times out):
-- Log: `"Screenshot capture skipped — run: python3 -m playwright install chromium"`
+- Log: `"Screenshot capture skipped; run: python3 -m playwright install chromium"`
 - Continue without screenshots
 - Do NOT set the `screenshots` field in brand-profile.json
 
@@ -116,7 +111,7 @@ Score each axis 1-10 using these heuristics:
 Read `~/.claude/skills/ads/references/brand-dna-template.md` for the exact schema.
 
 Construct the JSON object following the schema precisely. Use `null` for any
-field that cannot be confidently extracted — do not guess.
+field that cannot be confidently extracted; do not guess.
 
 Example of a low-confidence field:
 ```json
@@ -161,7 +156,7 @@ Run `/ads create` to generate campaign concepts from this profile.
 ## Limitations
 
 - **Sparse content**: Sites with <200 words of body text produce lower-confidence profiles.
-  Note: "Low confidence extraction — limited content available for analysis."
+  Note: "Low confidence extraction; limited content available for analysis."
 - **Dynamic sites**: JavaScript-rendered content may not be captured. Playwright is not
   used by default. If the site appears to be SPA/React with no static HTML, note this.
 - **Multi-brand enterprises**: This tool creates one profile per URL. Run separately

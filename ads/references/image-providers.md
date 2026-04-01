@@ -38,7 +38,7 @@ Use for bulk campaign generation (10+ images). Not available for interactive sin
 Official migration path: `gemini-3.1-flash-image-preview` (Nano Banana 2, per Google docs).
 
 **Preview upgrade**: `gemini-3.1-flash-image-preview` (Nano Banana 2) is available for higher quality
-but carries preview status — Google may update behavior without the GA deprecation notice window.
+but carries preview status; Google may update behavior without the GA deprecation notice window.
 Override: `python generate_image.py "prompt" --model gemini-3.1-flash-image-preview`
 
 ### OpenAI (`gpt-image-1`)

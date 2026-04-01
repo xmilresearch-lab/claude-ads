@@ -1,15 +1,15 @@
-# Google Deep Research 1 — Ad Audit Checklists & Scoring System
+# Google Deep Research 1: Ad Audit Checklists & Scoring System
 
 > Source: Google Deep Research PDF, "Ad Audit Checklist & Scoring System", February 2026
-> 29 pages — Complete audit checklists for 5 platforms with weighted scoring methodology
+> 29 pages; Complete audit checklists for 5 platforms with weighted scoring methodology
 
 ---
 
 ## Executive Summary: Deterministic Auditing
 
 The 2026 paradigm shift demands **Deterministic Auditing** based on two pillars:
-1. **Signal Integrity** — Is the platform receiving clean, complete conversion data?
-2. **Algorithmic Freedom** — Is the platform AI given enough room to optimize?
+1. **Signal Integrity**: Is the platform receiving clean, complete conversion data?
+2. **Algorithmic Freedom**: Is the platform AI given enough room to optimize?
 
 ---
 
@@ -446,8 +446,8 @@ THEN flag as "Quick Win"
 | ID | Check | Severity | Category | Pass Criteria |
 |----|-------|----------|----------|---------------|
 | MS11 | RSA asset count | High | Creative | RSA headlines and descriptions match Google Ads best practices |
-| MS12 | Multimedia Ads | Medium | Creative | Multimedia Ads tested (unique to Microsoft — rich visual format) |
-| MS13 | Ad copy uniqueness | Medium | Creative | Ad copy not just cloned from Google — optimized for Bing demographics |
+| MS12 | Multimedia Ads | Medium | Creative | Multimedia Ads tested (unique to Microsoft: rich visual format) |
+| MS13 | Ad copy uniqueness | Medium | Creative | Ad copy not just cloned from Google: optimized for Bing demographics |
 
 ### Settings (MS14-MS15)
 

@@ -1,11 +1,7 @@
 ---
 name: ads-linkedin
-description: >
-  LinkedIn Ads deep analysis for B2B advertising. Evaluates 25 checks across
-  technical setup, audience targeting, creative quality, lead gen forms, and
-  bidding strategy. Includes Thought Leader Ads, ABM, and predictive audiences.
-  Use when user says "LinkedIn Ads", "B2B ads", "sponsored content", "lead gen
-  forms", "InMail", or "LinkedIn campaign".
+description: "LinkedIn Ads deep analysis for B2B advertising. Evaluates 25 checks across technical setup, audience targeting, creative quality, lead gen forms, and bidding strategy. Includes Thought Leader Ads, ABM, and predictive audiences. Use when user says LinkedIn Ads, B2B ads, sponsored content, lead gen forms, InMail, or LinkedIn campaign."
+user-invokable: false
 ---
 
 # LinkedIn Ads Deep Analysis
@@ -24,7 +20,7 @@ description: >
 
 ### Technical Setup (25% weight)
 - Insight Tag installed and firing on all pages (L01)
-- Conversions API (CAPI) active — launched 2025 (L02)
+- Conversions API (CAPI) active, launched 2025 (L02)
 - Conversion events configured for full funnel
 - Revenue attribution tracking enabled
 
@@ -35,7 +31,7 @@ description: >
 - Matched Audiences active: retargeting + contact lists (L06)
 - ABM company lists uploaded (up to 300,000 companies) (L07)
 - Audience expansion OFF for precision campaigns, ON for scale (L08)
-- Predictive audiences tested — replaced Lookalikes Feb 2024 (L09)
+- Predictive audiences tested, replaced Lookalikes Feb 2024 (L09)
 
 ### Creative Quality (20% weight)
 - Thought Leader Ads active, ≥30% budget allocation for B2B (L10)
@@ -116,7 +112,7 @@ Budget & Bidding:  XX/100  ████████░░  (15%)
 ```
 
 ### Deliverables
-- `LINKEDIN-ADS-REPORT.md` — Full 25-check findings with pass/warning/fail
+- `LINKEDIN-ADS-REPORT.md`: Full 25-check findings with pass/warning/fail
 - TLA adoption roadmap (if not using)
 - ABM strategy recommendations (for B2B)
 - Lead Gen Form optimization priorities

@@ -1,11 +1,7 @@
 ---
 name: ads-meta
-description: >
-  Meta Ads deep analysis covering Facebook and Instagram advertising.
-  Evaluates 46 checks across Pixel/CAPI health, creative diversity and fatigue,
-  account structure, and audience targeting. Includes Advantage+ assessment.
-  Use when user says "Meta Ads", "Facebook Ads", "Instagram Ads", "Advantage+",
-  or "Meta campaign".
+description: "Meta Ads deep analysis covering Facebook and Instagram advertising. Evaluates 46 checks across Pixel/CAPI health, creative diversity and fatigue, account structure, and audience targeting. Includes Advantage+ assessment. Use when user says Meta Ads, Facebook Ads, Instagram Ads, Advantage+, or Meta campaign."
+user-invokable: false
 ---
 
 # Meta Ads Deep Analysis
@@ -91,11 +87,11 @@ If ads are in restricted categories:
 | <4.0 | Poor | Critical: CAPI + Enhanced Matching required |
 
 Key parameters to maximize EMQ:
-- `em` (email) — highest match rate signal
-- `ph` (phone) — second highest match signal
-- `fn`, `ln` (first/last name) — improves match accuracy
-- `ct`, `st`, `zp` (city, state, zip) — geographic matching
-- `external_id` — CRM/user ID for cross-device matching
+- `em` (email): highest match rate signal
+- `ph` (phone): second highest match signal
+- `fn`, `ln` (first/last name): improves match accuracy
+- `ct`, `st`, `zp` (city, state, zip): geographic matching
+- `external_id`: CRM/user ID for cross-device matching
 
 ## Key Thresholds
 
@@ -123,7 +119,7 @@ Audience:            XX/100  █████░░░░░  (20%)
 ```
 
 ### Deliverables
-- `META-ADS-REPORT.md` — Full 46-check findings with pass/warning/fail
+- `META-ADS-REPORT.md`: Full 46-check findings with pass/warning/fail
 - EMQ improvement roadmap
 - Creative fatigue alerts (any creative with CTR declining >20%)
 - Quick Wins sorted by impact

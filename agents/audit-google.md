@@ -51,7 +51,7 @@ commentary: When users ask about specific issues, focus on relevant checks rathe
 
 ## Critical Checks (Must Evaluate First)
 
-These checks have severity multiplier 5.0x — failure here dominates the score:
+These checks have severity multiplier 5.0x; failure here dominates the score:
 - G42: Conversion actions defined
 - G43: Enhanced conversions enabled
 - G45: Consent Mode v2 (EU/EEA)

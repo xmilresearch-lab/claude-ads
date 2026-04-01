@@ -39,7 +39,7 @@
 - Trademark infringement
 - Restricted healthcare claims
 
-### Recommendations Tab — What to Accept/Reject
+### Recommendations Tab: What to Accept/Reject
 
 **Safe to accept:**
 - Optimized ad rotation
@@ -64,7 +64,7 @@
 | Housing | No ZIP code, age must be 18-65+, no lookalike |
 | Employment | Same restrictions as Housing |
 | Credit | Same restrictions as Housing |
-| **Financial Products** | **New Jan 2025** — enforced as Special Category |
+| **Financial Products** | **New Jan 2025**, enforced as Special Category |
 
 All Special Ad Categories:
 - Cannot target by age (18-65+ only range)
@@ -139,7 +139,7 @@ All Special Ad Categories:
 - Google Ads policy approvals don't transfer
 - Microsoft has separate review process
 - Some Google-approved ads may be disapproved on Microsoft
-- Bing audience skews older/more conservative — creative should match
+- Bing audience skews older/more conservative; creative should match
 
 ### Copilot Placement Policies
 - Ads in Copilot must be clearly labeled
@@ -215,7 +215,7 @@ FOR ALL REGIONS:
 
 | Rule | Enforcement |
 |------|-------------|
-| No remarketing/retargeting for health services | Google policy — account suspension risk |
+| No remarketing/retargeting for health services | Google policy: account suspension risk |
 | No targeting by health conditions | Google, Meta, all platforms |
 | Online pharmacy certification | Google: LegitScript required |
 | Telemedicine certification | Google: platform certification |
@@ -226,9 +226,9 @@ FOR ALL REGIONS:
 
 | Rule | Enforcement |
 |------|-------------|
-| Clear APR/fee/terms disclosures | Google, Meta — ad disapproval |
-| Lending certification | Google — account level |
-| Crypto certification | Google — account level |
+| Clear APR/fee/terms disclosures | Google, Meta: ad disapproval |
+| Lending certification | Google: account level |
+| Crypto certification | Google: account level |
 | Risk disclosures | All platforms |
-| Financial Products Special Category | Meta (Jan 2025) — restricted targeting |
-| No misleading income claims | All platforms — account suspension |
+| Financial Products Special Category | Meta (Jan 2025): restricted targeting |
+| No misleading income claims | All platforms: account suspension |

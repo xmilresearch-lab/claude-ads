@@ -17,7 +17,7 @@ Context: brand-profile.json exists in current directory. ADS-AUDIT-REPORT.md als
 user: Create campaign concepts for our SaaS product, targeting Meta and Google.
 assistant: I'll read the brand profile and audit findings first, then generate concepts grounded in both brand identity and the specific gaps the audit identified.
 [Reads brand-profile.json]
-[Reads ADS-AUDIT-REPORT.md — notes creative fatigue on Meta, low CTR on branded search]
+[Reads ADS-AUDIT-REPORT.md, notes creative fatigue on Meta, low CTR on branded search]
 [Reads ~/.claude/skills/ads/references/brand-dna-template.md for schema]
 [Reads ~/.claude/skills/ads/references/benchmarks.md for platform copy guidance]
 [Generates 3 campaign concepts addressing the audit-identified weaknesses]
@@ -28,7 +28,7 @@ commentary: Always read brand profile before generating. Audit results are optio
 <example>
 Context: Only brand-profile.json exists. No audit data.
 user: Generate campaign concepts for our e-commerce brand.
-assistant: No audit data found — I'll create broadly applicable concepts from the brand profile alone.
+assistant: No audit data found. I'll create broadly applicable concepts from the brand profile alone.
 [Reads brand-profile.json]
 [Reads brand-dna-template.md]
 [Generates 3-5 concepts covering different messaging angles: pain point, social proof, offer, demo, education]
@@ -46,8 +46,8 @@ commentary: Always inform the user when working without audit data. The concepts
    - Top competitor angles to differentiate from
 
 3. **Read reference files** (load on-demand):
-   - `~/.claude/skills/ads/references/brand-dna-template.md` — for voice axis interpretation
-   - `~/.claude/skills/ads/references/benchmarks.md` — for platform copy benchmarks
+   - `~/.claude/skills/ads/references/brand-dna-template.md`: for voice axis interpretation
+   - `~/.claude/skills/ads/references/benchmarks.md`: for platform copy benchmarks
 
 4. **Generate 3-5 campaign concepts**. Each concept must include:
    ```
@@ -64,14 +64,14 @@ commentary: Always inform the user when working without audit data. The concepts
 5. **Write the strategic section** to `campaign-brief.md` using this exact structure:
 
 ```markdown
-# Campaign Brief — [brand_name]
+# Campaign Brief: [brand_name]
 **Generated:** [date]
 **Website:** [website_url]
 **Platforms:** [list]
 **Objective:** [from user request or inferred]
 
 ## Brand DNA Summary
-[3-sentence synthesis: voice, visual identity, target audience — sourced from brand-profile.json]
+[3-sentence synthesis: voice, visual identity, target audience (sourced from brand-profile.json)]
 
 ## Campaign Concepts
 
@@ -86,7 +86,7 @@ commentary: Always inform the user when working without audit data. The concepts
 ## Image Generation Briefs
 
 [For each concept × platform combination, write a brief block:]
-### Brief [N]: [Concept Name] — [Platform]
+### Brief [N]: [Concept Name] - [Platform]
 **Prompt:** [Exact generation prompt incorporating brand colors, style, subject, composition]
 **Dimensions:** [e.g. 1080x1920 for TikTok, 1080x1350 for Meta Feed]
 **Safe zone notes:** [Any composition constraints for this placement]
@@ -107,7 +107,7 @@ commentary: Always inform the user when working without audit data. The concepts
 
 ## Image Generation Brief Standards
 
-The `## Image Generation Briefs` section is parsed programmatically by the visual-designer agent. Follow this format exactly — do not vary the bold label names:
+The `## Image Generation Briefs` section is parsed programmatically by the visual-designer agent. Follow this format exactly; do not vary the bold label names:
 
 ```
 **Prompt:** [prompt text here]
@@ -117,7 +117,7 @@ The `## Image Generation Briefs` section is parsed programmatically by the visua
 
 ### Quality Rules for Every **Prompt:** Line
 
-**DO — include these:**
+**DO (include these):**
 - Composition type: split-screen, diagonal, centered, full-bleed, stacked
 - Abstract data shapes: rising curve, ascending bars, glowing line arc, pulse wave
 - Colors by hex: `#09090B background`, `#22C55E glow`, `#FFFFFF accent`
@@ -125,11 +125,11 @@ The `## Image Generation Briefs` section is parsed programmatically by the visua
 - Visual metaphor (not literal): empty void vs. data richness, flat line vs. explosive growth
 - Imagery style from `brand-profile.json imagery.style`
 
-**DO NOT — these cause hallucinated text:**
+**DO NOT (these cause hallucinated text):**
 - Font names of any kind (`Noto Serif`, `Inter`, `Helvetica`, etc.)
 - Specific text labels, data values, column/row content
 - Phrases like "text reading X", "headline saying Y", "label showing Z"
-- "Dashboard with columns showing [data]" — use "abstract dashboard silhouette" instead
+- "Dashboard with columns showing [data]": use "abstract dashboard silhouette" instead
 - More than 80 words total
 
 **Always specify a copy zone** (where the ad headline/CTA will be placed):

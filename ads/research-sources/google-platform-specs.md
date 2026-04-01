@@ -1,7 +1,7 @@
-# Google Deep Research 3 — Paid Ad Technical Specifications
+# Google Deep Research 3: Paid Ad Technical Specifications
 
 > Source: Google Deep Research PDF, "Paid Ad Technical Specifications Request", February 2026
-> 20 pages — Complete creative specs, safe zones, character limits, encoding requirements
+> 20 pages; Complete creative specs, safe zones, character limits, encoding requirements
 
 ---
 
@@ -120,23 +120,23 @@
 
 Google calculates Ad Strength for RSAs based on:
 
-1. **Headline uniqueness** — Measured via Levenshtein distance between headlines
+1. **Headline uniqueness**: Measured via Levenshtein distance between headlines
    - Headlines too similar to each other = penalty
    - Each headline should take a different angle/value prop
 
-2. **Keyword inclusion** — Headlines should contain primary keywords from ad group
+2. **Keyword inclusion**: Headlines should contain primary keywords from ad group
    - At least 2-3 headlines should include exact/close keyword variants
 
-3. **Headline count** — More unique headlines = better
+3. **Headline count**: More unique headlines = better
    - 3-7 headlines = Poor to Average
    - 8-10 headlines = Good
    - 11-15 headlines = Excellent potential
 
-4. **Description variety** — Different selling points in each description
+4. **Description variety**: Different selling points in each description
 
 5. **Performance correlation:**
    - "Excellent" Ad Strength RSAs show ~12% higher conversion rate vs "Poor"
-   - Not a guarantee — test "Good" vs "Excellent" for your account
+   - Not a guarantee; test "Good" vs "Excellent" for your account
 
 ---
 
@@ -212,7 +212,7 @@ Google calculates Ad Strength for RSAs based on:
 | Cover image/video | 1200×628 (1.91:1) or video |
 | Product images | 4 minimum, pulled from catalog |
 | Headline | 40 characters |
-| Instant Experience | Custom built — supports image, video, carousel, form |
+| Instant Experience | Custom built: supports image, video, carousel, form |
 
 ### Advantage+ Creative Enhancements
 
@@ -224,14 +224,14 @@ When enabled, Meta may automatically:
 - Generate text variations
 - Enhance video (templates from static images)
 
-**Recommendation:** Test with A/B split — enable for 50% of budget, compare performance.
+**Recommendation:** Test with A/B split; enable for 50% of budget, compare performance.
 
 ### Meta Ad Quality Ranking
 
 Meta provides 3 quality signals in ad reporting:
-1. **Quality Ranking** — Perceived quality vs competitors (Above/Below Average)
-2. **Engagement Rate Ranking** — Expected engagement vs competitors
-3. **Conversion Rate Ranking** — Expected conversion rate vs competitors
+1. **Quality Ranking**: Perceived quality vs competitors (Above/Below Average)
+2. **Engagement Rate Ranking**: Expected engagement vs competitors
+3. **Conversion Rate Ranking**: Expected conversion rate vs competitors
 
 All ranked as: Above Average, Average, Below Average (10th, 35th, 55th percentile thresholds)
 
@@ -246,7 +246,7 @@ All ranked as: Above Average, Average, Below Average (10th, 35th, 55th percentil
 | Non-Spark In-Feed | 540×960 (9:16) | 5-60 seconds | 500 MB | 516 kbps |
 | Spark Ads | Organic post specs | Organic post specs | N/A | N/A |
 | TopView | 720×1280 (9:16) | 5-60 seconds | 500 MB | 2500 kbps |
-| Brand Takeover | 720×1280 | 3-5 seconds | 2 MB (image), 500 MB (video) | — |
+| Brand Takeover | 720×1280 | 3-5 seconds | 2 MB (image), 500 MB (video) | N/A |
 
 **Recommended:**
 - Resolution: 1080×1920 (9:16)
@@ -284,11 +284,11 @@ All ranked as: Above Average, Average, Below Average (10th, 35th, 55th percentil
 ### Creative Quality Indicators
 
 TikTok's algorithm scores creative quality based on:
-1. **Completion rate** — % of users watching full video
-2. **Replay rate** — Users watching more than once
-3. **Engagement rate** — Likes, comments, shares relative to views
-4. **Click-through rate** — Clicks to landing page
-5. **Native feel** — Resemblance to organic content (not ads)
+1. **Completion rate**: % of users watching full video
+2. **Replay rate**: Users watching more than once
+3. **Engagement rate**: Likes, comments, shares relative to views
+4. **Click-through rate**: Clicks to landing page
+5. **Native feel**: Resemblance to organic content (not ads)
 
 ---
 

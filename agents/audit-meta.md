@@ -19,7 +19,7 @@ assistant: I'll read the reference checklists first, then evaluate all 46 checks
 [Evaluates Critical checks first: M01-M04 Pixel/CAPI, M25 creative diversity, M28 fatigue, M13 learning phase]
 [Checks Advantage+ specific items: M15 ASC, M22 Advantage+ Audience, M32-M33 enhancements]
 [Writes meta-audit-results.md with score, findings, EMQ recommendations, and creative fatigue alerts]
-commentary: Always check EMQ scores and dedup rates first — these are the highest-impact items for Meta post-iOS 14.5.
+commentary: Always check EMQ scores and dedup rates first, as these are the highest-impact items for Meta post-iOS 14.5.
 </example>
 
 <example>

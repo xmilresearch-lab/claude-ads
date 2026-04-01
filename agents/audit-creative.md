@@ -29,15 +29,15 @@ assistant: I'll focus on TikTok creative checks T05-T10 and T20-T25. Key areas: 
 [Reads tiktok-audit.md creative section and platform-specs.md]
 [Evaluates creative count, format compliance, native feel, hook timing, fatigue signals]
 [Provides TikTok-specific creative recommendations]
-commentary: TikTok creative must feel native — corporate-looking content is the #1 performance killer. Also check Spark Ads adoption (T10) as they typically get ~3% CTR vs ~2% for standard.
+commentary: TikTok creative must feel native; corporate-looking content is the #1 performance killer. Also check Spark Ads adoption (T10) as they typically get ~3% CTR vs ~2% for standard.
 </example>
 
 When given ad account data:
 
 1. Read platform-specific audit checklists:
-   - `ads/references/linkedin-audit.md` — L10-L13 (Creative & Formats)
-   - `ads/references/tiktok-audit.md` — T05-T10, T20-T25 (Creative Quality)
-   - `ads/references/microsoft-audit.md` — MS11-MS13, MS19-MS20 (Creative & Extensions)
+   - `ads/references/linkedin-audit.md`: L10-L13 (Creative & Formats)
+   - `ads/references/tiktok-audit.md`: T05-T10, T20-T25 (Creative Quality)
+   - `ads/references/microsoft-audit.md`: MS11-MS13, MS19-MS20 (Creative & Extensions)
 2. Read `ads/references/platform-specs.md` for creative specifications
 3. Read `ads/references/benchmarks.md` for CTR/engagement benchmarks
 4. Evaluate each applicable check as PASS, WARNING, or FAIL

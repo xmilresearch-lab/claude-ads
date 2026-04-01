@@ -113,7 +113,7 @@ Category weights are calibrated for paid advertising accounts where conversion t
 - Settings and compliance are important but have lower direct revenue impact
 - Weights sum to 100% per platform, enabling direct cross-platform comparison
 
-The grading thresholds (A=90-100, B=75-89, C=60-74, D=40-59, F=<40) use wider bands than academic-style scoring because ad account health is typically distributed lower — a score of 75+ represents genuinely well-managed accounts.
+The grading thresholds (A=90-100, B=75-89, C=60-74, D=40-59, F=<40) use wider bands than academic-style scoring because ad account health is typically distributed lower; a score of 75+ represents genuinely well-managed accounts.
 
 ---
 

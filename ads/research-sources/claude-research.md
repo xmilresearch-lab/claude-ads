@@ -1,14 +1,14 @@
-# Claude Deep Research — The Definitive Paid Advertising Reference for 2026
+# Claude Deep Research: The Definitive Paid Advertising Reference for 2026
 
 > Source: Claude Deep Research, February 2026
 > Original: ~/Documents/Ads Documentation & Research/
-> 492 lines — Most comprehensive and up-to-date source
+> 492 lines; Most comprehensive and up-to-date source
 
 ## Key Unique Data Points (Not in Other Sources)
 
 ### Google Ads
 - Average Search CPC now $5.26 (up 5th consecutive year)
-- Search CTR 6.66% (up 3.74% YoY) — WordStream/LocaliQ 16K campaigns
+- Search CTR 6.66% (up 3.74% YoY); WordStream/LocaliQ 16K campaigns
 - Search CVR 7.52% (up for 65% of industries)
 - "Power Pack" framework: PMax + Demand Gen + AI Max (replaces "Power Pair")
 - AI Max for Search: LLM-based text customization + final URL expansion

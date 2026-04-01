@@ -1,4 +1,4 @@
-# LinkedIn Creative Specs — Generation Guide
+# LinkedIn Creative Specs: Generation Guide
 
 <!-- Updated: 2026-03-12 -->
 <!-- Source: platform-specs.md + LinkedIn Campaign Manager requirements -->
@@ -7,7 +7,7 @@
 ## Purpose
 
 Generation-ready specifications for LinkedIn ad creative. LinkedIn is a professional
-platform — tone, imagery style, and composition constraints differ significantly from
+platform; tone, imagery style, and composition constraints differ significantly from
 Meta and TikTok.
 
 ---
@@ -33,11 +33,11 @@ on mobile, increasing scroll-stop rate.
 |-----------|------------|-----|
 | Intro text | 150 chars | 600 chars |
 | Headline | 70 chars | 200 chars |
-| Description | 100 chars | — (desktop only) |
-| CTA button | Predefined list | — |
+| Description | 100 chars |: (desktop only) |
+| CTA button | Predefined list | N/A |
 
 **Copy generation rule:** Write intro text ≤150 chars (truncated on mobile beyond this).
-Headline ≤70 chars. The description only shows on desktop — treat as supplementary.
+Headline ≤70 chars. The description only shows on desktop; treat as supplementary.
 
 ---
 
@@ -59,7 +59,7 @@ For video thumbnail generation: use 1:1 (1080×1080) as the primary thumbnail si
 
 - Formats: PDF, DOC, DOCX, PPT, PPTX
 - Max: 100MB, 300 pages (10-20 pages recommended)
-- Cover image: 1200×628 (1.91:1) — generate this as the document cover visual
+- Cover image: 1200×628 (1.91:1); generate this as the document cover visual
 
 ---
 
@@ -67,7 +67,7 @@ For video thumbnail generation: use 1:1 (1080×1080) as the primary thumbnail si
 
 When LinkedIn Audience Network is enabled, ads run on partner sites.
 Supported sizes for network: 300×250, 728×90, 160×600, 300×600.
-These are not generation targets — LinkedIn resizes from your primary assets.
+These are not generation targets; LinkedIn resizes from your primary assets.
 
 ---
 
@@ -108,8 +108,8 @@ that promotes lead gen forms:
 ## Aspect Ratio Priority
 
 When generating a single image for LinkedIn (time-constrained):
-1. `1080×1080` (1:1) — covers Feed (best engagement)
-2. `1200×628` (1.91:1) — covers legacy + desktop placements
+1. `1080×1080` (1:1); covers Feed (best engagement)
+2. `1200×628` (1.91:1); covers legacy + desktop placements
 
 Always generate both for full coverage.
 

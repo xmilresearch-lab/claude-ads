@@ -1,4 +1,4 @@
-# Research Sources — claude-ads
+# Research Sources: claude-ads
 
 Raw processed research documents used to build the claude-ads reference database.
 These preserve the full context from each research source for future reference.

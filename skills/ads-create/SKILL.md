@@ -1,15 +1,10 @@
 ---
 name: ads-create
-description: >
-  Campaign concept and copy brief generator for paid advertising. Reads
-  brand-profile.json and optional audit results to produce structured campaign
-  concepts, messaging pillars, and copy briefs. Outputs campaign-brief.md to
-  the current directory. Run after /ads dna and before /ads generate. Triggers
-  on: "create campaign", "campaign brief", "ad concepts", "write ad copy",
-  "campaign strategy", "ad messaging", "creative brief", "generate concepts".
+description: "Campaign concept and copy brief generator for paid advertising. Reads brand-profile.json and optional audit results to produce structured campaign concepts, messaging pillars, and copy briefs. Outputs campaign-brief.md to the current directory. Run after /ads dna and before /ads generate. Triggers on: create campaign, campaign brief, ad concepts, write ad copy, campaign strategy, ad messaging, creative brief, generate concepts."
+user-invokable: false
 ---
 
-# Ads Create — Campaign Concept & Copy Brief Generator
+# Ads Create: Campaign Concept & Copy Brief Generator
 
 Generates structured campaign concepts and platform-specific copy from your brand
 profile and optional audit data. Outputs `campaign-brief.md` for use by `/ads generate`.
@@ -46,14 +41,14 @@ If the user chooses manual, collect:
 Look for `ADS-AUDIT-REPORT.md` or any `*-audit-results.md` in the current directory.
 
 - **Found**: Read them. Note the top 3 weaknesses (creative fatigue, tracking gaps, wasted spend) to address in concepts.
-- **Not found**: Continue without. Note in the brief: "No audit data found — concepts are generalized. Run `/ads audit` for weakness-targeted concepts."
+- **Not found**: Continue without. Note in the brief: "No audit data found; concepts are generalized. Run `/ads audit` for weakness-targeted concepts."
 
 ### Step 3: Collect Campaign Parameters
 
 If `--platforms` or `--objective` flags were provided in the command, use those values
 and skip the corresponding questions below.
 
-Ask (combine into one message — omit any already provided via flags):
+Ask (combine into one message; omit any already provided via flags):
 1. **Platforms**: Which ad platforms? (Meta · Google · LinkedIn · TikTok · YouTube · Microsoft · All)
 2. **Objective**: Sales/Revenue · Leads/Demos · App Installs · Brand Awareness · Retargeting
 3. **Offer or brief**: Any specific offer, promotion, or message to highlight? (optional)
@@ -61,16 +56,16 @@ Ask (combine into one message — omit any already provided via flags):
 
 ### Step 4: Spawn Creative Agents in Sequence
 
-Agents must run **sequentially** — `copy-writer` reads the file that `creative-strategist`
+Agents must run **sequentially**; `copy-writer` reads the file that `creative-strategist`
 writes, so running them in parallel creates a race condition on `campaign-brief.md`.
 
-**Step 4a — Spawn `creative-strategist`** (Task tool):
+**Step 4a; Spawn `creative-strategist`** (Task tool):
 This agent creates `campaign-brief.md` and writes the strategic sections:
 `## Brand DNA Summary`, `## Campaign Concepts`, `## Image Generation Briefs`, `## Next Steps`.
 
 Wait for `creative-strategist` to **fully complete** before continuing.
 
-**Step 4b — Spawn `copy-writer`** (Task tool):
+**Step 4b; Spawn `copy-writer`** (Task tool):
 After `creative-strategist` completes, spawn `copy-writer`. It reads the existing
 `campaign-brief.md` and appends the `## Copy Deck` section with platform-specific
 headlines, primary text, and CTAs.
@@ -99,10 +94,10 @@ Next steps:
 
 ## campaign-brief.md Format Specification
 
-The following section headings are a **parsing contract** — agents downstream depend on these exact heading names.
+The following section headings are a **parsing contract**; agents downstream depend on these exact heading names.
 
 ```markdown
-# Campaign Brief — [brand_name]
+# Campaign Brief: [brand_name]
 **Generated:** [date]
 **Website:** [website_url]
 **Platforms:** [comma-separated list]
@@ -114,13 +109,13 @@ The following section headings are a **parsing contract** — agents downstream 
 
 ## Audit Context
 [If audit data found: top 3 weaknesses being addressed]
-[If no audit data: "No audit data — run /ads audit for weakness-targeted concepts"]
+[If no audit data: "No audit data; run /ads audit for weakness-targeted concepts"]
 
 ## Campaign Concepts
 
 ### Concept 1: [Name]
-**Hypothesis:** [why this will work — 1 sentence]
-**Primary Message:** [core message — 1 sentence]
+**Hypothesis:** [why this will work; 1 sentence]
+**Primary Message:** [core message; 1 sentence]
 **Tone:** [voice reading from brand-profile.json]
 **Visual Direction:** [2-3 sentences describing imagery]
 **Target Platforms:** [platforms and rationale]
@@ -133,16 +128,16 @@ The following section headings are a **parsing contract** — agents downstream 
 [repeat for all concepts]
 
 ## Copy Deck
-[appended by copy-writer agent — headlines, primary text, CTAs per concept per platform]
+[appended by copy-writer agent; headlines, primary text, CTAs per concept per platform]
 
 ## Image Generation Briefs
 
-### Brief 1: [Concept Name] — [Platform]
+### Brief 1: [Concept Name]: [Platform]
 **Prompt:** [exact generation prompt]
 **Dimensions:** [WxH]
 **Safe zone notes:** [constraint or "None"]
 
-### Brief 2: [Concept Name] — [Platform]
+### Brief 2: [Concept Name]: [Platform]
 **Prompt:** [exact generation prompt]
 **Dimensions:** [WxH]
 **Safe zone notes:** [constraint or "None"]

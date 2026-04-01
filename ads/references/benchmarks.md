@@ -3,7 +3,7 @@
 <!-- Updated: 2026-02-10 -->
 <!-- Sources: Claude Research (WordStream/LocaliQ 16K campaigns, Triple Whale 2025), Gemini Research -->
 
-## Google Ads — Search Benchmarks
+## Google Ads: Search Benchmarks
 
 ### All Industries Average (WordStream/LocaliQ 2025, 16K campaigns)
 | Metric | Average | YoY Change |
@@ -16,18 +16,18 @@
 ### By Industry (Search)
 | Industry | CPC | CTR | CVR | CPL |
 |----------|-----|-----|-----|-----|
-| Arts & Entertainment | $1.60 | 13.10% | — | — |
-| Travel | $2.12 | — | — | — |
-| Restaurants | $2.05 | — | — | — |
-| E-commerce | $1.15 | 4.13% | 2.81% | — |
+| Arts & Entertainment | $1.60 | 13.10% | N/A | N/A |
+| Travel | $2.12 | N/A | N/A | N/A |
+| Restaurants | $2.05 | N/A | N/A | N/A |
+| E-commerce | $1.15 | 4.13% | 2.81% | N/A |
 | B2B SaaS | $4.50-$8.00 | 4.28% | 1.65% | $100-$200 |
-| Education | $6.23 | — | — | — |
+| Education | $6.23 | N/A | N/A | N/A |
 | Local Services | $7.85-$15.00 | 5.50%-6.37% | 7.33%-15.0% | $90.92 |
-| Dental | $7.85 | 5.44% | — | — |
-| Healthcare | $40+ | 4.90% | 3.10% | — |
-| Legal | $8.58-$9.21 | 5.20%-5.97% | 4.60%-5.09% | — |
-| Finance | $3.46-$3.77 | 4.65%-8.33% | 2.55%-3.50% | — |
-| Real Estate | $1.55-$2.53 | 8.43% | 3.28% | — |
+| Dental | $7.85 | 5.44% | N/A | N/A |
+| Healthcare | $40+ | 4.90% | 3.10% | N/A |
+| Legal | $8.58-$9.21 | 5.20%-5.97% | 4.60%-5.09% | N/A |
+| Finance | $3.46-$3.77 | 4.65%-8.33% | 2.55%-3.50% | N/A |
+| Real Estate | $1.55-$2.53 | 8.43% | 3.28% | N/A |
 
 ### E-commerce Specific (Triple Whale 2025)
 | Metric | Median | YoY Change |
@@ -43,7 +43,7 @@ Note: CTR improved across all 14 tracked industries while CVR declined in 13 of 
 ### By Objective (WordStream 2025, 1K campaigns)
 | Objective | CTR | CPC | CVR | CPL |
 |-----------|-----|-----|-----|-----|
-| Traffic (all) | 1.71% | $0.70 | — | — |
+| Traffic (all) | 1.71% | $0.70 | N/A | N/A |
 | Leads (all) | 2.59% | $1.92 | 7.72% | $27.66 |
 
 ### ROAS Benchmarks
@@ -75,10 +75,10 @@ Note: CTR improved across all 14 tracked industries while CVR declined in 13 of 
 |--------|---------|------|
 | Frequency (prospecting) | >3 | >5 |
 | Frequency (retargeting) | >8 | >12 |
-| CTR decline over 14 days | — | >20% |
-| Exposures before conversion drop (~45%) | 4 | — |
-| TOF creative lifespan | 3-4 weeks | — |
-| BOF creative lifespan | 6-7 weeks | — |
+| CTR decline over 14 days | N/A | >20% |
+| Exposures before conversion drop (~45%) | 4 | N/A |
+| TOF creative lifespan | 3-4 weeks | N/A |
+| BOF creative lifespan | 6-7 weeks | N/A |
 
 ## LinkedIn Ads Benchmarks
 
@@ -171,10 +171,10 @@ Note: CTR improved across all 14 tracked industries while CVR declined in 13 of 
 |----------|--------|------|----------|--------|
 | E-commerce | 3.68 | 2.19-4.52 (ASC) | N/A | 1.41-1.67 |
 | B2B SaaS | N/A | N/A | 1.13 | N/A |
-| Legal | 3.0 | — | — | — |
-| Finance | 3.5 | — | — | — |
-| Healthcare | 2.8 | — | — | — |
-| Local Services | 5.0 | — | — | — |
+| Legal | 3.0 | N/A | N/A | N/A |
+| Finance | 3.5 | N/A | N/A | N/A |
+| Healthcare | 2.8 | N/A | N/A | N/A |
+| Local Services | 5.0 | N/A | N/A | N/A |
 
 ## Landing Page Benchmarks
 

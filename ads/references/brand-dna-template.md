@@ -96,7 +96,7 @@ Score interpretation: 1 = extreme left pole, 10 = extreme right pole, 5 = neutra
 - `primary`: Main brand color. **Always inject into image generation prompts.**
 - `secondary`: Supporting palette. Use for accents in generation prompts.
 - `forbidden`: Colors to explicitly exclude from prompts (e.g., competitor brand colors).
-- `background` / `text`: Digital UI colors — less relevant for ad image generation.
+- `background` / `text`: Digital UI colors (less relevant for ad image generation).
 
 **Null handling:** If extraction fails for a color, set to `null`. Agents must skip null
 color injection rather than defaulting to arbitrary colors.
@@ -120,7 +120,7 @@ Used by `copy-writer` agent for tone calibration. Not injected into image prompt
 - `texture`: Passed as texture preference.
 - `negative_space`: "generous" → "plenty of white space, uncluttered composition".
 
-### Screenshots (optional — populated by `/ads dna`)
+### Screenshots (optional, populated by `/ads dna`)
 
 - `homepage`: Desktop screenshot of homepage. **Primary visual style reference** for
   `visual-designer` agent. When present, generation auto-uses `gemini-3.1-flash-image-preview`
@@ -136,10 +136,10 @@ Used by `copy-writer` agent for tone calibration. Not injected into image prompt
 
 ### Pages to scan (in order)
 
-1. **Homepage** — Primary brand impression, dominant colors, hero headline tone
-2. **About / Our Story** — Brand values, voice descriptors, team photography style
-3. **Product / Service page** — Imagery style, composition, subject matter
-4. **Existing ads** (if accessible via Meta Ad Library or Google Ads Transparency) — Override
+1. **Homepage**: Primary brand impression, dominant colors, hero headline tone
+2. **About / Our Story**: Brand values, voice descriptors, team photography style
+3. **Product / Service page**: Imagery style, composition, subject matter
+4. **Existing ads** (if accessible via Meta Ad Library or Google Ads Transparency): Override
 
 ### CSS extraction targets
 

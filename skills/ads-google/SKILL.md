@@ -1,11 +1,7 @@
 ---
 name: ads-google
-description: >
-  Google Ads deep analysis covering Search, Performance Max, Display, YouTube,
-  and Demand Gen campaigns. Evaluates 74 checks across conversion tracking,
-  wasted spend, account structure, keywords, ads, and settings. Use when user
-  says "Google Ads", "Google PPC", "search ads", "PMax", "Performance Max",
-  or "Google campaign".
+description: "Google Ads deep analysis covering Search, Performance Max, Display, YouTube, and Demand Gen campaigns. Evaluates 74 checks across conversion tracking, wasted spend, account structure, keywords, ads, and settings. Use when user says Google Ads, Google PPC, search ads, PMax, Performance Max, or Google campaign."
+user-invokable: false
 ---
 
 # Google Ads Deep Analysis
@@ -43,13 +39,13 @@ description: >
 - Brand/non-brand campaigns separated
 - Geographic targeting precise (no wasted international spend)
 
-**Negative Keyword Rules (critical — bad negatives kill campaigns):**
-- NEVER suggest Broad Match negatives unless explicitly justified — they block too broadly
+**Negative Keyword Rules (critical: bad negatives kill campaigns):**
+- NEVER suggest Broad Match negatives unless explicitly justified; they block too broadly
 - Default to **Exact Match** `[keyword]` for specific irrelevant queries
 - Use **Phrase Match** `"keyword"` for irrelevant intent patterns
 - Source negatives from actual Search Terms Report irrelevant queries, NOT guesses
 - Group into themed lists: Informational (how-to, DIY, what is), Job-seeker (jobs, careers, salary), Competitor (only if intentionally excluded), Free-intent (free, crack, torrent)
-- Recommend **Shared Negative Lists** at the account level — not just campaign-level
+- Recommend **Shared Negative Lists** at the account level, not just campaign-level
 - Review existing negatives for over-blocking (are any negatives accidentally blocking converting queries?)
 
 ### Account Structure (15% weight)
@@ -155,7 +151,7 @@ Settings:            XX/100  ██████████  (10%)
 ```
 
 ### Deliverables
-- `GOOGLE-ADS-REPORT.md` — Full 74-check findings with pass/warning/fail
+- `GOOGLE-ADS-REPORT.md`: Full 74-check findings with pass/warning/fail
 - Wasted spend estimate (monthly $ value)
 - Quick Wins sorted by impact
 - PMax-specific recommendations (if applicable)

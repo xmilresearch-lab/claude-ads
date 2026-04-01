@@ -1,11 +1,7 @@
 ---
 name: ads-youtube
-description: >
-  YouTube Ads specific analysis covering campaign types, creative quality,
-  audience targeting, and measurement. Evaluates video ad performance across
-  skippable, non-skippable, bumper, Shorts, and Demand Gen formats. Use when
-  user says "YouTube Ads", "video ads", "pre-roll", "bumper ads", "YouTube
-  campaign", or "Shorts ads".
+description: "YouTube Ads specific analysis covering campaign types, creative quality, audience targeting, and measurement. Evaluates video ad performance across skippable, non-skippable, bumper, Shorts, and Demand Gen formats. Use when user says YouTube Ads, video ads, pre-roll, bumper ads, YouTube campaign, or Shorts ads."
+user-invokable: false
 ---
 
 # YouTube Ads Analysis
@@ -103,7 +99,7 @@ description: >
 | Brand Lift | Measurable | Requires Google Brand Lift Study |
 
 ### Attribution Considerations
-- YouTube is upper/mid-funnel — don't judge by last-click alone
+- YouTube is upper/mid-funnel; don't judge by last-click alone
 - Use data-driven attribution in Google Ads
 - Track view-through conversions (important for video)
 - Consider Brand Lift Studies for awareness campaigns
@@ -139,7 +135,7 @@ Measurement:        █████░░░░░  Attribution and tracking
 ```
 
 ### Deliverables
-- `YOUTUBE-ADS-REPORT.md` — Campaign-by-campaign analysis
+- `YOUTUBE-ADS-REPORT.md`: Campaign-by-campaign analysis
 - Creative quality scorecard per video
 - Audience strategy recommendations
 - Measurement gap analysis

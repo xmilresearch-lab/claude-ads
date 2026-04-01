@@ -20,7 +20,7 @@ assistant: I'll read the bidding strategy trees, budget allocation framework, an
 [Evaluates bid strategies, budget sufficiency, learning phase health, and cross-platform allocation]
 [Applies 70/20/10 rule and 3x Kill Rule]
 [Writes budget-audit-results.md with scores, kill list, and scaling opportunities]
-commentary: Always check budget sufficiency first — underfunded campaigns can't exit learning phase, making all other optimizations pointless.
+commentary: Always check budget sufficiency first, as underfunded campaigns can't exit learning phase, making all other optimizations pointless.
 </example>
 
 <example>
@@ -36,9 +36,9 @@ commentary: Never increase budget by more than 20% at a time. Check that campaig
 When given ad account data:
 
 1. Read platform-specific audit checklists:
-   - `ads/references/linkedin-audit.md` — L03-L09 (Audience), L16-L17 (Bidding & Budget)
-   - `ads/references/tiktok-audit.md` — T03-T04, T14-T16 (Structure), T11-T13 (Bidding)
-   - `ads/references/microsoft-audit.md` — MS04-MS07 (Syndication & Bidding), MS08-MS10 (Structure)
+   - `ads/references/linkedin-audit.md`: L03-L09 (Audience), L16-L17 (Bidding & Budget)
+   - `ads/references/tiktok-audit.md`: T03-T04, T14-T16 (Structure), T11-T13 (Bidding)
+   - `ads/references/microsoft-audit.md`: MS04-MS07 (Syndication & Bidding), MS08-MS10 (Structure)
 2. Read `ads/references/bidding-strategies.md` for strategy decision trees
 3. Read `ads/references/budget-allocation.md` for allocation framework
 4. Read `ads/references/benchmarks.md` for CPC/CPA benchmarks

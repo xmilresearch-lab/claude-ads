@@ -1,4 +1,4 @@
-# Gemini Deep Research — The State of Paid Advertising 2026
+# Gemini Deep Research: The State of Paid Advertising 2026
 
 > Source: Gemini Deep Research, February 2026
 > Original file: `~/Downloads/the state of paid advertising 2026.txt`
@@ -6,14 +6,14 @@
 
 ## Executive Summary
 
-The 2026 advertising ecosystem operates under a **signal-based paradigm** — transition from keyword-centric targeting to signal-based intent modeling. Key shifts:
+The 2026 advertising ecosystem operates under a **signal-based paradigm**; transition from keyword-centric targeting to signal-based intent modeling. Key shifts:
 
-1. **Privacy Sandbox is dead** — Google retired it October 2025 (CMA pressure + performance issues)
+1. **Privacy Sandbox is dead**: Google retired it October 2025 (CMA pressure + performance issues)
 2. **Third-party cookies persist** in Chrome but signal fidelity is degraded
-3. **Server-side integrations (CAPI) are the standard** — pixel-only = vulnerability
-4. **AI Max for Search** — LLMs match landing page content to conversational queries, bypassing keyword matching
-5. **Media Mix Modeling (MMM) renaissance** — Google Meridian, Meta Robyn for budget allocation
-6. **Platform "black boxes" dominate** — PMax, Advantage+, Smart+ are the norm
+3. **Server-side integrations (CAPI) are the standard**: pixel-only = vulnerability
+4. **AI Max for Search**: LLMs match landing page content to conversational queries, bypassing keyword matching
+5. **Media Mix Modeling (MMM) renaissance**: Google Meridian, Meta Robyn for budget allocation
+6. **Platform "black boxes" dominate**: PMax, Advantage+, Smart+ are the norm
 
 ---
 
@@ -32,7 +32,7 @@ The 2026 advertising ecosystem operates under a **signal-based paradigm** — tr
 
 ### MMM Renaissance
 - Hybrid strategy: MTA for tactical optimization + MMM for strategic budget setting
-- Platform-reported ROAS often overclaims — weight down by ~30% based on MMM incrementality
+- Platform-reported ROAS often overclaims; weight down by ~30% based on MMM incrementality
 - Tools: Google Meridian, Meta Robyn (Bayesian methods)
 
 ---
@@ -47,7 +47,7 @@ The 2026 advertising ecosystem operates under a **signal-based paradigm** — tr
 - Brand Guidelines must be configured in PMax/Search
 
 ### Performance Max (PMax) Maturity
-- Now a "grey box" — campaign-level negatives, brand exclusions, improved reporting
+- Now a "grey box"; campaign-level negatives, brand exclusions, improved reporting
 - Share of Voice reporting + Search Term Insights available
 - Structure Asset Groups by **User Intent** not Product Category
 - **Asset requirements**: Max 15 headlines, 5 descriptions, 20 images per group
@@ -68,13 +68,13 @@ The 2026 advertising ecosystem operates under a **signal-based paradigm** — tr
 
 ---
 
-## Section 3: Meta Ads — Andromeda Engine
+## Section 3: Meta Ads: Andromeda Engine
 
 ### Andromeda Algorithm Update (2025/2026)
 - AI-driven matching system, not simple auction
 - Optimizes for "creative portfolios" not single ads
 - Requires larger creative volume (old "3-5 ads per ad set" = obsolete)
-- **Creative IS the targeting** — broad targeting + specific creative angles
+- **Creative IS the targeting**: broad targeting + specific creative angles
 
 ### 3-Stage Account Structure
 1. **Testing Campaign (ABO)**: Test new concepts, multiple batches per ad set
@@ -122,7 +122,7 @@ The 2026 advertising ecosystem operates under a **signal-based paradigm** — tr
 
 ## Section 5: LinkedIn Ads
 
-### Thought Leader Ads (TLA) — Dominant B2B Format
+### Thought Leader Ads (TLA): Dominant B2B Format
 - 1.7x higher CTR, 1.6x more engagement vs standard
 - CPC: $4.14 (TLA) vs $22+ (standard brand)
 - Allocate 30% budget to TLAs for trust-building
@@ -143,7 +143,7 @@ The 2026 advertising ecosystem operates under a **signal-based paradigm** — tr
 
 - PMax inventory includes Copilot chat sessions → 63% conversion rate increase
 - "Target New Customers" goal in PMax (Beta 2026)
-- Google Ads PMax import available — validate URL settings transfer
+- Google Ads PMax import available; validate URL settings transfer
 
 ---
 
@@ -197,13 +197,13 @@ The 2026 advertising ecosystem operates under a **signal-based paradigm** — tr
 
 ## Section 9: Industry Playbooks
 
-### B2B SaaS — "SME Engine"
+### B2B SaaS: "SME Engine"
 - TOFU: LinkedIn TLAs + Meta Video Views (ungated value)
 - MOFU: Conversation Ads / Lead Forms (calculators, audits)
 - BOFU: Google Search retargeting (brand + competitor keywords)
 - Key metric: Pipeline ROI via Offline Conversion Import
 
-### E-Commerce DTC — "Four Peaks" Theory
+### E-Commerce DTC: "Four Peaks" Theory
 - Plan quarterly peaks to reset algorithmic fatigue
 - Acquisition: PMax + ASC + TikTok Shop (1 hero campaign per platform)
 - Retention: Email/SMS + Customer Match cross-sells
@@ -215,7 +215,7 @@ The 2026 advertising ecosystem operates under a **signal-based paradigm** — tr
 - Key metric: Cost Per Booked Appointment
 - Dispute invalid LSA leads weekly, sync CRM for Smart Bidding
 
-### Info Products — "Selfie-Style" Authority
+### Info Products: "Selfie-Style" Authority
 - Founder-led video on Meta/YouTube
 - Funnel: Short video → VSL/Webinar → Low-ticket tripwire ($27-$97) → High-ticket upsell
 - Monitor Hook Rate (<30% = rewrite intro) and Hold Rate (ThruPlay)

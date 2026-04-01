@@ -65,8 +65,8 @@ gtag('consent', 'update', {
 - Only macro conversions as "Primary" for bidding optimization
 
 ### Duplicate Detection Accuracy
-- Only check **ENABLED** conversion actions for duplicates — exclude HIDDEN and REMOVED actions (they cannot cause double-counting)
-- Exclude Smart Campaign system-managed conversions (e.g., 'Smart campaign map clicks to call') from DDA and counting-type checks — their attribution model and counting type are locked by Google and cannot be changed by advertisers
+- Only check **ENABLED** conversion actions for duplicates; exclude HIDDEN and REMOVED actions (they cannot cause double-counting)
+- Exclude Smart Campaign system-managed conversions (e.g., 'Smart campaign map clicks to call') from DDA and counting-type checks; their attribution model and counting type are locked by Google and cannot be changed by advertisers
 
 ---
 
@@ -95,7 +95,7 @@ gtag('consent', 'update', {
 - fbp (browser ID): important
 - fbc (click ID): important
 
-**87% of advertisers have poor EMQ** — fixing it improves performance 20-40%.
+**87% of advertisers have poor EMQ**; fixing it improves performance 20-40%.
 
 ### Event Deduplication
 ```
@@ -110,7 +110,7 @@ Target: 90%+ deduplication rate
 - Without CAPI: 30-40% data loss post-iOS 14.5 (pixel-only tracking is critically insufficient)
 - With CAPI: 15-20% performance increase over pixel-only
 - Bypasses ad blockers and iOS ATT limitations
-- 87% of advertisers have poor Event Match Quality — fixing CAPI improves performance 20-40%
+- 87% of advertisers have poor Event Match Quality; fixing CAPI improves performance 20-40%
 - Offline Conversions API deprecated May 2025 → CAPI replaces
 
 ### Standard Events (Use These, Not Custom)

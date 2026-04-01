@@ -1,11 +1,7 @@
 ---
 name: ads-apple
-description: >
-  Apple Search Ads (ASA) deep analysis for mobile app advertisers. Evaluates
-  campaign structure, bid health, Creative Sets, MMP attribution, budget pacing,
-  TAP coverage (Today/Search/Product Pages), and goal CPA benchmarks by country.
-  Use when user says "Apple Search Ads", "ASA", "App Store ads", "Apple ads",
-  "Search Ads", or is advertising a mobile app on iOS.
+description: "Apple Search Ads (ASA) deep analysis for mobile app advertisers. Evaluates campaign structure, bid health, Creative Sets, MMP attribution, budget pacing, TAP coverage (Today/Search/Product Pages), and goal CPA benchmarks by country. Use when user says Apple Search Ads, ASA, App Store ads, Apple ads, Search Ads, or is advertising a mobile app on iOS."
+user-invokable: false
 ---
 
 # Apple Search Ads (ASA) Deep Analysis
@@ -22,19 +18,19 @@ description: >
 
 ### Campaign Structure (25% weight)
 
-**BOFU — Bottom of Funnel (Search Results, Exact Match brand)**
+**BOFU; Bottom of Funnel (Search Results, Exact Match brand)**
 - Brand keyword campaign present (own app name + misspellings)
 - Competitor campaign present (competitor app names as keywords)
 - Category campaigns targeting high-intent generic terms (e.g. "workout app", "budget tracker")
 
-**MOFU — Middle of Funnel (Search Match / broad discovery)**
+**MOFU; Middle of Funnel (Search Match / broad discovery)**
 - Search Match campaigns active in at least one ad group for discovery
-- Search Match ad groups isolated from Exact Match (separate ad groups — never mix)
+- Search Match ad groups isolated from Exact Match (separate ad groups; never mix)
 - Search Terms Report reviewed to mine converting queries for Exact Match promotion
 
 **Campaign Architecture Rules:**
 - Brand / Category / Competitor should be separate campaigns (different CPT bids, budgets)
-- Search Match ad groups isolated from manual keyword ad groups — NEVER mix in same ad group
+- Search Match ad groups isolated from manual keyword ad groups; NEVER mix in same ad group
 - Goal: let Search Match discover, then promote winners to Exact Match campaigns
 
 ### Bid Health (20% weight)
@@ -47,7 +43,7 @@ description: >
 
 **Bid Strategy:**
 - Manual CPT bidding appropriate? (Or use Apple's CPA Goals auto-bidding for scaled accounts)
-- CPA Goals available at campaign level — evaluate if conversion volume supports it (>100 installs/month per campaign)
+- CPA Goals available at campaign level; evaluate if conversion volume supports it (>100 installs/month per campaign)
 - Are bids differentiated by match type? (Brand Exact > Category Exact > Search Match)
 - Keyword-level CPT bids set, not just ad group default?
 
@@ -65,7 +61,7 @@ description: >
 - Screenshot/preview variations aligned with keyword intent (e.g. fitness keywords → fitness screenshots)
 
 **Default (Store Listing) Creative:**
-- App icon, subtitle, and first 3 screenshots optimized — these show in ads by default
+- App icon, subtitle, and first 3 screenshots optimized; these show in ads by default
 - Short description (170 chars) compelling and keyword-rich
 - Preview video present (strongly recommended for TTR improvement)
 
@@ -87,7 +83,7 @@ description: >
 - Privacy threshold considerations: are campaigns getting SKAN postbacks or null reports?
 
 **Attribution Windows:**
-- Default ASA attribution: 30-day click, 1-day view — appropriate for app install goals?
+- Default ASA attribution: 30-day click, 1-day view; appropriate for app install goals?
 - For re-engagement or subscription goals: evaluate longer lookback windows
 
 ### Budget Pacing (10% weight)
@@ -98,9 +94,9 @@ description: >
 - Budget split across placement types aligned with performance (don't over-invest in underperforming placements)
 - Lifetime budget campaigns (if used): check end dates and pacing curves
 
-### TAP Coverage — Placement Types (10% weight)
+### TAP Coverage: Placement Types (10% weight)
 
-ASA offers 4 placement types — evaluate coverage and performance:
+ASA offers 4 placement types; evaluate coverage and performance:
 
 | Placement | Where | Best for | Benchmark CPT |
 |-----------|-------|----------|----------------|
@@ -113,7 +109,7 @@ ASA offers 4 placement types — evaluate coverage and performance:
 - Search Results: must be active (highest intent placement)
 - Search Tab: active for scale? Evaluate CPT and TTR vs Search Results
 - Today Tab: only if budget >$3k/month and brand awareness is a goal (high CPT, low intent)
-- Product Pages: competitive opportunity — are competitor CPPs being targeted?
+- Product Pages: competitive opportunity; are competitor CPPs being targeted?
 
 ### Goal CPA / KPI Assessment (5% weight)
 
@@ -134,7 +130,7 @@ ASA offers 4 placement types — evaluate coverage and performance:
 - Tier 3 (BR, IN, MX): CPT 30-60% below Tier 1; high volume, lower LTV
 
 **Checks:**
-- Actual CPI vs target CPI (from MMP) — flag if >2x target
+- Actual CPI vs target CPI (from MMP); flag if >2x target
 - CPI trend over 30 days (improving or worsening?)
 - Revenue events: is ROAS positive within MMP attribution window?
 

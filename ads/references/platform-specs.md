@@ -10,7 +10,7 @@
 |-----------|-----|-----|------------|
 | Headlines | 3 | 15 | 30 chars each |
 | Descriptions | 2 | 4 | 90 chars each |
-| Display Paths | — | 2 | 15 chars each |
+| Display Paths | N/A | 2 | 15 chars each |
 | Final URL | 1 | 1 | Required |
 
 Best practice: 8-10 headlines, 2-3 descriptions (Claude), 12-15 for Excellent (Google).
@@ -107,9 +107,9 @@ Best practice: 8-10 headlines, 2-3 descriptions (Claude), 12-15 for Excellent (G
 | Component | Recommended | Max |
 |-----------|------------|-----|
 | Primary Text | 125 chars | 2200 |
-| Headline | 27-40 chars | — |
-| Description | 20 chars (carousel) | — |
-| Reels Primary | 72 chars | — |
+| Headline | 27-40 chars | N/A |
+| Description | 20 chars (carousel) | N/A |
+| Reels Primary | 72 chars | N/A |
 
 ### Carousel
 - 2-10 cards, all 1:1 (1080×1080)
@@ -133,7 +133,7 @@ Rated: Above Average / Average / Below Average (10th, 35th, 55th percentile).
 | In-Feed (Non-Spark) | 540×960 (9:16) | 5-60s | 500MB | 516kbps |
 | Spark Ads | Organic specs | Organic | N/A | N/A |
 | TopView | 720×1280 (9:16) | 5-60s | 500MB | 2500kbps |
-| Brand Takeover | 720×1280 | 3-5s | 2MB img / 500MB vid | — |
+| Brand Takeover | 720×1280 | 3-5s | 2MB img / 500MB vid | N/A |
 
 Recommended: 1080×1920, MP4/MOV, H.264, audio required, captions required.
 
@@ -160,7 +160,7 @@ All critical text, logos, CTAs MUST be within safe box.
 | Component | Spec |
 |-----------|------|
 | Image (landscape) | 1200×627 (1.91:1) |
-| Image (square) | 1080×1080 (1:1) — better engagement |
+| Image (square) | 1080×1080 (1:1): better engagement |
 | Max file | 5MB, PNG/JPG |
 | Intro text | 150 chars rec / 600 max |
 | Headline | 70 chars rec / 200 max |

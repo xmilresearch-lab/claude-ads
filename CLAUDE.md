@@ -1,4 +1,4 @@
-# Claude Ads — Paid Advertising Audit & Optimization Skill
+# Claude Ads: Paid Advertising Audit & Optimization Skill
 
 ## Project Overview
 

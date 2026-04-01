@@ -1,11 +1,11 @@
 ---
 name: ads
-description: "Comprehensive paid advertising audit and optimization for any business type. Performs full multi-platform audits (Google Ads, Meta Ads, LinkedIn Ads, TikTok Ads, Microsoft Ads), single-platform deep analysis, conversion tracking health checks, creative quality assessment, budget allocation optimization, bidding strategy evaluation, and compliance verification. Industry detection for SaaS, e-commerce, local service, B2B enterprise, info products, mobile app, real estate, healthcare, finance, and agency. Triggers on: ads, PPC, paid advertising, Google Ads, Meta Ads, Facebook Ads, LinkedIn Ads, TikTok Ads, Microsoft Ads, Bing Ads, ad audit, campaign audit, ROAS, conversion tracking, creative fatigue, bid strategy, brand DNA, generate ads, create campaign, product photography, ad creative generation."
+description: "Multi-platform paid advertising audit and optimization skill. Analyzes Google, Meta, YouTube, LinkedIn, TikTok, Microsoft, and Apple Search Ads. 225+ checks with scoring, parallel agents, industry templates, and AI creative generation."
 argument-hint: "audit | google | meta | youtube | linkedin | tiktok | microsoft | apple | creative | landing | budget | plan <type> | competitor | dna <url> | create | generate | photoshoot"
 license: MIT
 ---
 
-# Ads — Multi-Platform Paid Advertising Audit & Optimization
+# Ads: Multi-Platform Paid Advertising Audit & Optimization
 
 Comprehensive ad account analysis across all major platforms (Google, Meta,
 LinkedIn, TikTok, Microsoft). Orchestrates 17 specialized sub-skills and
@@ -28,24 +28,24 @@ LinkedIn, TikTok, Microsoft). Orchestrates 17 specialized sub-skills and
 | `/ads plan <business-type>` | Strategic ad plan with industry templates |
 | `/ads apple` | Apple Search Ads (ASA) deep analysis |
 | `/ads competitor` | Competitor ad intelligence analysis |
-| `/ads dna <url>` | Extract brand DNA from website → `brand-profile.json` |
-| `/ads create` | Generate campaign concepts + copy briefs → `campaign-brief.md` |
-| `/ads generate` | Generate AI ad images from brief → `ad-assets/` |
+| `/ads dna <url>` | Extract brand DNA from website, outputs `brand-profile.json` |
+| `/ads create` | Generate campaign concepts + copy briefs, outputs `campaign-brief.md` |
+| `/ads generate` | Generate AI ad images from brief, outputs to `ad-assets/` |
 | `/ads photoshoot` | Product photography in 5 styles (Studio, Floating, Ingredient, In Use, Lifestyle) |
 
-## Context Intake (Required — Always Do This First)
+## Context Intake (Required: Always Do This First)
 
 Before any audit or analysis, collect this context. Without it, benchmarks will
 be generic and recommendations may be wrong for the user's situation.
 
 Ask these questions upfront (combine into one message):
 
-1. **Industry / Business type** — Which best describes you?
+1. **Industry / Business type**: Which best describes you?
    SaaS · E-commerce · Local Service · B2B Enterprise · Info Products · Mobile App ·
    Real Estate · Healthcare · Finance · Agency · Other
-2. **Monthly ad spend** — Total budget and per-platform breakdown (approximate is fine)
-3. **Primary goal** — Sales / Revenue · Leads / Demos · App Installs · Calls · Brand
-4. **Active platforms** — Which platforms are you advertising on?
+2. **Monthly ad spend**: Total budget and per-platform breakdown (approximate is fine)
+3. **Primary goal**: Sales / Revenue · Leads / Demos · App Installs · Calls · Brand
+4. **Active platforms**: Which platforms are you advertising on?
 
 If the user provides data upfront (e.g. "audit my Google Ads, I spend $5k/mo on SaaS"),
 extract context from that and proceed without re-asking.
@@ -58,7 +58,7 @@ Use the provided context to:
 ## Orchestration Logic
 
 When the user invokes `/ads audit`, delegate to subagents in parallel:
-1. **Collect context** (see Context Intake above — do this first)
+1. **Collect context** (see Context Intake above; do this first)
 2. Collect account data (exports, screenshots, or pasted metrics)
 3. Detect business type and identify active platforms
 4. Spawn subagents via Task tool with `context: fork`: audit-google, audit-meta, audit-creative, audit-tracking, audit-budget, audit-compliance
@@ -71,7 +71,7 @@ sub-skill directly. Still collect context first if not already provided.
 
 ## Creative Workflow
 
-Sequential pipeline — each step is independently runnable:
+Sequential pipeline (each step is independently runnable):
 1. `/ads dna <url>` → `brand-profile.json` in current directory
 2. `/ads create` → reads profile + optional audit results → `campaign-brief.md`
 3. `/ads generate` → reads brief + profile → `ad-assets/` directory
@@ -79,7 +79,7 @@ Sequential pipeline — each step is independently runnable:
 
 Requires `GOOGLE_API_KEY` (Gemini default) or `ADS_IMAGE_PROVIDER` + matching key.
 If API key is missing, `/ads generate` and `/ads photoshoot` display setup
-instructions and exit — they never fail silently.
+instructions and exit; they never fail silently.
 
 ## Industry Detection
 
@@ -97,7 +97,7 @@ Detect business type from ad account signals:
 
 ## Quality Gates
 
-Hard rules — never violate these:
+Hard rules (never violate these):
 - Never recommend Broad Match without Smart Bidding (Google)
 - 3x Kill Rule: flag any ad group/campaign with CPA >3x target for pause
 - Budget sufficiency: Meta ≥5x CPA per ad set, TikTok ≥50x CPA per ad group
@@ -108,33 +108,33 @@ Hard rules — never violate these:
 
 ## Reference Files
 
-Load these on-demand as needed — do NOT load all at startup.
+Load these on-demand as needed; do NOT load all at startup.
 
 **Path resolution:** All references are installed at `~/.claude/skills/ads/references/`.
 When sub-skills or agents reference `ads/references/*.md`, resolve to
 `~/.claude/skills/ads/references/*.md`.
 
-- `references/scoring-system.md` — Weighted scoring algorithm and grading thresholds
-- `references/benchmarks.md` — Industry benchmarks by platform (CPC, CTR, CVR, ROAS)
-- `references/bidding-strategies.md` — Bidding decision trees per platform
-- `references/budget-allocation.md` — Platform selection matrix, scaling rules, MER
-- `references/platform-specs.md` — Creative specifications across all platforms
-- `references/conversion-tracking.md` — Pixel, CAPI, EMQ, ttclid implementation
-- `references/compliance.md` — Regulatory requirements, ad policies, privacy
-- `references/google-audit.md` — 74-check Google Ads audit checklist
-- `references/meta-audit.md` — 46-check Meta Ads audit checklist
-- `references/linkedin-audit.md` — 25-check LinkedIn Ads audit checklist
-- `references/tiktok-audit.md` — 25-check TikTok Ads audit checklist
-- `references/microsoft-audit.md` — 20-check Microsoft Ads audit checklist
-- `references/brand-dna-template.md` — Brand DNA schema and extraction guide
-- `references/image-providers.md` — Provider config (Gemini/OpenAI/Stability/Replicate)
-- `references/google-creative-specs.md` — PMax/RSA/YouTube generation-ready specs
-- `references/meta-creative-specs.md` — Feed/Reels/Stories specs + safe zones
-- `references/linkedin-creative-specs.md` — Single image/video B2B constraints
-- `references/tiktok-creative-specs.md` — 9:16 only + safe zone overlay
-- `references/youtube-creative-specs.md` — Skippable/Bumper/Shorts/Thumbnail
-- `references/microsoft-creative-specs.md` — Multimedia Ads + RSA subset
-- `references/gaql-notes.md` — GAQL field compatibility, deduplication patterns, filter scope best practices
+- `references/scoring-system.md`: Weighted scoring algorithm and grading thresholds
+- `references/benchmarks.md`: Industry benchmarks by platform (CPC, CTR, CVR, ROAS)
+- `references/bidding-strategies.md`: Bidding decision trees per platform
+- `references/budget-allocation.md`: Platform selection matrix, scaling rules, MER
+- `references/platform-specs.md`: Creative specifications across all platforms
+- `references/conversion-tracking.md`: Pixel, CAPI, EMQ, ttclid implementation
+- `references/compliance.md`: Regulatory requirements, ad policies, privacy
+- `references/google-audit.md`: 74-check Google Ads audit checklist
+- `references/meta-audit.md`: 46-check Meta Ads audit checklist
+- `references/linkedin-audit.md`: 25-check LinkedIn Ads audit checklist
+- `references/tiktok-audit.md`: 25-check TikTok Ads audit checklist
+- `references/microsoft-audit.md`: 20-check Microsoft Ads audit checklist
+- `references/brand-dna-template.md`: Brand DNA schema and extraction guide
+- `references/image-providers.md`: Provider config (Gemini/OpenAI/Stability/Replicate)
+- `references/google-creative-specs.md`: PMax/RSA/YouTube generation-ready specs
+- `references/meta-creative-specs.md`: Feed/Reels/Stories specs + safe zones
+- `references/linkedin-creative-specs.md`: Single image/video B2B constraints
+- `references/tiktok-creative-specs.md`: 9:16 only + safe zone overlay
+- `references/youtube-creative-specs.md`: Skippable/Bumper/Shorts/Thumbnail
+- `references/microsoft-creative-specs.md`: Multimedia Ads + RSA subset
+- `references/gaql-notes.md`: GAQL field compatibility, deduplication patterns, filter scope best practices
 
 ## Scoring Methodology
 
@@ -168,34 +168,34 @@ Aggregate = Sum(Platform_Score x Platform_Budget_Share)
 
 This skill orchestrates 17 specialized sub-skills:
 
-1. **ads-audit** — Full multi-platform audit with parallel delegation
-2. **ads-google** — Google Ads deep analysis (Search, PMax, YouTube)
-3. **ads-meta** — Meta Ads deep analysis (FB, IG, Advantage+)
-4. **ads-youtube** — YouTube Ads specific analysis
-5. **ads-linkedin** — LinkedIn Ads deep analysis
-6. **ads-tiktok** — TikTok Ads deep analysis
-7. **ads-microsoft** — Microsoft/Bing Ads deep analysis
-8. **ads-creative** — Cross-platform creative quality audit
-9. **ads-landing** — Landing page quality for ad campaigns
-10. **ads-budget** — Budget allocation and bidding strategy
-11. **ads-plan** — Strategic ad planning with industry templates
-12. **ads-competitor** — Competitor ad intelligence
-13. **ads-apple** — Apple Search Ads (ASA) deep analysis
-14. **ads-dna** — Brand DNA extraction from website URL
-15. **ads-create** — Campaign concepts, copy decks, creative briefs
-16. **ads-generate** — AI image generation with pluggable providers
-17. **ads-photoshoot** — Product photography in 5 professional styles
+1. **ads-audit**: Full multi-platform audit with parallel delegation
+2. **ads-google**: Google Ads deep analysis (Search, PMax, YouTube)
+3. **ads-meta**: Meta Ads deep analysis (FB, IG, Advantage+)
+4. **ads-youtube**: YouTube Ads specific analysis
+5. **ads-linkedin**: LinkedIn Ads deep analysis
+6. **ads-tiktok**: TikTok Ads deep analysis
+7. **ads-microsoft**: Microsoft/Bing Ads deep analysis
+8. **ads-creative**: Cross-platform creative quality audit
+9. **ads-landing**: Landing page quality for ad campaigns
+10. **ads-budget**: Budget allocation and bidding strategy
+11. **ads-plan**: Strategic ad planning with industry templates
+12. **ads-competitor**: Competitor ad intelligence
+13. **ads-apple**: Apple Search Ads (ASA) deep analysis
+14. **ads-dna**: Brand DNA extraction from website URL
+15. **ads-create**: Campaign concepts, copy decks, creative briefs
+16. **ads-generate**: AI image generation with pluggable providers
+17. **ads-photoshoot**: Product photography in 5 professional styles
 
 ## Subagents
 
 For parallel analysis during full audits:
-- `audit-google` — Google Ads checks (G01-G74)
-- `audit-meta` — Meta Ads checks (M01-M46)
-- `audit-creative` — Creative quality for LinkedIn, TikTok, Microsoft
-- `audit-tracking` — Conversion tracking health across all platforms
-- `audit-budget` — Budget, bidding, structure for LinkedIn, TikTok, Microsoft
-- `audit-compliance` — Compliance, settings, performance across all platforms
-- `creative-strategist` — Campaign concepts from brand profile + audit results (Opus, maxTurns: 25)
-- `visual-designer` — Image generation with brand injection via generate_image.py (Sonnet, maxTurns: 30)
-- `copy-writer` — Headlines, CTAs, primary text within platform limits (Sonnet, maxTurns: 20)
-- `format-adapter` — Asset dimension validation and spec compliance reporting (Haiku, maxTurns: 15)
+- `audit-google`: Google Ads checks (G01-G74)
+- `audit-meta`: Meta Ads checks (M01-M46)
+- `audit-creative`: Creative quality for LinkedIn, TikTok, Microsoft
+- `audit-tracking`: Conversion tracking health across all platforms
+- `audit-budget`: Budget, bidding, structure for LinkedIn, TikTok, Microsoft
+- `audit-compliance`: Compliance, settings, performance across all platforms
+- `creative-strategist`: Campaign concepts from brand profile + audit results (Opus, maxTurns: 25)
+- `visual-designer`: Image generation with brand injection via generate_image.py (Sonnet, maxTurns: 30)
+- `copy-writer`: Headlines, CTAs, primary text within platform limits (Sonnet, maxTurns: 20)
+- `format-adapter`: Asset dimension validation and spec compliance reporting (Haiku, maxTurns: 15)

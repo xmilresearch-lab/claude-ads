@@ -1,8 +1,8 @@
 <p align="center">
-  <img src="assets/banner.png" alt="Claude Ads — Paid Advertising Audit Skill for Claude Code" width="100%">
+  <img src="assets/banner.png" alt="Claude Ads: Paid Advertising Audit Skill for Claude Code" width="100%">
 </p>
 
-# Claude Ads — Paid Advertising Audit Skill for Claude Code
+# Claude Ads: Paid Advertising Audit Skill for Claude Code
 
 Comprehensive paid advertising audit and optimization skill for Claude Code. Covers Google Ads, Meta Ads, YouTube Ads, LinkedIn Ads, TikTok Ads, Microsoft Ads, and Apple Search Ads with 190+ audit checks, industry-specific templates, and parallel subagent delegation.
 
@@ -108,12 +108,12 @@ claude
 **Full Multi-Platform Audit**
 
 Spawns 6 parallel subagents to analyze your ad accounts simultaneously:
-- **audit-google** — 74 checks across Search, PMax, Display, YouTube, Demand Gen
-- **audit-meta** — 46 checks across Pixel/CAPI, Creative, Structure, Audience
-- **audit-creative** — 21 cross-platform creative quality checks
-- **audit-tracking** — 7 conversion tracking health checks
-- **audit-budget** — 24 budget and bidding strategy checks
-- **audit-compliance** — 18 compliance and regulatory checks
+- **audit-google**: 74 checks across Search, PMax, Display, YouTube, Demand Gen
+- **audit-meta**: 46 checks across Pixel/CAPI, Creative, Structure, Audience
+- **audit-creative**: 21 cross-platform creative quality checks
+- **audit-tracking**: 7 conversion tracking health checks
+- **audit-budget**: 24 budget and bidding strategy checks
+- **audit-compliance**: 18 compliance and regulatory checks
 
 Generates a unified **Ads Health Score (0-100)** with prioritized action plan.
 
@@ -123,17 +123,17 @@ Generates a unified **Ads Health Score (0-100)** with prioritized action plan.
 Industry-specific templates with platform mix, campaign architecture, creative strategy, targeting, budget guidelines, and KPI targets.
 
 **Supported business types:**
-- `saas` — Trial/demo focus, Google + LinkedIn primary
-- `ecommerce` — Shopping/PMax, ROAS-focused, seasonal
-- `local-service` — Google Search + LSA, call tracking, geo radius
-- `b2b-enterprise` — LinkedIn ABM, long sales cycle, pipeline metrics
-- `info-products` — Meta + YouTube, webinar/VSL funnels
-- `mobile-app` — Meta + Google UAC, MMP required, LTV:CPI
-- `real-estate` — Special Ad Category (housing), buyer/seller campaigns
-- `healthcare` — HIPAA compliance, LegitScript, restricted targeting
-- `finance` — Special Ad Category (credit), required disclosures
-- `agency` — Multi-client management, reporting framework
-- `generic` — Universal template with platform selection questionnaire
+- `saas`: Trial/demo focus, Google + LinkedIn primary
+- `ecommerce`: Shopping/PMax, ROAS-focused, seasonal
+- `local-service`: Google Search + LSA, call tracking, geo radius
+- `b2b-enterprise`: LinkedIn ABM, long sales cycle, pipeline metrics
+- `info-products`: Meta + YouTube, webinar/VSL funnels
+- `mobile-app`: Meta + Google UAC, MMP required, LTV:CPI
+- `real-estate`: Special Ad Category (housing), buyer/seller campaigns
+- `healthcare`: HIPAA compliance, LegitScript, restricted targeting
+- `finance`: Special Ad Category (credit), required disclosures
+- `agency`: Multi-client management, reporting framework
+- `generic`: Universal template with platform selection questionnaire
 
 ## Features
 
@@ -189,17 +189,17 @@ Hard rules enforced during every audit:
 1. **Orchestrator** (`/ads`) routes commands to specialized sub-skills
 2. **Sub-skills** provide deep single-domain analysis with structured output
 3. **Agents** run in parallel during full audits for maximum speed
-4. **References** load on-demand (RAG pattern) — only what's needed per analysis
+4. **References** load on-demand (RAG pattern); only what's needed per analysis
 5. **Templates** provide industry-specific strategy frameworks
 
 ## How It Analyzes Your Ads
 
-**Claude Ads works with data you provide** — exports, screenshots, or pasted metrics from your ad platform dashboards. It does not connect to any ad platform API automatically.
+**Claude Ads works with data you provide**; exports, screenshots, or pasted metrics from your ad platform dashboards. It does not connect to any ad platform API automatically.
 
 **To get accurate, account-specific recommendations:**
 1. Export your account data (last 30 days recommended)
 2. Run the relevant command: `/ads google`, `/ads audit`, etc.
-3. Claude will ask for your industry and budget context first — provide these for relevant benchmarks
+3. Claude will ask for your industry and budget context first; provide these for relevant benchmarks
 4. Paste or share your data when prompted
 
 ### Live Data Integration (Optional)
@@ -212,10 +212,10 @@ For direct API access without manual exports, install the [Google Ads MCP](https
 No. Claude Ads analyzes data you provide (exports, screenshots, or pasted metrics). It doesn't connect to ad platforms automatically. See the Live Data Integration section above for Google Ads API access via MCP.
 
 **Does it use real account data or generic benchmarks?**
-Benchmarks are based on industry research (WordStream, Triple Whale, etc.) covering 16,000+ campaigns. They're averages — your results will vary by industry, budget level, and account maturity. Always provide your industry and monthly spend when running audits for the most relevant comparisons.
+Benchmarks are based on industry research (WordStream, Triple Whale, etc.) covering 16,000+ campaigns. They're averages; your results will vary by industry, budget level, and account maturity. Always provide your industry and monthly spend when running audits for the most relevant comparisons.
 
 **Is ad posting or campaign creation still manual?**
-Yes. Claude Ads is an audit and strategy tool. It finds issues, recommends fixes, and builds campaign plans — but creating, editing, or posting ads remains manual in your ad platform.
+Yes. Claude Ads is an audit and strategy tool. It finds issues, recommends fixes, and builds campaign plans; but creating, editing, or posting ads remains manual in your ad platform.
 
 **Why do some recommendations seem off for my account size?**
 Benchmarks and best practices differ significantly between a $500/month account and a $50k/month account. Always tell Claude your budget upfront: *"I spend $2k/month on Google Ads for a local plumbing business"* gives much better results than running `/ads google` without context.
@@ -244,7 +244,7 @@ irm https://raw.githubusercontent.com/AgriciDaniel/claude-ads/main/uninstall.ps1
 
 ## Related Projects
 
-- [Claude SEO](https://github.com/AgriciDaniel/claude-seo) — Comprehensive SEO analysis skill for Claude Code
+- [Claude SEO](https://github.com/AgriciDaniel/claude-seo); Comprehensive SEO analysis skill for Claude Code
 
 ## License
 

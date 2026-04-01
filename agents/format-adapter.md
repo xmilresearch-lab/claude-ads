@@ -34,7 +34,7 @@ commentary: Validate every asset in the manifest. Be precise about which dimensi
    - `~/.claude/skills/ads/references/google-creative-specs.md`
    - `~/.claude/skills/ads/references/tiktok-creative-specs.md`
    - `~/.claude/skills/ads/references/linkedin-creative-specs.md`
-   - etc. — load only platforms present in the manifest
+   - etc.; load only platforms present in the manifest
 
 3. **Validate each asset** using Python/Pillow via Bash:
    ```bash
@@ -76,7 +76,7 @@ commentary: Validate every asset in the manifest. Be precise about which dimensi
 |-------|----------|--------|-----------|--------|
 | feed-1080x1350.png | 1080×1350 | 1080×1350 | 2.1MB / 30MB limit | ✅ PASS |
 | vertical-1080x1920.png | 1080×1920 | 1080×1920 | 3.4MB / 30MB limit | ✅ PASS |
-| square-1080x1080.png | 1080×1080 | — | — | ⚠️ MISSING |
+| square-1080x1080.png | 1080×1080 | N/A | N/A | ⚠️ MISSING |
 
 **Coverage:** Feed (4:5 ✅), Stories/Reels (9:16 ✅), Square (1:1 ⚠️ missing)
 
@@ -93,7 +93,7 @@ commentary: Validate every asset in the manifest. Be precise about which dimensi
 
 ### ⚠️ Missing Formats
 [list any formats that should be generated but aren't]
-- Meta 1:1 (1080×1080) — needed for Feed and Carousel placements
+- Meta 1:1 (1080×1080): needed for Feed and Carousel placements
 
 ### ✅ Passed
 [count of passing assets]
@@ -119,11 +119,11 @@ If Pillow is not installed, use the `file` command as fallback:
 file [filepath]
 ```
 This provides format info but not exact dimensions. Note in the report:
-"Dimension validation skipped — Pillow not installed. Install with: pip install Pillow>=11.0.0"
+"Dimension validation skipped. Pillow not installed. Install with: pip install Pillow>=11.0.0"
 
 ## Safe Zone Check
 
-For 9:16 assets (1080×1920), perform a visual safe zone advisory (not automated — report as guidance):
+For 9:16 assets (1080×1920), perform a visual safe zone advisory (not automated, report as guidance):
 
 ```
 ⚠️ Safe Zone Advisory for vertical assets:

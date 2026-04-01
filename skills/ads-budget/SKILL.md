@@ -1,11 +1,7 @@
 ---
 name: ads-budget
-description: >
-  Budget allocation and bidding strategy review across all ad platforms.
-  Evaluates spend distribution, bidding strategy appropriateness, scaling
-  readiness, and identifies campaigns to kill or scale. Uses 70/20/10 rule,
-  3x Kill Rule, and 20% scaling rule. Use when user says "budget allocation",
-  "bidding strategy", "ad spend", "ROAS target", "media budget", or "scaling".
+description: "Budget allocation and bidding strategy review across all ad platforms. Evaluates spend distribution, bidding strategy appropriateness, scaling readiness, and identifies campaigns to kill or scale. Uses 70/20/10 rule, 3x Kill Rule, and 20% scaling rule. Use when user says budget allocation, bidding strategy, ad spend, ROAS target, media budget, or scaling."
+user-invokable: false
 ---
 
 # Budget Allocation & Bidding Strategy
@@ -42,7 +38,7 @@ description: >
 | Real Estate | Google Search, Meta | YouTube | Microsoft |
 | Healthcare | Google Search | Meta | Microsoft, YouTube |
 | Finance | Google Search, Meta | LinkedIn | Microsoft |
-| Agency (clients) | Varies by client | — | — |
+| Agency (clients) | Varies by client | N/A | N/A |
 
 ### Budget Sufficiency Rules
 
@@ -161,7 +157,7 @@ Budget Sufficiency:   █████░░░░░  XX/100
 ```
 
 ### Deliverables
-- `BUDGET-STRATEGY-REPORT.md` — Full allocation and bidding analysis
+- `BUDGET-STRATEGY-REPORT.md`: Full allocation and bidding analysis
 - Current vs recommended budget split (pie chart data)
 - Bidding strategy recommendations per platform/campaign
 - Scale list: campaigns ready for more budget

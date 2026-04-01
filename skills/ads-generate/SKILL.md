@@ -1,15 +1,10 @@
 ---
 name: ads-generate
-description: >
-  AI image generation for paid ad creatives. Reads campaign-brief.md and
-  brand-profile.json to produce platform-sized ad images using Gemini
-  (default) or a configured provider. Requires GOOGLE_API_KEY or
-  ADS_IMAGE_PROVIDER + matching key. Triggers on: "generate ads", "create
-  images", "make ad creatives", "generate visuals", "create ad images",
-  "generate campaign images", "make the images", "generate from brief".
+description: "AI image generation for paid ad creatives. Reads campaign-brief.md and brand-profile.json to produce platform-sized ad images using Gemini (default) or a configured provider. Requires GOOGLE_API_KEY or ADS_IMAGE_PROVIDER + matching key. Triggers on: generate ads, create images, make ad creatives, generate visuals, create ad images, generate campaign images, make the images, generate from brief."
+user-invokable: false
 ---
 
-# Ads Generate — AI Ad Image Generator
+# Ads Generate: AI Ad Image Generator
 
 Generates platform-sized ad creative images from your campaign brief and brand
 profile. Uses Gemini by default (`gemini-2.5-flash-image`, stable GA).
@@ -28,7 +23,7 @@ profile. Uses Gemini by default (`gemini-2.5-flash-image`, stable GA).
 **Required before running:**
 
 ```bash
-# Gemini (default — recommended)
+# Gemini (default: recommended)
 export GOOGLE_API_KEY="your-key"
 # Get a key: console.cloud.google.com/apis/credentials
 
@@ -176,6 +171,6 @@ python ~/.claude/skills/ads/scripts/generate_image.py \
 
 ## Reference Files
 
-- `~/.claude/skills/ads/references/image-providers.md` — provider config, pricing, limits
-- `~/.claude/skills/ads/references/[platform]-creative-specs.md` — per-platform specs
-- `~/.claude/skills/ads/references/brand-dna-template.md` — brand injection schema
+- `~/.claude/skills/ads/references/image-providers.md`: provider config, pricing, limits
+- `~/.claude/skills/ads/references/[platform]-creative-specs.md`: per-platform specs
+- `~/.claude/skills/ads/references/brand-dna-template.md`: brand injection schema

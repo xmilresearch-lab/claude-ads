@@ -1,4 +1,4 @@
-# Microsoft Creative Specs — Generation Guide
+# Microsoft Creative Specs: Generation Guide
 
 <!-- Updated: 2026-03-12 -->
 <!-- Source: platform-specs.md + Microsoft Advertising requirements -->
@@ -7,7 +7,7 @@
 ## Purpose
 
 Generation-ready specifications for Microsoft (Bing) Ads creative. Microsoft creative
-is largely a subset of Google creative — most Google assets can be reused directly.
+is largely a subset of Google creative; most Google assets can be reused directly.
 The unique format is the Multimedia Ad.
 
 ---
@@ -37,7 +37,7 @@ Identical to Google RSA character limits:
 |-----------|-----|-----|-----------------|
 | Headlines | 3 | 15 | 30 chars each |
 | Descriptions | 2 | 4 | 90 chars each |
-| Display Paths | — | 2 | 15 chars each |
+| Display Paths | N/A | 2 | 15 chars each |
 
 **Asset reuse:** RSA copy written for Google can be used directly in Microsoft
 with no changes. Use the same headlines and descriptions.
@@ -100,7 +100,7 @@ Most advertisers import Google campaigns to Microsoft. After import:
 **For Multimedia Ads (1200×628):**
 - `"horizontal composition, 1.91:1 aspect ratio"`
 - `"clean professional background"`
-- `"Microsoft Bing search audience — professional, trustworthy aesthetic"`
+- `"Microsoft Bing search audience; professional, trustworthy aesthetic"`
 - `"product or service clearly visible"`
 
 **Tone guidance:** Microsoft's audience skews slightly older (35+) and more professional

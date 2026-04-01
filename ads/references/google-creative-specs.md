@@ -1,4 +1,4 @@
-# Google Creative Specs — Generation Guide
+# Google Creative Specs: Generation Guide
 
 <!-- Updated: 2026-03-12 -->
 <!-- Source: platform-specs.md + Google Ads asset requirements -->
@@ -30,9 +30,9 @@ and YouTube thumbnails.
 ### Generation targets per campaign
 
 Minimum viable set (3 images):
-1. `1200×628` landscape — primary ad creative
-2. `1200×1200` square — feed placements
-3. `960×1200` portrait — mobile-optimized
+1. `1200×628` landscape: primary ad creative
+2. `1200×1200` square: feed placements
+3. `960×1200` portrait: mobile-optimized
 
 Full coverage set (5 images): add `1080×1920` vertical for YouTube Shorts placements.
 
@@ -61,9 +61,9 @@ Generate both 1:1 and 4:5 variants for maximum placement coverage.
 **Thumbnail generation guidelines:**
 - High contrast between subject and background
 - Face or product in center-left position (text overlays go right)
-- Avoid busy backgrounds — viewer scans at thumbnail size
+- Avoid busy backgrounds; viewer scans at thumbnail size
 - Bright, saturated colors outperform muted palettes for CTR
-- Include product or person — abstract imagery underperforms
+- Include product or person; abstract imagery underperforms
 
 ---
 
@@ -73,7 +73,7 @@ Generate both 1:1 and 4:5 variants for maximum placement coverage.
 |-----------|-----|-----|-----------------|
 | Headlines | 3 | 15 | 30 chars each |
 | Descriptions | 2 | 4 | 90 chars each |
-| Display paths | — | 2 | 15 chars each |
+| Display paths | N/A | 2 | 15 chars each |
 
 Best practice: 8+ headlines, 2+ descriptions.
 
@@ -112,8 +112,8 @@ AI Max is Google's broad match + AI-generated creative system. When active:
 ## Aspect Ratio Priority
 
 When generating a single image for Google (time-constrained):
-1. `1200×628` (1.91:1) — covers most placements
-2. `1200×1200` (1:1) — adds feed placements
-3. `960×1200` (4:5) — adds mobile portrait placements
+1. `1200×628` (1.91:1): covers most placements
+2. `1200×1200` (1:1): adds feed placements
+3. `960×1200` (4:5): adds mobile portrait placements
 
 Always generate 1 and 2 at minimum.
