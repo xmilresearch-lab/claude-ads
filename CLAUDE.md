@@ -4,9 +4,9 @@
 
 This repository contains **Claude Ads**, a Tier 4 Claude Code skill for comprehensive
 paid advertising analysis across all major platforms. It follows the Agent Skills open
-standard and the 3-layer architecture (directive, orchestration, execution). 12 sub-skills,
-6 parallel subagents, and 11 industry templates cover Google, Meta, YouTube, LinkedIn,
-TikTok, and Microsoft Ads with 186 weighted audit checks.
+standard and the 3-layer architecture (directive, orchestration, execution). 17 sub-skills,
+10 agents (6 audit + 4 creative), and 11 industry templates cover Google, Meta, YouTube, LinkedIn,
+TikTok, Microsoft, and Apple Search Ads with 225+ weighted audit checks.
 
 ## Architecture
 
@@ -15,9 +15,9 @@ claude-ads/
   CLAUDE.md                          # Project instructions (this file)
   ads/                               # Main orchestrator skill
     SKILL.md                         # Entry point, routing table, core rules
-    references/                      # On-demand knowledge files (12 files)
+    references/                      # On-demand knowledge files (21 files)
     scripts/                         # Python execution scripts
-  skills/                            # 12 specialized sub-skills
+  skills/                            # 17 specialized sub-skills
     ads-audit/SKILL.md              # Full multi-platform audit
     ads-google/SKILL.md            # Google Ads deep analysis
     ads-meta/SKILL.md              # Meta/Facebook Ads analysis
@@ -30,7 +30,7 @@ claude-ads/
     ads-budget/SKILL.md           # Budget allocation optimization
     ads-plan/SKILL.md             # Strategic ad planning by industry
     ads-competitor/SKILL.md       # Competitor ad research
-  agents/                            # 6 parallel subagents
+  agents/                            # 10 agents (6 audit + 4 creative)
     audit-google.md                # Google Ads audit agent
     audit-meta.md                  # Meta Ads audit agent
     audit-creative.md              # Creative quality agent

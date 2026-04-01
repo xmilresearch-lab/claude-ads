@@ -134,6 +134,7 @@ When sub-skills or agents reference `ads/references/*.md`, resolve to
 - `references/tiktok-creative-specs.md` — 9:16 only + safe zone overlay
 - `references/youtube-creative-specs.md` — Skippable/Bumper/Shorts/Thumbnail
 - `references/microsoft-creative-specs.md` — Multimedia Ads + RSA subset
+- `references/gaql-notes.md` — GAQL field compatibility, deduplication patterns, filter scope best practices
 
 ## Scoring Methodology
 

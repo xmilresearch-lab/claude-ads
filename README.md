@@ -170,16 +170,16 @@ Hard rules enforced during every audit:
 - Compliance: auto-check Special Ad Categories (housing/credit/finance)
 
 ### Reference Data
-12 built-in reference files with 2026-current benchmarks, bidding decision trees, platform specifications, compliance requirements, and conversion tracking implementation guides.
+21 built-in reference files with 2026-current benchmarks, bidding decision trees, platform specifications, compliance requirements, and conversion tracking implementation guides.
 
 ## Architecture
 
 ```
 ~/.claude/skills/ads/              # Main orchestrator
-~/.claude/skills/ads/references/   # 12 RAG reference files
-~/.claude/skills/ads-*/            # 13 sub-skills
+~/.claude/skills/ads/references/   # 21 RAG reference files
+~/.claude/skills/ads-*/            # 17 sub-skills
 ~/.claude/skills/ads-plan/assets/  # 11 industry templates
-~/.claude/agents/audit-*.md        # 6 parallel audit agents
+~/.claude/agents/                  # 10 agents (6 audit + 4 creative)
 ```
 
 ### How It Works
