@@ -11,6 +11,8 @@ Comprehensive paid advertising audit and optimization skill for Claude Code. Cov
 [![Version](https://img.shields.io/github/v/release/AgriciDaniel/claude-ads)](https://github.com/AgriciDaniel/claude-ads/releases)
 [![CI](https://img.shields.io/github/actions/workflow/status/AgriciDaniel/claude-ads/ci.yml?branch=main&label=CI)](https://github.com/AgriciDaniel/claude-ads/actions)
 
+> **Blog:** [Read the full ad audit breakdown](https://agricidaniel.com/blog/claude-code-ad-agency)
+
 ## Contents
 
 - [Installation](#installation)
