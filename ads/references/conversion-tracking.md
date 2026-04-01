@@ -64,6 +64,10 @@ gtag('consent', 'update', {
 - Separate micro (AddToCart, TimeOnSite) from macro (Purchase, Lead) conversions
 - Only macro conversions as "Primary" for bidding optimization
 
+### Duplicate Detection Accuracy
+- Only check **ENABLED** conversion actions for duplicates — exclude HIDDEN and REMOVED actions (they cannot cause double-counting)
+- Exclude Smart Campaign system-managed conversions (e.g., 'Smart campaign map clicks to call') from DDA and counting-type checks — their attribution model and counting type are locked by Google and cannot be changed by advertisers
+
 ---
 
 ## Meta Ads Conversion Tracking

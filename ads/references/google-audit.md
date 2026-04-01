@@ -29,8 +29,12 @@
 | G46 | Conversion window appropriate | Medium | Window matches sales cycle (7d ecom, 30-90d B2B, 30d lead gen) | Default 30d without validation | Window mismatched to sales cycle |
 | G47 | Micro vs macro separation | High | Only macro conversions (Purchase, Lead) set as "Primary" for bidding | Some micro events as Primary | All events including micro (AddToCart, TimeOnSite) as Primary |
 | G48 | Attribution model | Medium | Data-driven attribution (DDA) selected | Last Click (intentional) | Rule-based model still active (deprecated Sep 2025) |
+
+**G48/CT-FL5 accuracy notes:** Exclude Smart Campaign system-managed conversions (e.g., 'Smart campaign map clicks to call') from DDA and counting-type checks. Their attribution model and counting type are locked by Google — advertisers cannot change them. Only evaluate advertiser-controlled conversion actions.
 | G49 | Conversion value assignment | High | Dynamic values for ecom; value rules for lead gen | Static values assigned | No conversion values |
 | G-CT1 | No duplicate counting | Critical | GA4 + Google Ads not double-counting same conversion | — | Both GA4 import and native tag counting same action |
+
+**G-CT1 accuracy notes:** Only check ENABLED conversion actions for duplicates. Exclude HIDDEN and REMOVED conversion actions — these are already disabled and cannot cause double-counting. When reporting duplicates, include the conversion action ID, type, origin, category, status, primary/secondary flag, counting type, and attribution model for easy resolution.
 | G-CT2 | GA4 linked and flowing | High | GA4 property linked, data flowing correctly | Linked but data discrepancies | Not linked |
 | G-CT3 | Google Tag firing | Critical | gtag.js or GTM firing correctly on all pages | Firing on most pages (>90%) | Tag missing or broken on key pages |
 
@@ -43,10 +47,18 @@
 | G13 | Search term audit recency | Critical | Search terms reviewed within last 14 days | Reviewed within 30 days | Not reviewed in >30 days |
 | G14 | Negative keyword lists exist | Critical | ≥3 theme-based lists (Competitor, Jobs, Free, Irrelevant) | 1-2 lists exist | No negative keyword lists |
 | G15 | Account-level negatives applied | High | Negative lists applied at account or all-campaign level | Applied to some campaigns only | Not applied |
+
+**G14/G15 accuracy notes:** Count both campaign-level negatives AND Shared Negative Keyword Lists when evaluating coverage. Campaigns covered by shared lists should NOT be flagged as "missing negatives." Report per-campaign breakdown showing direct negatives vs. shared list assignments for clear remediation paths.
 | G16 | Wasted spend on irrelevant terms | Critical | <5% of spend on irrelevant search terms (last 30d) | 5-15% on irrelevant terms | >15% on irrelevant terms |
+
+**G16/G-WS1 accuracy notes:** Only flag search terms as "wasted" if they have >$10 spend AND 0 conversions. Long-tail terms with minimal spend (<$10) are normal exploration, not waste. When reporting, show top 10 wasters with spend and click details.
 | G17 | Broad match + smart bidding pairing | Critical | No Broad Match keywords running on Manual CPC | — | Broad Match + Manual CPC active |
+
+**G17/FL04 legacy BMM heuristic:** Google stripped '+' prefixes from Broad Match Modified keywords during the 2021 migration but kept `matchType=BROAD` in the API. BROAD + Manual CPC almost always indicates legacy BMM (behaves as phrase match), NOT intentional broad match. True intentional broad match is always paired with Smart Bidding (tCPA, tROAS, Maximize Conversions/Value). Only flag BROAD keywords in Smart Bidding campaigns as needing review. Skip BROAD + Manual CPC — these are legacy BMM and should not be flagged as failures.
 | G18 | Close variant pollution | High | Exact/Phrase match not triggering irrelevant close variants | Minor close variant issues | Significant irrelevant close variant spend |
 | G19 | Search term visibility | Medium | >60% of search term spend is visible (not hidden) | 40-60% visible | <40% visible |
+
+**G19 accuracy notes:** When computing `totalVisibleSpend`, use ALL fetched search terms before any truncation or top-N limiting. A common error is summing cost from a truncated subset (e.g., top 500 of 2000 terms) which understates visibility. Fetch terms ordered by cost descending to ensure the highest-spend terms are captured first.
 | G-WS1 | Zero-conversion keywords | High | No keywords with >100 clicks and 0 conversions | 1-3 such keywords | >3 keywords with >100 clicks, 0 conversions |
 
 ---
@@ -58,15 +70,23 @@
 | G01 | Campaign naming convention | Medium | Consistent pattern (e.g., [Brand]_[Type]_[Geo]_[Target]) | Partially consistent | No naming convention |
 | G02 | Ad group naming convention | Medium | Matches campaign naming pattern | Partially consistent | No naming convention |
 | G03 | Single theme ad groups | High | Each ad group targets 1 keyword theme (≤10 keywords) | 11-20 keywords with consistent theme | Ad groups with 20+ unrelated keywords (theme drift) |
+
+**G03 accuracy notes:** When evaluating theme coherence: (1) Only count keywords with impressions > 0 — dormant zero-impression keywords don't affect ad serving and shouldn't inflate counts. (2) Exclude paused ad groups — `ENABLED` ad groups only (paused groups can have enabled keywords at criterion level but aren't visible in UI). (3) Deduplicate keywords by text per ad group — the same keyword with BROAD + PHRASE match types is one keyword, not two. (4) Exclude stopword-only keywords (e.g., 'attorney', 'lawyers') from coherence scoring — they carry no thematic signal and dilute coherence scores.
 | G04 | Campaign count per objective | High | ≤5 campaigns per funnel stage/objective | 6-8 campaigns per objective | >8 campaigns per objective (fragmented) |
+
+**G04 accuracy notes:** For multi-location businesses, strip geographic identifiers (city names, state abbreviations, zip codes, metro areas, directional qualifiers like "North"/"South") from campaign names before counting unique objectives. A firm running "Divorce - Chicago", "Divorce - Schaumburg", "Divorce - Naperville" has 1 objective across 3 geos, not 3 separate objectives. Preserve PPC-meaningful terms (brand, nonbrand, pmax, remarketing, etc.).
 | G05 | Brand vs Non-Brand separation | Critical | Brand and non-brand in separate campaigns | — | Brand and non-brand mixed in same campaign |
+
+**G05/G07/G-PM3 brand detection:** Don't rely solely on campaign naming conventions. Derive brand tokens from the account/business name and scan actual keyword text for brand terms. Classify campaigns by keyword composition: >50% brand keywords = brand campaign. This catches mislabeled campaigns and provides accurate brand vs. non-brand separation.
 | G06 | PMax present for eligible accounts | Medium | PMax active for accounts with conversion history | PMax tested but paused | No PMax tested despite eligibility |
 | G07 | Search + PMax overlap | High | Brand exclusions configured in PMax when Search brand campaign exists | Partial brand exclusions | No brand exclusions in PMax alongside brand Search |
 | G08 | Budget allocation matches priority | High | Top-performing campaigns not budget-limited | Minor budget constraints on top performers | Top performers severely budget-limited |
 | G09 | Campaign daily budget vs spend | Medium | No campaigns hitting budget cap before 6PM | 1-2 campaigns hitting cap early | Multiple campaigns capped before noon |
 | G10 | Ad schedule configured | Low | Ad schedule set if business has operating hours | — | No schedule despite clear business hours |
 | G11 | Geographic targeting accuracy | High | "People in" (not "People in or interested in") for local | — | "People in or interested in" for local business |
-| G12 | Network settings | High | Search Partners and Display Network disabled for Search (unless intentional) | Search Partners ON (monitored) | Display Network ON for Search campaign |
+| G12 | Network settings | High | Search Partners enabled for additional reach; Display Network disabled for Search (unless intentional) | Search Partners OFF (missing incremental reach) | Display Network ON for Search campaign |
+
+**G12 note:** Search Partners typically provides incremental reach at comparable CPA. Flag Search Partners OFF as a missed opportunity (Warning), not ON. Display Network on Search campaigns remains a Fail.
 
 ---
 

@@ -16,9 +16,11 @@ description: >
 2. Read `ads/references/platform-specs.md` for creative specifications
 3. Read `ads/references/benchmarks.md` for CTR/engagement benchmarks
 4. Read `ads/references/scoring-system.md` for weighted scoring algorithm
-5. Evaluate creative quality per platform
-6. Assess cross-platform creative consistency
-7. Generate production priority recommendations
+5. **Validate**: confirm at least one platform has creative data (assets or performance metrics) before proceeding
+6. Evaluate creative quality per platform
+7. Assess cross-platform creative consistency
+8. **Validate**: verify fatigue signals reference actual performance trends, not assumptions
+9. Generate production priority recommendations
 
 ## Per-Platform Assessment
 

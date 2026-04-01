@@ -17,8 +17,10 @@ description: >
 3. Read `ads/references/platform-specs.md` for video specifications
 4. Read `ads/references/benchmarks.md` for YouTube benchmarks
 5. Read `ads/references/scoring-system.md` for health score algorithm
-6. Evaluate campaign setup, creative quality, targeting, and measurement
-7. Generate YouTube-specific findings report with health score
+6. **Validate**: confirm at least one active video campaign exists before proceeding
+7. Evaluate campaign setup, creative quality, targeting, and measurement
+8. **Validate**: verify all campaign types identified before generating report
+9. Generate YouTube-specific findings report with health score
 
 ## Campaign Types Assessment
 

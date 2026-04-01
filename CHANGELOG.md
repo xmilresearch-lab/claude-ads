@@ -5,6 +5,48 @@ All notable changes to claude-ads are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.0] - 2026-04-01
+
+### Added
+- **marketplace.json** for plugin system discoverability and update mechanism (Issue #14)
+- **Validation gates** in 6 skills — cherry-picked from PR #12 (Tessl):
+  - `ads/SKILL.md`: Task tool orchestration clarity + subagent JSON score verification
+  - `ads-audit`: Platform data availability check + subagent score field verification
+  - `ads-budget`: 14-day minimum for kill/scale decisions + 20-click/$100 data sufficiency
+  - `ads-creative`: Data existence check + assumption prevention gate
+  - `ads-google`: 30-day data minimum + 74-check completeness verification
+  - `ads-youtube`: Active campaign check + campaign type completeness gate
+- **GAQL compatibility reference** (`gaql-notes.md`): known field incompatibilities, deduplication patterns, filter scope best practices, legacy BMM detection heuristic
+- **Google Ads MCP integration** in ads-google: optional automated data collection via [google-ads-mcp](https://github.com/googleads/google-ads-mcp) with fallback to manual export
+- **Shared negative keyword list support** (G14/G15): campaigns covered by shared lists no longer flagged as "missing negatives"
+- **Keyword-level brand detection** (G05/G07/G-PM3): derives brand tokens from account name, classifies by keyword composition instead of campaign naming conventions
+- **G-SYS1 diagnostic**: guidance for reporting API fetch failures instead of silently skipping checks
+- **`dependencies` label** created for Dependabot PR automation
+
+### Fixed
+- **G03**: False positives from zero-impression keywords, paused ad groups, match type duplication, and stopword-only keywords diluting coherence scores (~18% false positive reduction)
+- **G04**: False positives from multi-location campaign structures — now strips geographic identifiers before counting objectives
+- **G12**: Inverted Search Partners logic — flag OFF as missed opportunity (was incorrectly flagging ON)
+- **G16/G-WS1**: Wasted spend threshold raised to >$10 spend + 0 conversions (was flagging all non-converting terms including long-tail exploration)
+- **G17/FL04**: Legacy BMM false positives — BROAD + Manual CPC is legacy BMM (not intentional broad). Only flags BROAD in Smart Bidding campaigns
+- **G19**: Search term visibility calculated from ALL fetched terms before truncation (was computing from truncated subset)
+- **G48/CT-FL5**: False flags on Smart Campaign system-managed conversions excluded from DDA and counting-type checks
+- **G-CT1**: False duplicate detection on HIDDEN/REMOVED conversion actions — now only checks ENABLED actions
+- **Conversion tracking**: Added duplicate detection accuracy rules (exclude HIDDEN/REMOVED, exclude Smart Campaign system conversions)
+
+### Changed
+- Dependabot: actions/checkout v4 → v6, actions/setup-python v5 → v6, Pillow `<12.0.0` → `<13.0.0`
+- Version aligned to 1.3.0 (plugin.json was incorrectly at 2.0.0)
+- Reference file count: 20 → 21 (added gaql-notes.md)
+
+### Community
+- Closed PRs #4, #5, #13 (out of scope: white-label rebrand, campaign system, FastAPI web app)
+- Cherry-picked validation improvements from PR #12 (Tessl) — 6 of 18 files
+- Replied to Discussion #11 ("Does this really work?")
+- Closed Issue #14 (marketplace.json shipped)
+- GAQL accuracy fixes sourced from akarls-web fork (44 commits of audit engine improvements)
+- MCP integration sourced from double-agency fork
+
 ## [1.2.0] - 2026-03-12
 
 ### Added

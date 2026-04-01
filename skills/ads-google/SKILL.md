@@ -13,12 +13,14 @@ description: >
 ## Process
 
 1. Collect Google Ads account data (export, Change History, Search Terms Report)
-2. Read `ads/references/google-audit.md` for full 74-check audit
-3. Read `ads/references/benchmarks.md` for Google-specific benchmarks
-4. Read `ads/references/scoring-system.md` for weighted scoring
-5. Evaluate all applicable checks as PASS, WARNING, or FAIL
-6. Calculate Google Ads Health Score (0-100)
-7. Generate findings report with action plan
+2. **Validate**: confirm data covers ≥30 days and includes Search Terms Report before proceeding
+3. Read `ads/references/google-audit.md` for full 74-check audit
+4. Read `ads/references/benchmarks.md` for Google-specific benchmarks
+5. Read `ads/references/scoring-system.md` for weighted scoring
+6. Evaluate all applicable checks as PASS, WARNING, or FAIL
+7. **Validate**: confirm all 74 checks evaluated before calculating score
+8. Calculate Google Ads Health Score (0-100)
+9. Generate findings report with action plan
 
 ## What to Analyze
 
@@ -81,6 +83,30 @@ description: >
 - Device bid adjustments set based on performance data
 - Location targeting: "Presence" not "Presence or Interest"
 - Network settings: Search Partners reviewed, Display opt-out for Search
+
+## GAQL & Data Accuracy
+
+Before analyzing data, read `ads/references/gaql-notes.md` for known GAQL field incompatibilities,
+deduplication patterns, and filter scope best practices. Key rules:
+
+- Deduplicate keywords by `(ad_group_id + keyword_text + match_type)` before any analysis
+- Only analyze ENABLED campaigns and ad groups (exclude paused/removed)
+- Filter to keywords with impressions > 0 for theme coherence checks (G03)
+- Apply legacy BMM heuristic: BROAD + Manual CPC = legacy BMM, not intentional broad (G17)
+- Only flag wasted spend on terms with >$10 spend AND 0 conversions (G16)
+- Count shared negative keyword lists alongside campaign-level negatives (G14/G15)
+
+## Google Ads MCP Integration (Optional)
+
+For automated data collection, connect the [Google Ads MCP server](https://github.com/googleads/google-ads-mcp):
+
+- **Tools available**: `search` (GAQL queries), `list_accessible_customers`
+- **Setup**: Configure in `.mcp.json` or Claude Code MCP settings
+- **Customer ID**: Extract from CLAUDE.md under Accounts > Google Ads, or ask the user
+- **Fallback**: If MCP is not configured, fall back to manual data export (the default workflow)
+
+When MCP is available, use it to pull Search Terms Reports, keyword data, conversion actions,
+and campaign structure automatically instead of requiring manual exports.
 
 ## PMax Deep Dive
 

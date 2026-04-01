@@ -90,7 +90,7 @@ main() {
     echo "    • 1 main skill (ads orchestrator)"
     echo "    • 17 sub-skills (platform + functional + creative)"
     echo "    • 10 agents (6 audit + 4 creative)"
-    echo "    • 20 reference files"
+    echo "    • 21 reference files"
     echo "    • 11 industry templates"
     echo ""
     echo "Usage:"
