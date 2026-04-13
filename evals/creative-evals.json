@@ -81,7 +81,7 @@
     "prompt": "create ad creatives for my Meta campaign",
     "expected_skill": "ads-generate",
     "should_trigger": true,
-    "notes": "Ad creative generation — Meta specific"
+    "notes": "Ad creative generation, Meta specific"
   },
   {
     "id": "generate-003",
@@ -130,41 +130,41 @@
     "prompt": "audit my Google Ads account, I spend $10k/mo on SaaS",
     "expected_skill": "ads-audit",
     "should_trigger": false,
-    "notes": "Audit command — must NOT trigger any creative skills"
+    "notes": "Audit command. Must NOT trigger any creative skills"
   },
   {
     "id": "negative-002",
     "prompt": "what's my ROAS on Meta this month?",
     "expected_skill": "ads-meta",
     "should_trigger": false,
-    "notes": "Performance analysis — must NOT trigger ads-generate or ads-create"
+    "notes": "Performance analysis. Must NOT trigger ads-generate or ads-create"
   },
   {
     "id": "negative-003",
     "prompt": "check my conversion tracking setup",
     "expected_skill": "ads-audit",
     "should_trigger": false,
-    "notes": "Technical audit — must NOT trigger creative skills"
+    "notes": "Technical audit. Must NOT trigger creative skills"
   },
   {
     "id": "negative-004",
     "prompt": "my TikTok ads have low CTR, what should I fix?",
     "expected_skill": "ads-tiktok",
     "should_trigger": false,
-    "notes": "Performance issue analysis — must NOT trigger ads-generate"
+    "notes": "Performance issue analysis. Must NOT trigger ads-generate"
   },
   {
     "id": "negative-005",
     "prompt": "analyze my ad budget allocation across platforms",
     "expected_skill": "ads-budget",
     "should_trigger": false,
-    "notes": "Budget analysis — must NOT trigger creative skills"
+    "notes": "Budget analysis. Must NOT trigger creative skills"
   },
   {
     "id": "negative-006",
     "prompt": "I need a landing page audit for my ads campaign",
     "expected_skill": "ads-landing",
     "should_trigger": false,
-    "notes": "Landing page audit — must NOT trigger ads-dna or ads-create"
+    "notes": "Landing page audit. Must NOT trigger ads-dna or ads-create"
   }
 ]

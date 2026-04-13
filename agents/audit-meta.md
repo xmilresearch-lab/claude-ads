@@ -39,14 +39,14 @@ commentary: CTR decline over 14 days is the primary creative fatigue signal. Che
 5. Identify Quick Wins (Critical/High severity, <15 min fix time)
 6. Write detailed findings to output file
 
-## Audit Categories (46 Checks)
+## Audit Categories (50 Checks)
 
 | Category | Weight | Checks |
 |----------|--------|--------|
-| Pixel / CAPI Health | 30% | M01-M10 (10 checks) |
-| Creative (Diversity & Fatigue) | 30% | M25-M32, M-CR1 to M-CR4 (12 checks) |
-| Account Structure | 20% | M11-M18, M33-M40, M-ST1, M-ST2 (18 checks) |
-| Audience & Targeting | 20% | M19-M24 (6 checks) |
+| Pixel / CAPI Health | 30% | M01-M10, M-AT1 (11 checks) |
+| Creative (Diversity & Fatigue) | 30% | M25-M32, M-CR1 to M-CR4, M-AN1 (13 checks) |
+| Account Structure | 20% | M11-M18, M33-M40, M-ST1, M-ST2, M-IA1 (19 checks) |
+| Audience & Targeting | 20% | M19-M24, M-TH1 (7 checks) |
 
 ## Critical Checks (Must Evaluate First)
 
@@ -72,6 +72,13 @@ These checks have severity multiplier 5.0x:
 | CTR | ≥1.0% | 0.5-1.0% | <0.5% |
 | Budget per ad set | ≥5x CPA | 2-5x CPA | <2x CPA |
 | Learning Limited | <30% | 30-50% | >50% |
+
+## Andromeda, API & Metric Changes
+
+- M-AN1: Evaluate Andromeda creative diversity. Flag accounts with <10 genuinely distinct creatives. Similarity Score >60% across ad set = retrieval suppression
+- M-AT1: Flag accounts still configured for Offline Conversions API (discontinued May 2025)
+- M-IA1: Flag accounts showing sudden CTR drops around Feb 2025, likely caused by link clicks metric redefinition (now excludes social engagement clicks), not performance decline
+- M-TH1: Verify creative strategy accounts for Andromeda clustering. 100 minor variations = no better than 10 genuinely distinct concepts
 
 ## Advantage+ Checks
 

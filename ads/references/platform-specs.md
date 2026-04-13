@@ -1,7 +1,7 @@
 # Platform Creative Specifications
 
-<!-- Updated: 2026-02-10 -->
-<!-- Sources: Google Research PDF 3, Claude Research -->
+<!-- Updated: 2026-04-13 | v1.5 -->
+<!-- Sources: Google Research PDF 3, Claude Research, 2026 Platform Research -->
 
 ## Google Ads
 
@@ -60,6 +60,7 @@ Best practice: 8-10 headlines, 2-3 descriptions (Claude), 12-15 for Excellent (G
 | YouTube Shorts | 9:16 | 1080×1920 | ≤60s | Swipe |
 
 **YouTube Shorts Safe Zone:** Center 1080×1420px. Bottom 480px = UI overlay.
+**Shorts CTA timing:** CTA button appears at **3 seconds** for PMax/App/Demand Gen campaigns, **10 seconds** for Video View/Reach campaigns. Music/voiceover increases conversions by 20%+.
 
 ### Google Extensions / Assets
 | Type | Char Limit | Max Count | Notes |
@@ -146,6 +147,7 @@ Bottom: 0-450px   → Caption, music, CTA, nav bar
 SAFE BOX: X:40-940px, Y:150-1470px (900×1320px)
 ```
 All critical text, logos, CTAs MUST be within safe box.
+**Video Shopping Ads (VSA):** Increase bottom clearance to **450px** for product card overlay. Safe box becomes X:40-940px, Y:150-1320px.
 
 ### Smart+ Specs
 - Up to 30 ad groups per campaign
@@ -214,6 +216,16 @@ All critical text, logos, CTAs MUST be within safe box.
 | Long Headline | 90 chars |
 | Description | 90 chars |
 | Business Name | 25 chars |
+
+### Video Ads (v1.5, April 2025+)
+| Format | Ratio | Resolution | Duration | Notes |
+|--------|-------|-----------|----------|-------|
+| Vertical Video | 9:16 | 1080×1920 | Up to 90s | Added April 2025 |
+| Horizontal Video | 16:9 | 1920×1080 | Up to 90s | Standard |
+| Square Video | 1:1 | 1080×1080 | Up to 90s | Audience Network |
+| CTV Non-Skippable | 16:9 | 1920×1080 | 30s | Netflix, Max, Hulu, Roku, discovery+ |
+
+**Copilot Image Animation (Nov 2025 pilot):** Converts static images to video assets automatically.
 
 ### Microsoft-Unique Extensions
 | Extension | Description |

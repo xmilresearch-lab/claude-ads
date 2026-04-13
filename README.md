@@ -4,7 +4,7 @@
 
 # Claude Ads: Paid Advertising Audit Skill for Claude Code
 
-Comprehensive paid advertising audit and optimization skill for Claude Code. Covers Google Ads, Meta Ads, YouTube Ads, LinkedIn Ads, TikTok Ads, Microsoft Ads, and Apple Search Ads with 225+ audit checks, industry-specific templates, and parallel subagent delegation.
+Comprehensive paid advertising audit and optimization skill for Claude Code. Covers Google Ads, Meta Ads, YouTube Ads, LinkedIn Ads, TikTok Ads, Microsoft Ads, and Apple Ads with **250+ audit checks**, industry-specific templates, parallel subagent delegation, PPC financial modeling, A/B test design, and PDF report generation.
 
 [![Claude Code Skill](https://img.shields.io/badge/Claude%20Code-Skill-blue)](https://claude.ai/claude-code)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
@@ -30,6 +30,17 @@ Comprehensive paid advertising audit and optimization skill for Claude Code. Cov
 
 ## Installation
 
+### Plugin Install (Recommended)
+
+Add the marketplace and install in Claude Code:
+
+```shell
+/plugin marketplace add AgriciDaniel/claude-ads
+/plugin install claude-ads@agricidaniel-claude-ads
+```
+
+This registers claude-ads as a native plugin with auto-updates, namespace isolation, and proper version tracking.
+
 ### One-Command Install (Unix/macOS/Linux)
 
 ```bash
@@ -53,6 +64,10 @@ cd claude-ads
 ```powershell
 .\install.ps1         # Windows PowerShell
 ```
+
+<p align="center">
+  <img src="assets/diagrams/20-install-methods.svg" alt="Installation Methods Comparison" width="100%">
+</p>
 
 ## Demo
 
@@ -86,6 +101,10 @@ claude
 /ads budget
 ```
 
+<p align="center">
+  <img src="assets/diagrams/06-how-it-works.svg" alt="How It Works: 5-Step Process" width="100%">
+</p>
+
 ## Commands
 
 | Command | Description |
@@ -100,22 +119,33 @@ claude
 | `/ads creative` | Cross-platform creative quality audit and fatigue detection |
 | `/ads landing` | Landing page quality assessment for ad campaigns |
 | `/ads budget` | Budget allocation and bidding strategy review |
-| `/ads apple` | Apple Search Ads (ASA) deep analysis (campaign structure, bids, MMP, TAP) |
+| `/ads apple` | Apple Ads deep analysis (campaign structure, bids, CPPs, Maximize Conversions, TAP) |
 | `/ads plan <type>` | Strategic ad plan with industry templates |
 | `/ads competitor` | Competitor ad intelligence across all platforms |
+| `/ads math` | PPC financial calculator (CPA, ROAS, break-even, budget forecasting, LTV:CAC) |
+| `/ads test` | A/B test design (hypothesis framework, significance, sample size, duration) |
+| `/ads report` | Generate PDF audit report for client deliverables |
 
 ### `/ads audit`
 **Full Multi-Platform Audit**
 
 Spawns 6 parallel subagents to analyze your ad accounts simultaneously:
-- **audit-google**: 74 checks across Search, PMax, Display, YouTube, Demand Gen
-- **audit-meta**: 46 checks across Pixel/CAPI, Creative, Structure, Audience
-- **audit-creative**: 21 cross-platform creative quality checks
-- **audit-tracking**: 7 conversion tracking health checks
+- **audit-google**: 80 checks across Search, PMax, AI Max, Demand Gen, CTV, YouTube
+- **audit-meta**: 50 checks across Pixel/CAPI, Andromeda creative diversity, Structure, Audience
+- **audit-creative**: 21+ cross-platform creative quality checks with Andromeda and Symphony awareness
+- **audit-tracking**: 8+ conversion tracking and privacy infrastructure checks (Consent Mode V2, CAPI, Events API, AdAttributionKit)
 - **audit-budget**: 24 budget and bidding strategy checks
-- **audit-compliance**: 18 compliance and regulatory checks
+- **audit-compliance**: 18+ compliance checks (ECPC deprecated, VAC deprecated, EU messaging, Apple rebrand)
 
 Generates a unified **Ads Health Score (0-100)** with prioritized action plan.
+
+<p align="center">
+  <img src="assets/diagrams/02-parallel-audit.svg" alt="Parallel Audit Pipeline" width="100%">
+</p>
+
+<p align="center">
+  <img src="assets/diagrams/19-audit-lifecycle.svg" alt="Audit Lifecycle" width="100%">
+</p>
 
 ### `/ads plan <business-type>`
 **Strategic Ad Planning**
@@ -135,19 +165,47 @@ Industry-specific templates with platform mix, campaign architecture, creative s
 - `agency`: Multi-client management, reporting framework
 - `generic`: Universal template with platform selection questionnaire
 
+<p align="center">
+  <img src="assets/diagrams/08-industry-templates.svg" alt="Industry Templates" width="100%">
+</p>
+
+### `/ads math` and `/ads test`
+
+<p align="center">
+  <img src="assets/diagrams/18-ppc-calculators.svg" alt="PPC Calculators" width="48%">
+  <img src="assets/diagrams/17-ab-testing.svg" alt="A/B Test Design" width="48%">
+</p>
+
+### `/ads report`
+
+Generate professional PDF audit reports for client deliverables with health score gauge, platform comparison charts, pass/fail distribution, formatted tables, and zero-overlap layout.
+
+<p align="center">
+  <img src="assets/diagrams/16-pdf-pipeline.svg" alt="PDF Report Pipeline" width="100%">
+</p>
+
 ## Features
 
-### 225+ Audit Checks
+### 250+ Audit Checks
 Comprehensive coverage across all platforms with weighted severity scoring:
 
 | Platform | Checks | Key Areas |
 |----------|--------|-----------|
-| Google Ads | 74 | Search, PMax, Display, YouTube, Demand Gen |
-| Meta Ads | 46 | Pixel/CAPI, Creative, Structure, Audience |
-| LinkedIn Ads | 25 | B2B targeting, TLA, Lead Gen forms |
-| TikTok Ads | 25 | Creative-first, Smart+, TikTok Shop |
-| Microsoft Ads | 20 | Google import, Copilot, MSAN |
-| Apple Search Ads | 35 | Campaign structure, bids, Creative Sets, MMP, TAP placements |
+| Google Ads | 80 | Search, PMax, AI Max, Demand Gen, CTV, YouTube |
+| Meta Ads | 50 | Pixel/CAPI, Andromeda creative diversity, Structure, Audience |
+| LinkedIn Ads | 27 | B2B targeting, TLA, Lead Gen, CRM integration |
+| TikTok Ads | 28 | Creative-first, Smart+, GMV Max, Search Ads, Events API |
+| Microsoft Ads | 24 | Google import safety, Copilot, CTV, LinkedIn targeting, video |
+| Apple Ads | 35+ | Campaign structure, CPPs, Maximize Conversions, AdAttributionKit |
+| Cross-platform | 3 | Privacy infrastructure, creative diversity, refresh cadence |
+
+<p align="center">
+  <img src="assets/diagrams/15-platform-grid.svg" alt="Platform Coverage Grid" width="100%">
+</p>
+
+<p align="center">
+  <img src="assets/diagrams/04-platform-checks.svg" alt="Platform Check Distribution" width="100%">
+</p>
 
 ### Ads Health Score (0-100)
 Weighted scoring algorithm with severity multipliers:
@@ -160,6 +218,10 @@ Weighted scoring algorithm with severity multipliers:
 | D | 40-59 | Significant problems present |
 | F | <40 | Urgent intervention required |
 
+<p align="center">
+  <img src="assets/diagrams/13-scoring-algorithm.svg" alt="Scoring Algorithm" width="100%">
+</p>
+
 ### Industry Detection
 Auto-detects business type from ad account signals (product feeds, conversion events, platform mix, targeting patterns) and loads industry-specific benchmarks and templates.
 
@@ -167,20 +229,45 @@ Auto-detects business type from ad account signals (product feeds, conversion ev
 Hard rules enforced during every audit:
 - Never recommend Broad Match without Smart Bidding (Google)
 - 3x Kill Rule: flag CPA >3x target for immediate pause
-- Budget sufficiency: Meta ≥5x CPA/ad set, TikTok ≥50x CPA/ad group
+- Budget sufficiency: Meta >=5x CPA/ad set, TikTok >=50x CPA/ad group
 - Learning phase protection: no edits during active learning
 - Compliance: auto-check Special Ad Categories (housing/credit/finance)
+- **Privacy infrastructure gate**: verify tracking stack (Consent Mode V2, CAPI, Events API, AdAttributionKit) before optimization recommendations
+- **Andromeda creative diversity**: flag Meta accounts with <10 genuinely distinct creatives
+
+<p align="center">
+  <img src="assets/diagrams/05-quality-gates.svg" alt="Quality Gates" width="100%">
+</p>
+
+### Creative Pipeline
+
+AI-powered creative generation with 4 specialized agents:
+
+<p align="center">
+  <img src="assets/diagrams/14-creative-pipeline.svg" alt="Creative Pipeline" width="100%">
+</p>
 
 ### Reference Data
-23 built-in reference files with 2026-current benchmarks, bidding decision trees, platform specifications, compliance requirements, and conversion tracking implementation guides.
+25 built-in reference files with 2026-current benchmarks, bidding decision trees, platform specifications, compliance requirements, conversion tracking guides, MCP integration guide, and additional platform coverage.
+
+### Data Handling & Privacy
+Claude Ads runs entirely on your local machine via Claude Code. No ad account data is sent to external servers. When using MCP servers for live API access, data flows directly between your machine and the ad platform APIs. All analysis happens locally.
+
+<p align="center">
+  <img src="assets/diagrams/12-privacy-flow.svg" alt="Privacy and Data Flow" width="100%">
+</p>
 
 ## Architecture
 
+<p align="center">
+  <img src="assets/diagrams/01-architecture.svg" alt="3-Layer Architecture" width="100%">
+</p>
+
 ```
 ~/.claude/skills/ads/              # Main orchestrator
-~/.claude/skills/ads/references/   # 23 RAG reference files
-~/.claude/skills/ads-*/            # 17 sub-skills
-~/.claude/skills/ads-plan/assets/  # 11 industry templates
+~/.claude/skills/ads/references/   # 25 RAG reference files
+~/.claude/skills/ads-*/            # 19 sub-skills (17 original + ads-math + ads-test)
+~/.claude/skills/ads-plan/assets/  # 12 industry templates
 ~/.claude/agents/                  # 10 agents (6 audit + 4 creative)
 ```
 
@@ -202,9 +289,20 @@ Hard rules enforced during every audit:
 3. Claude will ask for your industry and budget context first; provide these for relevant benchmarks
 4. Paste or share your data when prompted
 
+<p align="center">
+  <img src="assets/diagrams/07-data-flow.svg" alt="Data Flow" width="100%">
+</p>
+
 ### Live Data Integration (Optional)
 
-For direct API access without manual exports, install the [Google Ads MCP](https://github.com/googleads/google-ads-mcp) alongside Claude Ads. This MCP server connects Claude directly to your Google Ads account via the API.
+For direct API access without manual exports, pair Claude Ads with MCP servers. See `ads/references/mcp-integration.md` for setup guides:
+- **Google Ads**: [mcp-google-ads](https://github.com/cohnen/mcp-google-ads): 29 GAQL tools for live API access
+- **Meta Ads**: [Adspirer MCP](https://www.adspirer.com) or use included `scripts/fetch_meta_ads.py`
+- **LinkedIn Ads**: [GrowthSpree MCP](https://www.growthspreeofficial.com) or [Adzviser MCP](https://adzviser.com)
+
+<p align="center">
+  <img src="assets/diagrams/10-mcp-integration.svg" alt="MCP Integration" width="100%">
+</p>
 
 ## FAQ
 
@@ -221,12 +319,13 @@ Yes. Claude Ads is an audit and strategy tool. It finds issues, recommends fixes
 Benchmarks and best practices differ significantly between a $500/month account and a $50k/month account. Always tell Claude your budget upfront: *"I spend $2k/month on Google Ads for a local plumbing business"* gives much better results than running `/ads google` without context.
 
 **Does it support [platform] ads?**
-Currently supported: Google, Meta (Facebook/Instagram), YouTube, LinkedIn, TikTok, Microsoft/Bing, and Apple Search Ads. Pinterest and other platforms are on the roadmap.
+Currently supported: Google, Meta (Facebook/Instagram), YouTube, LinkedIn, TikTok, Microsoft/Bing, and Apple Ads. Additional platforms (Reddit, CTV/OTT, Pinterest, Snapchat) are covered in the reference guide for strategic planning.
 
 ## Requirements
 
 - Claude Code CLI
 - Python 3.10+ with Playwright (optional, for live landing page analysis)
+- reportlab (optional, for PDF report generation via `/ads report`)
 
 ## Uninstall
 

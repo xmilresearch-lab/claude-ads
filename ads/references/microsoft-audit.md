@@ -1,8 +1,8 @@
 # Microsoft Ads Audit Checklist
 
-<!-- Updated: 2026-02-11 -->
-<!-- Sources: Google Research PDF 1 (MS01-MS20), Claude Research, Gemini Research -->
-<!-- Total Checks: 20 | Categories: 5 | See scoring-system.md for weights and algorithm -->
+<!-- Updated: 2026-04-13 | v1.5 -->
+<!-- Sources: Google Research PDF 1 (MS01-MS20), Claude Research, Gemini Research, Seer Interactive -->
+<!-- Total Checks: 24 | Categories: 6 | See scoring-system.md for weights and algorithm -->
 
 ## Quick Reference
 
@@ -13,6 +13,7 @@
 | Structure & Audience | 20% | MS08-MS10 (3 checks) |
 | Creative & Extensions | 20% | MS11-MS13 + MS19-MS20 (5 checks) |
 | Settings & Performance | 15% | MS14-MS18 (5 checks) |
+| Import Safety, Compliance & Video (v1.5) | N/A | MS-SI1, MS-CM1, MS-CT1, MS-VD1 (4 checks) |
 
 ---
 
@@ -22,7 +23,7 @@
 |----|-------|----------|------|---------|------|
 | MS01 | UET tag installed | Critical | Universal Event Tracking tag firing on all pages | Firing on most pages (>90%) | UET tag not installed or broken |
 | MS02 | Enhanced conversions | High | Enhanced conversions enabled for improved matching | N/A | Not enabled |
-| MS03 | Google Ads import validation | High | If imported: all settings verified (URLs, extensions, bids) | Minor discrepancies found | Import errors not resolved (broken URLs, missing goals) |
+| MS03 | Google Ads import validation | High | If imported: all settings verified (URLs, extensions, bids). Scheduled auto-imports deactivated after initial setup | Minor discrepancies found | Import errors not resolved (broken URLs, missing goals). Scheduled imports still active without monitoring |
 
 ### Import Validation Critical Note
 Google Ads imports are the most common Microsoft Ads setup method. Common import issues:
@@ -30,7 +31,9 @@ Google Ads imports are the most common Microsoft Ads setup method. Common import
 - Tracking templates may not transfer
 - Extensions may be partially imported
 - Bid adjustments may not match
+- **Scheduled auto-imports can re-enable paused campaigns** (a common billing surprise)
 - ALWAYS validate conversion tracking after import
+- **Deactivate auto-imports immediately after initial setup** to prevent silent campaign re-enablement and overwritten manual bid/budget changes
 
 ---
 
@@ -39,7 +42,7 @@ Google Ads imports are the most common Microsoft Ads setup method. Common import
 | ID | Check | Severity | Pass | Warning | Fail |
 |----|-------|----------|------|---------|------|
 | MS04 | Brand syndication control | Critical | Brand campaigns excluded from syndicated partners OR low-performers excluded | Partners enabled, monitored regularly | Brand campaigns on syndicated partners, never reviewed (massive budget waste risk) |
-| MS05 | Audience Network settings | Medium | Audience Network enabled only if testing intentionally | N/A | Audience Network ON by default without review |
+| MS05 | Audience Network settings | High | Audience Network enabled only if testing intentionally. Run Website URL publisher reports weekly and maintain account-level exclusion lists | Audience Network enabled with regular publisher report monitoring | Audience Network ON by default without review. B2B clients see CPA 2-4x higher from Audience Network than search alone (Seer Interactive). Microsoft auto-includes it by default |
 | MS06 | Bid strategy alignment | High | Strategy matches goal + conversion volume; targets 20-35% lower than Google | Strategy matches but targets not adjusted for Bing | Mismatched strategy for conversion volume |
 | MS07 | Target New Customers (PMax) | Medium | "Target New Customers" enabled for growth campaigns (Beta 2026) | N/A | Not tested for eligible PMax campaigns |
 
@@ -51,7 +54,7 @@ Google Ads imports are the most common Microsoft Ads setup method. Common import
 |----|-------|----------|------|---------|------|
 | MS08 | Campaign structure | High | Mirrors Google structure (if imported) or follows best practices | Minor structural issues | Disorganized structure, no naming convention |
 | MS09 | Budget allocation | Medium | Budget proportional to Bing search volume (typically 20-30% of Google) | Slightly over/under-allocated | Budget >50% of Google budget (over-investment) |
-| MS10 | LinkedIn profile targeting | High | LinkedIn targeting utilized for B2B (company, industry, job function) | Partial LinkedIn targeting | No LinkedIn targeting for B2B campaigns (unique advantage missed) |
+| MS10 | LinkedIn profile targeting | High | LinkedIn targeting utilized for B2B: up to 16% greater CTR and 64% greater conversion rate vs non-audience-targeted ads. Available across Search, DSA, Shopping, PMax, and Multimedia ads. Dimensions: Company (80,000+), Industry (148), Job Function (26). Use Observation (Bid Only) mode first. CPCs 30-70% cheaper than LinkedIn Ads directly | Partial LinkedIn targeting | No LinkedIn targeting for B2B campaigns (unique advantage missed) |
 
 ---
 
@@ -78,7 +81,7 @@ These extensions are ONLY available on Microsoft Ads:
 
 | ID | Check | Severity | Pass | Warning | Fail |
 |----|-------|----------|------|---------|------|
-| MS14 | Copilot placement | Medium | Copilot chat placement enabled for PMax campaigns | N/A | Not enabled (73% higher CTR opportunity) |
+| MS14 | Copilot placement | Medium | Copilot chat placement enabled for PMax campaigns. CTV ads now serve on Netflix, Max, Hulu, Roku, discovery+. Auto-generated RSA assets enabled by default globally Jan 2026 (5% CTR increase). Image Animation via Copilot pilot (Nov 2025): static images converted to video assets | N/A | Not enabled (73% higher CTR opportunity) |
 | MS15 | Conversion goals | High | Goals configured natively (not relying on Google-imported goals) | Imported goals verified and working | Imported goals not verified |
 | MS16 | CPC vs Google comparison | Medium | Microsoft CPC 20-40% lower than Google for same keywords | CPC within 0-20% of Google | CPC equal to or higher than Google |
 | MS17 | Conversion rate comparison | Medium | Microsoft CVR comparable to Google | CVR 25-50% lower | CVR >50% lower than Google |
@@ -130,3 +133,26 @@ Microsoft's Copilot represents the biggest unique advantage:
 5. **Launch partners**: Urban Outfitters, Etsy, Ashley Furniture
 
 Ensure PMax campaigns have Copilot placement enabled to capture this growing channel.
+
+---
+
+## Import Safety, Compliance & Video (v1.5)
+
+| ID | Check | Severity | Pass | Warning | Fail |
+|----|-------|----------|------|---------|------|
+| MS-SI1 | Scheduled import status | Critical | Scheduled Google Ads imports disabled or closely monitored. Auto-imports can silently re-enable paused campaigns and overwrite manual bid/budget changes | Imports active with manual review schedule | Scheduled imports running unmonitored (risk of re-enabling paused campaigns and unexpected spend) |
+| MS-CM1 | Consent Mode compliance (EEA/UK) | High | Consent Mode implemented by May 5, 2025 deadline for EEA/UK/Switzerland audiences. Required for behavioral modeling and conversion recovery | Implementation in progress | Not implemented for EEA/UK/CH audiences (non-compliant since May 2025) |
+| MS-CT1 | CTV ad inventory coverage | Medium | CTV placements evaluated for brand/awareness campaigns. Microsoft CTV now serves on Netflix, Max, Hulu, Roku, discovery+. 30-second non-skippable format available | N/A | CTV not evaluated despite brand awareness objectives |
+| MS-VD1 | Video ad inventory utilization | Medium | Video formats tested: 9:16 vertical video (available since Apr 2025), up to 90-second duration. Copilot Image Animation (Nov 2025 pilot) evaluated for static-to-video conversion | N/A | No video assets despite available inventory and video-capable campaigns |
+
+---
+
+## Context Notes
+
+- **PMax on Microsoft**: Up to 300 campaigns per account (vs 100 on Google). LinkedIn profile data integration. No video placements. Self-serve negative keywords in open beta (Feb 2026)
+- **Scheduled imports danger**: Can re-enable paused campaigns silently. Deactivate after initial setup
+- **CTV inventory (2025-2026)**: Netflix, Max, Hulu, Roku, discovery+. 30-second non-skippable on CTV
+- **Auto-generated RSA (Jan 2026)**: Enabled by default globally. 5% CTR increase
+- **Smart Shopping to PMax (Aug 2025)**: All Smart Shopping auto-upgraded
+- **Copilot ads**: Show beneath AI responses with "Sponsored" labels in Copilot conversations
+- **9:16 vertical video (Apr 2025)**: 90-second duration support added

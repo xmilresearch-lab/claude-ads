@@ -85,6 +85,7 @@ For ALL platforms, verify:
 - CCPA/CPRA compliance if serving California (opt-out mechanisms)
 - State privacy laws (20 US states with active laws)
 - Consent Mode v2 implementation (Google requirement, best practice everywhere)
+- Microsoft Consent Mode deadline: May 5, 2025 for EEA/UK/Switzerland
 
 ### Special Ad Categories
 - Housing, Employment, Credit: restricted targeting on Meta and Google
@@ -93,10 +94,19 @@ For ALL platforms, verify:
 - Read `ads/references/compliance.md` for full category requirements
 
 ### Platform Policies
-- Google three-strike policy awareness (warning → strike → escalation)
+- Google three-strike policy awareness (warning -> strike -> escalation)
 - Meta ad review and appeals process
 - TikTok market availability (11 countries)
 - LinkedIn professional content standards
+- Apple Ads rebrand: "Apple Search Ads" renamed to "Apple Ads" April 2025. Use new terminology in all reports and recommendations.
+- EU Sponsored Messaging (LinkedIn): discontinued since January 2022. Never recommend Message/Conversation Ads for EU-targeting campaigns.
+
+### Deprecated Features (Do Not Recommend)
+- ECPC (Enhanced CPC): deprecated March 2025. Migrate to tCPA/tROAS/Max Conversions
+- Video Action Campaigns (VAC): deprecated April 2026. Migrate to Demand Gen campaigns
+- Creative Sets (Apple Ads): discontinued. Use Custom Product Pages instead
+- CPA Cap (Apple Ads): removed. Use cost-per-goal targets
+- Rule-based attribution models (Google): sunset. Use data-driven attribution (DDA)
 
 ## Performance Benchmarks Summary
 

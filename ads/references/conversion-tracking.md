@@ -1,6 +1,6 @@
 # Conversion Tracking Setup & Requirements
 
-<!-- Updated: 2026-02-10 -->
+<!-- Updated: 2026-04-13 | v1.5 -->
 <!-- Sources: Google Research PDF 2, Claude Research, Gemini Research -->
 
 ## Google Ads Conversion Tracking
@@ -39,6 +39,7 @@ gtag('consent', 'update', {
   'analytics_storage': 'granted'
 });
 ```
+- Consent Mode V2 enforcement began July 21, 2025 for EEA/UK. Requires 700+ ad clicks/day over 7 days per country/domain for behavioral modeling to activate. Advanced mode mandatory (Basic = huge data loss). Combined with Enhanced Conversions + server-side tagging, recovers 30-50% of lost conversions.
 - Enables conversion modeling for unconsented users
 - Advanced mode recovers 30-50% of lost conversions
 - Without implementation: 90-95% metric drops (enforcement tightened July 2025)
@@ -97,6 +98,11 @@ gtag('consent', 'update', {
 
 **87% of advertisers have poor EMQ**; fixing it improves performance 20-40%.
 
+**Tiered EMQ Targets by Event:**
+- Purchase: 8.5+
+- AddToCart: 6.5+
+- PageView: 5.5+
+
 ### Event Deduplication
 ```
 Same event_id + same event_name = deduplicated (correct)
@@ -111,7 +117,7 @@ Target: 90%+ deduplication rate
 - With CAPI: 15-20% performance increase over pixel-only
 - Bypasses ad blockers and iOS ATT limitations
 - 87% of advertisers have poor Event Match Quality; fixing CAPI improves performance 20-40%
-- Offline Conversions API deprecated May 2025 → CAPI replaces
+- Offline Conversions API permanently discontinued May 2025. All offline tracking now uses CAPI with action_source='physical_store'.
 
 ### Standard Events (Use These, Not Custom)
 ```
@@ -188,10 +194,20 @@ Stage 5: Deal Closed-Won
 4. Auto-tagging (MSCLKID) → ensure CMS doesn't strip
 ```
 
+### Consent Mode
+- Consent Mode deadline May 5, 2025 for EEA/UK/Switzerland
+
 ### Import Validation
 - If importing from Google: verify conversion goals transferred
 - Google-imported goals often break during import
 - Always validate conversion tracking after import
+
+---
+
+## Apple Ads Conversion Tracking
+
+### AdAttributionKit & Dual Attribution
+- April 10, 2025: Apple Ads registered with AdAttributionKit (SKAN v1-3), creating dual attribution. Installs report through BOTH SKAN/AAK postbacks AND AdServices API. WWDC 2025: configurable attribution windows, overlapping re-engagement windows, country codes in postbacks.
 
 ---
 
@@ -225,3 +241,6 @@ IF region == "EU/EEA":
 
 server_side_recovery = 10-30% accuracy improvement
 ```
+
+### General Note: Incrementality Measurement
+- Meridian (2025): Google's open-source Marketing Mix Model for incrementality measurement. Useful for advanced accounts evaluating cross-channel contribution.

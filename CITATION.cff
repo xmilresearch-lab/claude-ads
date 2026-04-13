@@ -5,7 +5,7 @@ title: "Claude Ads"
 abstract: >
   Comprehensive paid advertising audit and optimization skill for Claude Code.
   Covers Google Ads, Meta Ads, YouTube Ads, LinkedIn Ads, TikTok Ads, Microsoft
-  Ads, and Apple Search Ads with 225+ audit checks, industry-specific templates,
+  Ads, and Apple Ads with 250+ audit checks, industry-specific templates,
   and parallel subagent delegation.
 authors:
   - alias: AgriciDaniel
@@ -13,8 +13,8 @@ authors:
 repository-code: "https://github.com/AgriciDaniel/claude-ads"
 url: "https://github.com/AgriciDaniel/claude-ads"
 license: MIT
-version: "1.4.0"
-date-released: "2026-04-01"
+version: "1.5.0"
+date-released: "2026-04-13"
 keywords:
   - paid advertising
   - google ads

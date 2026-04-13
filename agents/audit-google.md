@@ -38,16 +38,17 @@ commentary: When users ask about specific issues, focus on relevant checks rathe
 5. Identify Quick Wins (Critical/High severity, <15 min fix time)
 6. Write detailed findings to output file
 
-## Audit Categories (74 Checks)
+## Audit Categories (80 Checks)
 
 | Category | Weight | Checks |
 |----------|--------|--------|
-| Conversion Tracking | 25% | G42-G49, G-CT1 to G-CT3 (11 checks) |
+| Conversion Tracking | 25% | G42-G49, G-CT1 to G-CT3, G-CTV1 (12 checks) |
 | Wasted Spend / Negatives | 20% | G13-G19, G-WS1 (8 checks) |
 | Account Structure | 15% | G01-G12 (12 checks) |
 | Keywords & Quality Score | 15% | G20-G25, G-KW1, G-KW2 (8 checks) |
-| Ads & Assets | 15% | G26-G35, G-AD1, G-AD2, G-PM1 to G-PM5 (17 checks) |
+| Ads & Assets | 15% | G26-G35, G-AD1, G-AD2, G-PM1 to G-PM6 (18 checks) |
 | Settings & Targeting | 10% | G36-G41, G50-G61 (18 checks) |
+| AI & Demand Gen | N/A | G-AI1, G-DG1, G-DG2, G-DG3 (4 checks) |
 
 ## Critical Checks (Must Evaluate First)
 
@@ -86,6 +87,15 @@ If Performance Max campaigns exist, additionally evaluate:
 - G31: Asset group completeness (≥5 images, ≥2 logos, ≥1 video)
 - G32: Native video in all formats (16:9, 1:1, 9:16)
 - G34: Final URL expansion configured intentionally
+- G-PM6: PMax campaign not using ECPC (deprecated)
+
+## AI & Demand Gen Checks
+
+- G-AI1: Flag any ECPC campaigns as deprecated. Migrate to tCPA/tROAS/Max Conversions immediately
+- G-DG1: Flag any remaining Video Action Campaigns as deprecated. All should be Demand Gen by April 2026
+- G-DG2: Flag Demand Gen campaigns that previously had VAC frequency caps. Those caps are now gone with no native replacement
+- G-DG3: Flag accounts relying on Floodlight for CTV campaigns. Floodlight does NOT work on CTV devices
+- G-CTV1: Verify CTV campaigns are not using Floodlight for conversion tracking (Floodlight does not fire on CTV devices)
 
 ## Output Format
 

@@ -44,7 +44,7 @@ When given ad account data:
 4. Assess cross-platform tracking consistency
 5. Write detailed findings to output file
 
-## Check Assignment (7 Checks)
+## Check Assignment (8+ Checks)
 
 ### LinkedIn Tracking (2 checks)
 | ID | Check | Severity |
@@ -64,6 +64,18 @@ When given ad account data:
 | MS01 | UET tag installed and firing on all pages | Critical |
 | MS02 | Enhanced conversions enabled | High |
 | MS03 | Google Ads import validated (URLs, extensions, bids, goals) | High |
+
+## Cross-Platform Privacy Infrastructure (X-PI1)
+
+X-PI1: Verify complete tracking stack per platform:
+- **Google / Microsoft**: Consent Mode V2: enforcement began July 21, 2025 for EEA/UK. Requires 700+ ad clicks/day over 7 days for behavioral modeling. Advanced mode mandatory.
+- **Meta**: CAPI with EMQ 8+ (Event Match Quality). Flag accounts below threshold.
+- **TikTok**: Events API Gateway active with ttclid passback.
+- **Apple**: AdAttributionKit (AAK) configured. Note dual attribution (April 10, 2025): installs report through BOTH SKAN/AAK postbacks AND AdServices API.
+
+## CTV Floodlight Limitation (G-CTV1)
+
+Floodlight does NOT work on CTV devices. Flag accounts relying on Floodlight for CTV campaign conversion tracking. Recommend native CTV measurement solutions instead.
 
 ## ttclid Critical Requirement (TikTok)
 

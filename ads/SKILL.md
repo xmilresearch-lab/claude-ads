@@ -1,6 +1,6 @@
 ---
 name: ads
-description: "Multi-platform paid advertising audit and optimization skill. Analyzes Google, Meta, YouTube, LinkedIn, TikTok, Microsoft, and Apple Search Ads. 225+ checks with scoring, parallel agents, industry templates, and AI creative generation."
+description: "Multi-platform paid advertising audit and optimization skill. Analyzes Google, Meta, YouTube, LinkedIn, TikTok, Microsoft, and Apple Ads. 250+ checks with scoring, parallel agents, industry templates, and AI creative generation."
 argument-hint: "audit | google | meta | youtube | linkedin | tiktok | microsoft | apple | creative | landing | budget | plan <type> | competitor | dna <url> | create | generate | photoshoot"
 license: MIT
 ---
@@ -26,8 +26,11 @@ LinkedIn, TikTok, Microsoft). Orchestrates 17 specialized sub-skills and
 | `/ads landing` | Landing page quality assessment for ad campaigns |
 | `/ads budget` | Budget allocation and bidding strategy review |
 | `/ads plan <business-type>` | Strategic ad plan with industry templates |
-| `/ads apple` | Apple Search Ads (ASA) deep analysis |
+| `/ads apple` | Apple Ads deep analysis |
 | `/ads competitor` | Competitor ad intelligence analysis |
+| `/ads math` | PPC financial calculator (CPA, ROAS, break-even, budget forecasting) |
+| `/ads test` | A/B test design (hypothesis, significance, duration, sample size) |
+| `/ads report` | PDF audit report generation for client deliverables |
 | `/ads dna <url>` | Extract brand DNA from website, outputs `brand-profile.json` |
 | `/ads create` | Generate campaign concepts + copy briefs, outputs `campaign-brief.md` |
 | `/ads generate` | Generate AI ad images from brief, outputs to `ad-assets/` |
@@ -105,6 +108,9 @@ Hard rules (never violate these):
 - Compliance: always check Special Ad Categories for housing/employment/credit/finance
 - Creative: never run silent video ads on TikTok (sound-on platform)
 - Attribution: default to 7-day click / 1-day view (Meta), data-driven (Google)
+- Andromeda creative diversity: Flag Meta accounts with <10 genuinely distinct creatives
+- Privacy infrastructure gate: Always verify tracking stack (Consent Mode V2, CAPI, Events API, AdAttributionKit) before making optimization recommendations
+- PDF report quality gate: When generating reports via `/ads report`, always use `scripts/generate_report.py` with `--check` first. Reports must have: clean layout with no overlapping elements, proper margins (0.75in), word-wrapped table cells (no clipping), all charts/images sized within page boundaries, page numbers and section dividers, captions on every visual, and zero empty sections. Run `--check` before `--output` and fix any warnings before delivering the PDF
 
 ## Reference Files
 
@@ -182,7 +188,7 @@ This skill orchestrates 17 specialized sub-skills:
 10. **ads-budget**: Budget allocation and bidding strategy
 11. **ads-plan**: Strategic ad planning with industry templates
 12. **ads-competitor**: Competitor ad intelligence
-13. **ads-apple**: Apple Search Ads (ASA) deep analysis
+13. **ads-apple**: Apple Ads deep analysis
 14. **ads-dna**: Brand DNA extraction from website URL
 15. **ads-create**: Campaign concepts, copy decks, creative briefs
 16. **ads-generate**: AI image generation with pluggable providers

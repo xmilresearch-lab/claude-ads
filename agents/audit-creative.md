@@ -52,7 +52,7 @@ When given ad account data:
 | L10 | Thought Leader Ads active, ≥30% budget for B2B | High |
 | L11 | Ad format diversity (≥2 formats tested) | High |
 | L12 | Video ads tested | Medium |
-| L13 | Creative refresh every 4-6 weeks | Medium |
+| L13 | Creative refresh every 4-6 weeks (LinkedIn cadence) | Medium |
 
 ### TikTok Creative (12 checks)
 | ID | Check | Severity |
@@ -61,7 +61,7 @@ When given ad account data:
 | T06 | All video 9:16 vertical (1080x1920) | Critical |
 | T07 | Native-looking content (not corporate) | High |
 | T08 | Hook in first 1-2 seconds | High |
-| T09 | No creative active >7 days with declining CTR | High |
+| T09 | No creative active >7-10 days with declining CTR | High |
 | T10 | Spark Ads tested (~3% CTR vs ~2% standard) | High |
 | T20 | TikTok Shop integration (e-commerce) | Medium |
 | T21 | Video Shopping Ads tested | Medium |
@@ -87,6 +87,20 @@ All critical text, logos, and CTAs must be within:
 - Right 140px: like, comment, share icons (unsafe)
 - Bottom 450px: caption, music, CTA, navigation (unsafe)
 
+## Refresh Cadence Thresholds
+
+| Platform | Refresh Cadence |
+|----------|----------------|
+| TikTok | 7-10 days |
+| Meta | 14-21 days |
+| LinkedIn | 4-6 weeks |
+| Google / Microsoft | 8-12 weeks |
+
+## Andromeda & Symphony Awareness
+
+- Evaluate Andromeda Creative Similarity Score for Meta accounts. Ads >60% similar get clustered by Andromeda. 100 minor variations = no better than 10.
+- Symphony Automation awareness: assess whether TikTok accounts use AI-generated creative variations. If so, creative diversity may appear high but actual concept diversity could be low.
+
 ## Cross-Platform Creative Synthesis
 
 After evaluating individual checks, provide:
@@ -94,6 +108,8 @@ After evaluating individual checks, provide:
 - Format diversity comparison (which platforms lack format variety?)
 - Fatigue risk assessment (any creatives past refresh cadence?)
 - Platform-native compliance (are ads native to each platform's style?)
+- Andromeda similarity assessment (Meta: are creatives genuinely distinct?)
+- Symphony concept diversity assessment (TikTok: are AI variations masking low concept count?)
 - Recommendation for creative production priorities
 
 ## Output Format

@@ -1,7 +1,7 @@
 # Industry Benchmarks 2026
 
-<!-- Updated: 2026-02-10 -->
-<!-- Sources: Claude Research (WordStream/LocaliQ 16K campaigns, Triple Whale 2025), Gemini Research -->
+<!-- Updated: 2026-04-13 | v1.5 -->
+<!-- Sources: Claude Research (WordStream/LocaliQ 16K campaigns, Triple Whale 2025), Gemini Research, SplitMetrics 2025 -->
 
 ## Google Ads: Search Benchmarks
 
@@ -38,6 +38,13 @@
 
 Note: CTR improved across all 14 tracked industries while CVR declined in 13 of 14.
 
+### Smart Bidding & Demand Gen (2025-2026)
+| Metric | Value |
+|--------|-------|
+| Smart Bidding Exploration | 18% more unique query categories, 19% more conversions |
+| Demand Gen video+image | 20% more conversions vs video-only |
+| CTV ad spend share | 75% of YouTube ad spend now on CTV |
+
 ## Meta Ads Benchmarks
 
 ### By Objective (WordStream 2025, 1K campaigns)
@@ -70,6 +77,15 @@ Note: CTR improved across all 14 tracked industries while CVR declined in 13 of 
 - January 2026: $0.85 (24% below prior January)
 - November 2025 peak: $1.32 (Q4 surge)
 
+### Andromeda & Advantage+ (2025-2026)
+| Metric | Value |
+|--------|-------|
+| 25 diverse creatives | 17% more conversions at 16% lower cost |
+| Creative Similarity Score >60% | Triggers retrieval suppression (Andromeda penalty) |
+| Advantage+ Sales ROAS | 22% higher ROAS |
+| Advantage+ Sales CPA | 11.7% CPA improvement |
+| Creative fatigue lifespan | Compressed to 2-4 weeks (was 6-8 weeks) |
+
 ### Creative Fatigue Thresholds
 | Signal | Warning | Fail |
 |--------|---------|------|
@@ -91,10 +107,12 @@ Note: CTR improved across all 14 tracked industries while CVR declined in 13 of 
 | Average CPL | $60-$150+ |
 | Lead Gen Form CVR | 13% (3.25× higher than landing pages) |
 | Message Ads CTR | 3% (30% open rate) |
-| Conversation Ads | 50% open rate, 10-12% CTR |
+| Conversation Ads | 50-60% open rates, 2-5% CTR (far exceeds feed ad benchmarks of 0.3-0.5% CTR) |
 | B2B ROAS | 113% ($1.13 per $1) |
-| TLA CPC | $2.29-$4.14 (vs $13.23 standard) |
+| Document Ads engagement rate | 7.00% (14% YoY increase), leading all LinkedIn content formats |
+| TLA CPC | $2.29-$4.14 (vs $13.23 standard, 2-5x cheaper) |
 | TLA CTR | 1.7× higher than standard |
+| Predictive Audiences | 21% CPL reduction |
 | Min daily budget | $10/day |
 
 ### CPL by Industry
@@ -130,6 +148,18 @@ Note: CTR improved across all 14 tracked industries while CVR declined in 13 of 
 | Spark Ads | ~3% | ~$60 |
 | Standard In-Feed | ~2% | ~$100 |
 
+### Spark Ads vs Non-Spark
+| Metric | Spark Ads Impact |
+|--------|-----------------|
+| Completion rate | +30% |
+| Engagement rate | +142% |
+| CVR | +43% |
+| CPM | -4% (cheaper) |
+
+### Search Ads & Creative Lifecycle
+- Search Ads: 20% conversion uplift when combined with In-Feed
+- Creative lifespan: 7-10 days average (plan for high-volume creative rotation)
+
 ### Key Thresholds
 - Minimum campaign budget: $50/day
 - Minimum ad group budget: $20/day
@@ -152,6 +182,14 @@ Note: CTR improved across all 14 tracked industries while CVR declined in 13 of 
 | Users click paid ads | 25% more often | vs Google users |
 | Higher ROAS reported | 37% of advertisers | vs Google |
 
+### LinkedIn Profile Targeting & Copilot
+| Metric | Value |
+|--------|-------|
+| LinkedIn Profile Targeting CTR | 16% greater than standard |
+| LinkedIn Profile Targeting CVR | 64% greater than standard |
+| CPCs vs LinkedIn Ads directly | 30-70% cheaper |
+| Copilot placement CTR | 73% higher than traditional search |
+
 ### Copilot Checkout (January 2026)
 - Users discover, compare, and purchase within Copilot conversations
 - 194% more likely to purchase when shopping intent is present
@@ -164,6 +202,26 @@ Note: CTR improved across all 14 tracked industries while CVR declined in 13 of 
 - US all-devices share: 8.78% (record)
 - US desktop share: 16.75-17.58%
 - With Yahoo/AOL partners: ~25% US desktop
+
+## Apple Ads Benchmarks
+
+### Overall Averages (SplitMetrics 2025)
+| Metric | Average |
+|--------|---------|
+| TTR (Tap-Through Rate) | 9.7% |
+| CR (Conversion Rate) | 66.2% |
+| CPT (Cost Per Tap) | $2.25 |
+| CPA (Cost Per Acquisition) | $3.76 |
+
+### International Markets
+- International markets deliver 3-5x better CPI than US
+
+### Category Benchmarks (CPT)
+| Category | CPT Range |
+|----------|-----------|
+| Games | $0.50-$1.00 |
+| Health | $1.50-$3.00 |
+| Finance | $2.00-$5.00 |
 
 ## ROAS Benchmarks by Industry (Cross-Platform)
 

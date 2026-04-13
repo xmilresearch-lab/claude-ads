@@ -182,7 +182,7 @@ def generate_gemini(prompt: str, width: int, height: int, api_key: str, model: s
 
     client = genai.Client(api_key=api_key)
 
-    # Build contents — with optional brand reference image for style guidance
+    # Build contents, with optional brand reference image for style guidance
     if reference_image_path and os.path.exists(reference_image_path):
         with open(reference_image_path, 'rb') as f:
             ref_bytes = f.read()
@@ -341,7 +341,7 @@ def generate_image(
 
     if provider == "gemini":
         # Auto-upgrade to Nano Banana 2 (gemini-3.1-flash-image-preview) for
-        # reference-guided generation — it has better visual style-transfer capability
+        # reference-guided generation, as it has better visual style-transfer capability
         if not model and reference_image_path and os.path.exists(reference_image_path):
             preview_model = "gemini-3.1-flash-image-preview"
             try:
@@ -358,7 +358,7 @@ def generate_image(
                     model = DEFAULT_MODEL_GEMINI
                     image_bytes = generate_gemini(prompt, width, height, api_key, model, None)
                 else:
-                    raise  # rate limit, safety filter, auth errors — re-raise as normal
+                    raise  # rate limit, safety filter, auth errors: re-raise as normal
         else:
             model = model or DEFAULT_MODEL_GEMINI
             image_bytes = generate_gemini(prompt, width, height, api_key, model, reference_image_path)
@@ -375,7 +375,7 @@ def generate_image(
         print(f"Error: Unknown provider '{provider}'", file=sys.stderr)
         sys.exit(1)
 
-    # Read actual dimensions from image header — handles ratio remapping
+    # Read actual dimensions from image header. Handles ratio remapping
     # (e.g. 1.91:1 request → Gemini generates 16:9 natively)
     actual = _actual_dimensions(image_bytes)
     if actual:
@@ -404,6 +404,8 @@ def run_batch(batch_file: str, output_dir: str, provider: str, model: str | None
         prompt = job.get("prompt", "")
         ratio = job.get("ratio", "1:1")
         output_name = job.get("output", f"image_{i:03d}.png")
+        # Security: strip path components to prevent directory traversal
+        output_name = Path(output_name).name
         output_path = str(Path(output_dir) / output_name)
         reference_image = job.get("reference_image", None)
 

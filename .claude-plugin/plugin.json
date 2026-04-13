@@ -1,8 +1,28 @@
 {
   "name": "claude-ads",
-  "version": "1.4.0",
-  "description": "Comprehensive paid advertising audit, optimization, and AI creative generation skill for Claude Code. 225+ checks across Google, Meta, YouTube, LinkedIn, TikTok, Microsoft, and Apple Search Ads with weighted scoring, parallel agents, and industry templates. AI-powered brand DNA extraction and ad image generation.",
-  "author": "AgriciDaniel",
+  "version": "1.5.0",
+  "description": "Comprehensive paid advertising audit, optimization, and AI creative generation for Claude Code. 250+ checks across Google, Meta, YouTube, LinkedIn, TikTok, Microsoft, and Apple Ads with weighted scoring, parallel agents, industry templates, PPC math, A/B test design, and PDF reports.",
+  "author": {
+    "name": "AgriciDaniel",
+    "url": "https://github.com/AgriciDaniel"
+  },
+  "homepage": "https://agricidaniel.com/blog/claude-code-ad-agency",
+  "repository": "https://github.com/AgriciDaniel/claude-ads",
   "license": "MIT",
-  "homepage": "https://github.com/AgriciDaniel/claude-ads"
+  "keywords": [
+    "advertising-audit",
+    "google-ads",
+    "meta-ads",
+    "linkedin-ads",
+    "tiktok-ads",
+    "microsoft-ads",
+    "apple-ads",
+    "youtube-ads",
+    "ppc",
+    "paid-advertising",
+    "ad-optimization",
+    "creative-generation",
+    "claude-code-skill"
+  ],
+  "skills": ["./ads/", "./skills/"]
 }

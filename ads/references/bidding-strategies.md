@@ -1,6 +1,6 @@
 # Bidding Strategy Decision Trees
 
-<!-- Updated: 2026-02-10 -->
+<!-- Updated: 2026-04-13 | v1.5 -->
 <!-- Sources: Google Research PDF 2, Claude Research, Gemini Research -->
 
 ## Google Ads Bidding Decision Engine
@@ -16,7 +16,7 @@ START → How many conversions in last 30 days?
 │  → Learning: 3-5 days                       │
 │  → Monitor until 15+ conversions achieved    │
 │  → OR use Manual CPC if full control needed  │
-│  → NOTE: eCPC deprecated March 31, 2025      │
+│  → NOTE: eCPC fully removed March 2025       │
 └──────────────────────────────────────────────┘
 
 ┌─ 15-29 conversions ─────────────────────────┐
@@ -45,10 +45,9 @@ START → How many conversions in last 30 days?
 
 ### Smart Bidding Exploration (Google, 2025+)
 
-An opt-in feature for Target ROAS campaigns that temporarily eases
-ROAS targets to discover new, untapped search traffic:
+Allows flexible ROAS targets to discover new traffic. Delivers 18% more
+unique search query categories + 19% more conversions.
 
-- **Effect**: +18% more unique search query categories, +19% more conversions
 - **How it works**: Algorithm temporarily relaxes ROAS constraints to
   enter auctions it would normally skip, testing new user segments
 - **When to enable**: Stable tROAS campaigns with 50+ conversions/month
@@ -56,6 +55,20 @@ ROAS targets to discover new, untapped search traffic:
 - **When to avoid**: Tight-margin accounts or campaigns already spending
   full budget (exploration adds volume, not just efficiency)
 - **Available on**: Target ROAS bid strategies only
+
+### AI Max for Search (Google, 2025+)
+
+AI Max for Search layers broad match + keywordless targeting on existing
+Search campaigns. 14% avg conversion lift. DSA likely consolidated into
+AI Max Q2 2026. Requires strong negative keyword lists.
+
+- **How it works**: Automatically expands keyword coverage using AI to
+  match user intent beyond exact keyword matches
+- **When to enable**: Established Search campaigns with healthy conversion
+  volume and comprehensive negative keyword lists
+- **When to avoid**: Low-budget campaigns without negative keyword hygiene;
+  accounts with strict brand safety requirements
+- **Migration note**: Begin migrating DSA campaigns to AI Max before Q2 2026
 
 ┌─ Brand Protection campaigns ────────────────┐
 │  → Target Impression Share                  │
@@ -140,6 +153,11 @@ IF high-value diverse products:
   → Best for: Wide AOV range
 ```
 
+### Andromeda Context
+
+Under Andromeda, creative diversity matters more than bid strategy.
+Focus budget on creative testing, not micro-optimizing bids.
+
 ### CBO vs ABO Decision
 
 ```
@@ -182,8 +200,9 @@ NOTE: Advantage+ Sales/Leads auto-enable CBO
 
 ```
 Sponsored Content:
-  → Maximum Delivery (recommended default)
-  → Manual Bidding (for CPC control, experienced only)
+  → Start with Manual CPC for cost control (recommended default)
+  → Test automated bidding only with established data
+  → Maximum Delivery is the most expensive option
   → Minimum daily budget: $10/day (recommend $50+)
 
 Message Ads:
@@ -233,6 +252,9 @@ IF strict cost control needed:
 IF Smart+ campaign:
   → Modular automation (choose per module)
   → Up to 30 ad groups, 50 creatives per asset group
+  → Smart+ now supports modular control (2025). Lock
+    targeting/creative/budget/placement independently
+    while automating others
 
 GMV Max (TikTok Shop):
   → Default/only for Shop campaigns (July 2025)
@@ -266,6 +288,28 @@ PMax on Microsoft:
   → Enable "Target New Customers" (Beta 2026)
   → Copilot chat placement: 73% higher CTR
   → LinkedIn profile targeting (unique)
+```
+
+---
+
+## Apple Ads Bidding
+
+### Maximize Conversions (GA Feb 26, 2026)
+
+AI-powered auto-bidder using Search Match. Currently only optimizes for installs.
+
+```
+Strategy Selection:
+  → Maximize Conversions (recommended for most campaigns)
+  → Target CPA (weekly average target) replaces CPA Cap (being deprecated)
+  → Daily budget >= 5x target CPA
+  → Two-week learning period before evaluating performance
+
+Key Rules:
+  → Set realistic target CPA based on historical install cost
+  → Avoid budget or target changes during the 2-week learning period
+  → Currently only optimizes for installs (not post-install events)
+  → Pair with strong Search Match negative keywords to control relevance
 ```
 
 ---
