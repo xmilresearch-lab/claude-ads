@@ -1,6 +1,6 @@
 {
   "name": "claude-ads",
-  "version": "1.5.0",
+  "version": "1.5.1",
   "description": "Comprehensive paid advertising audit, optimization, and AI creative generation for Claude Code. 250+ checks across Google, Meta, YouTube, LinkedIn, TikTok, Microsoft, and Apple Ads with weighted scoring, parallel agents, industry templates, PPC math, A/B test design, and PDF reports.",
   "author": {
     "name": "AgriciDaniel",

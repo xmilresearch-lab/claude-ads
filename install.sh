@@ -25,7 +25,7 @@ main() {
 
     # Clone or update
     TEMP_DIR=$(mktemp -d)
-    trap "rm -rf ${TEMP_DIR}" EXIT
+    trap 'rm -rf "${TEMP_DIR}"' EXIT
 
     echo "↓ Downloading Claude Ads..."
     git clone --depth 1 "${REPO_URL}" "${TEMP_DIR}/claude-ads" 2>/dev/null
@@ -69,8 +69,9 @@ main() {
     if command -v pip3 >/dev/null 2>&1 || command -v pip >/dev/null 2>&1; then
         PIP_CMD="pip3"
         command -v pip3 >/dev/null 2>&1 || PIP_CMD="pip"
-        ${PIP_CMD} install --break-system-packages -q -r "${SKILL_DIR}/requirements.txt" 2>/dev/null \
-            || ${PIP_CMD} install -q -r "${SKILL_DIR}/requirements.txt" 2>/dev/null \
+        ${PIP_CMD} install -q -r "${SKILL_DIR}/requirements.txt" 2>/dev/null \
+            || { echo "  ⚠ Standard pip install failed, trying --break-system-packages..." >&2; \
+                 ${PIP_CMD} install --break-system-packages -q -r "${SKILL_DIR}/requirements.txt" 2>/dev/null; } \
             && echo "  ✓ Python dependencies installed" \
             || echo "  ⚠ pip install failed. Run manually: pip3 install -r ${SKILL_DIR}/requirements.txt"
     else

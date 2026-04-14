@@ -11,49 +11,16 @@ Usage:
 """
 
 import argparse
-import ipaddress
 import json
-import socket
 import sys
-from urllib.parse import urlparse
+
+from url_utils import validate_url
 
 try:
     from playwright.sync_api import sync_playwright, TimeoutError as PlaywrightTimeout
 except ImportError:
     print("Error: playwright required. Install with: pip install -r requirements.txt && playwright install chromium")
     sys.exit(1)
-
-
-_BLOCKED_NETS = [
-    ipaddress.ip_network("127.0.0.0/8"),
-    ipaddress.ip_network("10.0.0.0/8"),
-    ipaddress.ip_network("172.16.0.0/12"),
-    ipaddress.ip_network("192.168.0.0/16"),
-    ipaddress.ip_network("169.254.0.0/16"),
-]
-
-
-def _validate_url(url: str) -> str:
-    """Validate URL scheme and block private/internal IPs (SSRF protection)."""
-    parsed = urlparse(url)
-    if not parsed.scheme:
-        url = f"https://{url}"
-        parsed = urlparse(url)
-    if parsed.scheme not in ("http", "https"):
-        raise ValueError(f"Invalid URL scheme: {parsed.scheme}. Only http/https allowed.")
-    hostname = parsed.hostname
-    if not hostname:
-        raise ValueError("URL has no hostname.")
-    try:
-        resolved = socket.getaddrinfo(hostname, None, socket.AF_UNSPEC, socket.SOCK_STREAM)
-        for _, _, _, _, addr in resolved:
-            ip = ipaddress.ip_address(addr[0])
-            for net in _BLOCKED_NETS:
-                if ip in net:
-                    raise ValueError(f"URL resolves to blocked private/internal IP: {ip}")
-    except socket.gaierror:
-        pass  # DNS failure will be caught by Playwright
-    return url
 
 
 def analyze_landing(url: str, timeout: int = 30000) -> dict:
@@ -110,7 +77,7 @@ def analyze_landing(url: str, timeout: int = 30000) -> dict:
     }
 
     try:
-        url = _validate_url(url)
+        url = validate_url(url)
     except ValueError as e:
         result["error"] = str(e)
         return result

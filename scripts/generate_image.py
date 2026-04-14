@@ -35,10 +35,12 @@ import argparse
 import base64
 import json
 import os
+import re
 import struct
 import sys
 import time
 from pathlib import Path
+from urllib.parse import urlparse
 
 # Aspect ratio shorthand → (width, height)
 ASPECT_RATIOS = {
@@ -74,6 +76,21 @@ DEFAULT_MODEL_REPLICATE = "black-forest-labs/flux-1.1-pro"
 
 MAX_RETRIES = 4
 RETRY_BACKOFF = [1, 2, 4, 8]  # seconds
+
+MAX_BATCH_SIZE = 50
+MAX_DIMENSION = 8192
+_ALLOWED_IMAGE_EXTENSIONS = {'.png', '.jpg', '.jpeg', '.webp', '.gif'}
+_SENSITIVE_PATTERN = re.compile(
+    r'(key|token|secret|password)\s*[=:]\s*\S+|Bearer\s+\S+', re.IGNORECASE,
+)
+
+
+def _sanitize_error(err: Exception) -> str:
+    """Strip potential API keys/tokens from error messages."""
+    msg = str(err)
+    return _SENSITIVE_PATTERN.sub(
+        lambda m: (m.group(1) + '=***') if m.group(1) else 'Bearer ***', msg,
+    )
 
 
 def _actual_dimensions(image_bytes: bytes) -> tuple[int, int] | None:
@@ -144,9 +161,12 @@ def _dims_from_ratio(ratio: str) -> tuple[int, int]:
     # Try parsing WxH directly (e.g. "1200x628")
     if "x" in ratio:
         try:
-            w, h = ratio.lower().split("x")
-            return int(w), int(h)
-        except ValueError:
+            w, h = int(ratio.lower().split("x")[0]), int(ratio.lower().split("x")[1])
+            if w < 1 or h < 1 or w > MAX_DIMENSION or h > MAX_DIMENSION:
+                print(f"Error: Dimensions must be 1-{MAX_DIMENSION}. Got {w}x{h}", file=sys.stderr)
+                sys.exit(1)
+            return w, h
+        except (ValueError, IndexError):
             pass
     print(f"Error: Unknown ratio '{ratio}'. Use one of: {', '.join(ASPECT_RATIOS.keys())} or WxH (e.g. 1200x628)", file=sys.stderr)
     sys.exit(1)
@@ -184,6 +204,8 @@ def generate_gemini(prompt: str, width: int, height: int, api_key: str, model: s
 
     # Build contents, with optional brand reference image for style guidance
     if reference_image_path and os.path.exists(reference_image_path):
+        if Path(reference_image_path).suffix.lower() not in _ALLOWED_IMAGE_EXTENSIONS:
+            raise ValueError(f"Unsupported reference image format: {Path(reference_image_path).suffix}")
         with open(reference_image_path, 'rb') as f:
             ref_bytes = f.read()
         mime = 'image/png' if reference_image_path.lower().endswith('.png') else 'image/jpeg'
@@ -214,7 +236,7 @@ def generate_gemini(prompt: str, width: int, height: int, api_key: str, model: s
             raise RuntimeError("No image data in Gemini response")
 
         except Exception as e:
-            err_str = str(e)
+            err_str = _sanitize_error(e)
             if "429" in err_str or "RESOURCE_EXHAUSTED" in err_str:
                 if attempt < MAX_RETRIES - 1:
                     wait = RETRY_BACKOFF[attempt]
@@ -278,7 +300,7 @@ def generate_stability(prompt: str, width: int, height: int, api_key: str, model
     resp = requests.post(url, headers=headers, files={"none": ""}, data=data, timeout=120)
     if resp.status_code == 200:
         return resp.content
-    raise RuntimeError(f"Stability API error {resp.status_code}: {resp.text}")
+    raise RuntimeError(f"Stability API error {resp.status_code}: {resp.text[:200]}")
 
 
 def _nearest_stability_ratio(width: int, height: int) -> str:
@@ -321,6 +343,8 @@ def generate_replicate(prompt: str, width: int, height: int, api_key: str, model
     )
     # Output is a URL or list of URLs
     url = output[0] if isinstance(output, list) else str(output)
+    if urlparse(url).scheme != "https":
+        raise RuntimeError(f"Replicate returned non-HTTPS URL: {url[:100]}")
     resp = requests.get(url, timeout=120)
     resp.raise_for_status()
     return resp.content
@@ -348,7 +372,7 @@ def generate_image(
                 image_bytes = generate_gemini(prompt, width, height, api_key, preview_model, reference_image_path)
                 model = preview_model
             except Exception as preview_err:
-                err_str = str(preview_err)
+                err_str = _sanitize_error(preview_err)
                 if any(code in err_str for code in ("404", "NOT_FOUND", "invalid_argument", "not found")):
                     print(
                         f"Warning: {preview_model} unavailable ({err_str[:80]}). "
@@ -397,6 +421,10 @@ def run_batch(batch_file: str, output_dir: str, provider: str, model: str | None
     with open(batch_file) as f:
         jobs = json.load(f)
 
+    if len(jobs) > MAX_BATCH_SIZE:
+        print(f"Error: Batch file contains {len(jobs)} jobs, max is {MAX_BATCH_SIZE}", file=sys.stderr)
+        sys.exit(1)
+
     Path(output_dir).mkdir(parents=True, exist_ok=True)
     results = []
 
@@ -408,6 +436,9 @@ def run_batch(batch_file: str, output_dir: str, provider: str, model: str | None
         output_name = Path(output_name).name
         output_path = str(Path(output_dir) / output_name)
         reference_image = job.get("reference_image", None)
+        if reference_image and Path(reference_image).suffix.lower() not in _ALLOWED_IMAGE_EXTENSIONS:
+            print(f"  ⚠ Skipping invalid reference image: {reference_image}", file=sys.stderr)
+            reference_image = None
 
         result = {
             "index": i,
@@ -429,8 +460,8 @@ def run_batch(batch_file: str, output_dir: str, provider: str, model: str | None
             result["height"] = height
             print(f"  ✓ Saved to {output_path} ({width}×{height})", file=sys.stderr)
         except Exception as e:
-            result["error"] = str(e)
-            print(f"  ✗ Error: {e}", file=sys.stderr)
+            result["error"] = _sanitize_error(e)
+            print(f"  ✗ Error: {_sanitize_error(e)}", file=sys.stderr)
 
         results.append(result)
 
@@ -529,7 +560,7 @@ Set ADS_IMAGE_PROVIDER to switch providers: gemini (default), openai, stability,
     try:
         image_bytes, width, height = generate_image(args.prompt, ratio, provider, args.model, api_key, args.reference_image)
     except Exception as e:
-        print(f"Error: {e}", file=sys.stderr)
+        print(f"Error: {_sanitize_error(e)}", file=sys.stderr)
         sys.exit(1)
 
     Path(output_path).parent.mkdir(parents=True, exist_ok=True)

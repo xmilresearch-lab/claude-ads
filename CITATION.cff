@@ -13,8 +13,8 @@ authors:
 repository-code: "https://github.com/AgriciDaniel/claude-ads"
 url: "https://github.com/AgriciDaniel/claude-ads"
 license: MIT
-version: "1.5.0"
-date-released: "2026-04-13"
+version: "1.5.1"
+date-released: "2026-04-14"
 keywords:
   - paid advertising
   - google ads

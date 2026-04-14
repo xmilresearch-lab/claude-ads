@@ -9,7 +9,8 @@ Usage:
 
 import argparse
 import sys
-from urllib.parse import urlparse
+
+from url_utils import validate_url
 
 try:
     import requests
@@ -48,13 +49,10 @@ def fetch_page(
         "error": None,
     }
 
-    parsed = urlparse(url)
-    if not parsed.scheme:
-        url = f"https://{url}"
-        parsed = urlparse(url)
-
-    if parsed.scheme not in ("http", "https"):
-        result["error"] = f"Invalid URL scheme: {parsed.scheme}"
+    try:
+        url = validate_url(url)
+    except ValueError as e:
+        result["error"] = str(e)
         return result
 
     try:

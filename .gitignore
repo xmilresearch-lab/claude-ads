@@ -20,6 +20,15 @@ desktop.ini
 .env.*
 !.env.example
 
+# Certificates and credentials
+*.pem
+*.key
+*.p12
+*.pfx
+credentials.json
+service-account.json
+client_secret*.json
+
 # Python
 __pycache__/
 *.pyc
