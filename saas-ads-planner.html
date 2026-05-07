@@ -1,0 +1,1553 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SaaS Paid Ads Planner</title>
+<style>
+  :root {
+    --bg: #0f1117;
+    --surface: #1a1d27;
+    --surface2: #222636;
+    --border: #2e3148;
+    --accent: #6c63ff;
+    --accent2: #00d4aa;
+    --accent3: #ff6b6b;
+    --accent4: #ffd93d;
+    --text: #e2e8f0;
+    --muted: #8892a4;
+    --google: #4285f4;
+    --linkedin: #0077b5;
+    --meta: #1877f2;
+    --youtube: #ff0000;
+    --microsoft: #00a4ef;
+    --radius: 12px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    line-height: 1.6;
+  }
+
+  /* Layout */
+  .app { display: flex; min-height: 100vh; }
+
+  .sidebar {
+    width: 220px;
+    flex-shrink: 0;
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    padding: 24px 0;
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    overflow-y: auto;
+  }
+
+  .sidebar-logo {
+    padding: 0 20px 24px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 16px;
+  }
+
+  .sidebar-logo .logo-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--accent);
+    letter-spacing: -0.3px;
+  }
+
+  .sidebar-logo .logo-sub {
+    font-size: 11px;
+    color: var(--muted);
+    margin-top: 2px;
+  }
+
+  .nav-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 20px;
+    cursor: pointer;
+    font-size: 13px;
+    color: var(--muted);
+    transition: all 0.15s;
+    border-left: 2px solid transparent;
+    user-select: none;
+  }
+
+  .nav-item:hover { color: var(--text); background: rgba(108,99,255,0.06); }
+
+  .nav-item.active {
+    color: var(--accent);
+    border-left-color: var(--accent);
+    background: rgba(108,99,255,0.1);
+  }
+
+  .nav-icon { font-size: 15px; width: 20px; text-align: center; }
+
+  .main { flex: 1; overflow-y: auto; }
+
+  .section { display: none; padding: 36px 40px; max-width: 1000px; }
+  .section.active { display: block; }
+
+  /* Section header */
+  .section-header { margin-bottom: 28px; }
+  .section-title { font-size: 22px; font-weight: 700; letter-spacing: -0.5px; }
+  .section-desc { color: var(--muted); font-size: 14px; margin-top: 6px; }
+
+  /* Cards */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px 24px;
+    margin-bottom: 16px;
+  }
+
+  .card-title {
+    font-size: 13px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--muted);
+    margin-bottom: 14px;
+  }
+
+  /* Grid */
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+
+  /* Inputs */
+  .form-group { margin-bottom: 16px; }
+  label { display: block; font-size: 12px; font-weight: 600; color: var(--muted); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.4px; }
+
+  input[type="number"], input[type="text"], select {
+    width: 100%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    padding: 9px 12px;
+    font-size: 14px;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+
+  input[type="number"]:focus, input[type="text"]:focus, select:focus {
+    border-color: var(--accent);
+  }
+
+  select option { background: var(--surface2); }
+
+  input[type="range"] {
+    -webkit-appearance: none;
+    width: 100%;
+    height: 4px;
+    border-radius: 4px;
+    background: var(--border);
+    outline: none;
+    cursor: pointer;
+  }
+
+  input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: var(--accent);
+    cursor: pointer;
+  }
+
+  /* Buttons */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 18px;
+    border-radius: 8px;
+    border: none;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .btn-primary {
+    background: var(--accent);
+    color: white;
+  }
+
+  .btn-primary:hover { background: #7c74ff; transform: translateY(-1px); }
+
+  .btn-outline {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text);
+  }
+
+  .btn-outline:hover { border-color: var(--accent); color: var(--accent); }
+
+  /* Platform bars */
+  .platform-row {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 18px;
+  }
+
+  .platform-label {
+    width: 120px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    font-weight: 600;
+  }
+
+  .platform-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .platform-slider { flex: 1; }
+
+  .platform-values {
+    width: 130px;
+    flex-shrink: 0;
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    font-size: 13px;
+  }
+
+  .pct-badge {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 2px 8px;
+    font-size: 12px;
+    font-weight: 700;
+    min-width: 44px;
+    text-align: center;
+  }
+
+  .amount { color: var(--accent2); font-weight: 600; }
+
+  /* Budget summary */
+  .budget-summary {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+
+  .stat-card {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 16px;
+  }
+
+  .stat-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.4px; }
+  .stat-value { font-size: 22px; font-weight: 700; margin-top: 4px; letter-spacing: -0.5px; }
+  .stat-sub { font-size: 11px; color: var(--muted); margin-top: 2px; }
+
+  /* Table */
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th { text-align: left; padding: 10px 14px; background: var(--surface2); color: var(--muted); font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.4px; }
+  th:first-child { border-radius: 8px 0 0 8px; }
+  th:last-child { border-radius: 0 8px 8px 0; }
+  td { padding: 11px 14px; border-bottom: 1px solid var(--border); }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: rgba(255,255,255,0.02); }
+
+  /* Badges */
+  .badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 600;
+  }
+
+  .badge-critical { background: rgba(255,107,107,0.15); color: var(--accent3); }
+  .badge-high { background: rgba(255,170,0,0.15); color: #ffaa00; }
+  .badge-medium { background: rgba(108,99,255,0.15); color: var(--accent); }
+  .badge-low { background: rgba(0,212,170,0.15); color: var(--accent2); }
+  .badge-primary { background: rgba(108,99,255,0.2); color: var(--accent); }
+  .badge-secondary { background: rgba(0,212,170,0.2); color: var(--accent2); }
+  .badge-testing { background: rgba(255,217,61,0.15); color: var(--accent4); }
+
+  /* Checklist */
+  .checklist-phase {
+    margin-bottom: 20px;
+  }
+
+  .phase-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--accent);
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .phase-badge {
+    background: rgba(108,99,255,0.15);
+    border-radius: 20px;
+    padding: 1px 8px;
+    font-size: 11px;
+  }
+
+  .check-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 8px 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.1s;
+    margin-bottom: 4px;
+  }
+
+  .check-item:hover { background: rgba(255,255,255,0.03); }
+
+  .check-item.done .check-text { text-decoration: line-through; color: var(--muted); }
+
+  .check-box {
+    width: 18px;
+    height: 18px;
+    border: 2px solid var(--border);
+    border-radius: 5px;
+    flex-shrink: 0;
+    margin-top: 1px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s;
+    font-size: 11px;
+  }
+
+  .check-item.done .check-box {
+    background: var(--accent2);
+    border-color: var(--accent2);
+    color: #000;
+  }
+
+  .check-text { font-size: 13px; }
+  .check-meta { font-size: 11px; color: var(--muted); margin-top: 2px; }
+
+  /* Progress bar */
+  .progress-wrap { margin-bottom: 6px; }
+  .progress-label { display: flex; justify-content: space-between; font-size: 12px; color: var(--muted); margin-bottom: 6px; }
+  .progress-track { height: 6px; background: var(--border); border-radius: 4px; overflow: hidden; }
+  .progress-fill { height: 100%; border-radius: 4px; transition: width 0.4s; }
+
+  /* KPI table highlight */
+  .kpi-val { font-weight: 600; }
+  .kpi-target { color: var(--accent2); }
+
+  /* Architecture tree */
+  .tree { font-family: 'SF Mono', 'Fira Code', monospace; font-size: 12px; line-height: 1.9; }
+  .tree-branch { color: var(--muted); }
+  .tree-node { color: var(--text); }
+  .tree-note { color: var(--accent2); font-size: 11px; }
+
+  /* Bidding table */
+  .bid-arrow { color: var(--accent); font-weight: 700; }
+
+  /* Mobile */
+  @media (max-width: 768px) {
+    .sidebar { display: none; }
+    .section { padding: 20px 16px; }
+    .grid-2, .grid-3 { grid-template-columns: 1fr; }
+    .budget-summary { grid-template-columns: 1fr 1fr; }
+    .platform-row { flex-wrap: wrap; }
+    .platform-values { width: auto; }
+  }
+
+  /* Tabs */
+  .tabs { display: flex; gap: 4px; margin-bottom: 20px; border-bottom: 1px solid var(--border); }
+  .tab {
+    padding: 8px 14px;
+    font-size: 13px;
+    cursor: pointer;
+    color: var(--muted);
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1px;
+    transition: all 0.15s;
+  }
+  .tab:hover { color: var(--text); }
+  .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+
+  /* Warning box */
+  .warning {
+    background: rgba(255,170,0,0.08);
+    border: 1px solid rgba(255,170,0,0.25);
+    border-radius: 8px;
+    padding: 12px 16px;
+    font-size: 13px;
+    color: #ffaa00;
+    margin-bottom: 16px;
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+  }
+
+  .info-box {
+    background: rgba(108,99,255,0.08);
+    border: 1px solid rgba(108,99,255,0.2);
+    border-radius: 8px;
+    padding: 12px 16px;
+    font-size: 13px;
+    margin-bottom: 16px;
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+  }
+
+  /* Donut chart */
+  .donut-wrap { display: flex; align-items: center; gap: 24px; }
+  .donut-legend { flex: 1; }
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+    font-size: 13px;
+  }
+  .legend-dot { width: 12px; height: 12px; border-radius: 3px; flex-shrink: 0; }
+
+  /* Phase timeline */
+  .timeline { position: relative; padding-left: 20px; }
+  .timeline::before {
+    content: '';
+    position: absolute;
+    left: 7px;
+    top: 8px;
+    bottom: 8px;
+    width: 2px;
+    background: var(--border);
+  }
+  .tl-item { position: relative; margin-bottom: 24px; }
+  .tl-dot {
+    position: absolute;
+    left: -16px;
+    top: 4px;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    border: 2px solid var(--surface);
+    background: var(--accent);
+  }
+  .tl-title { font-size: 14px; font-weight: 700; margin-bottom: 4px; }
+  .tl-weeks { font-size: 11px; color: var(--accent); font-weight: 600; margin-bottom: 8px; }
+  .tl-tasks { font-size: 12px; color: var(--muted); }
+  .tl-tasks li { margin-bottom: 3px; list-style: none; padding-left: 12px; position: relative; }
+  .tl-tasks li::before { content: '→'; position: absolute; left: 0; color: var(--accent2); }
+
+  /* Responsive fix */
+  .scroll-x { overflow-x: auto; }
+
+  /* Generate button row */
+  .action-row { display: flex; gap: 10px; align-items: center; margin-top: 20px; flex-wrap: wrap; }
+
+  /* Highlight */
+  mark { background: rgba(108,99,255,0.2); color: var(--accent); border-radius: 3px; padding: 0 3px; }
+
+  .divider { height: 1px; background: var(--border); margin: 20px 0; }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- Sidebar -->
+  <nav class="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-title">⚡ SaaS Ads Planner</div>
+      <div class="logo-sub">Paid Advertising Strategy</div>
+    </div>
+    <div class="nav-item active" onclick="showSection('setup')">
+      <span class="nav-icon">⚙️</span> Setup
+    </div>
+    <div class="nav-item" onclick="showSection('platforms')">
+      <span class="nav-icon">📊</span> Platform Mix
+    </div>
+    <div class="nav-item" onclick="showSection('budget')">
+      <span class="nav-icon">💰</span> Budget Plan
+    </div>
+    <div class="nav-item" onclick="showSection('architecture')">
+      <span class="nav-icon">🏗️</span> Architecture
+    </div>
+    <div class="nav-item" onclick="showSection('keywords')">
+      <span class="nav-icon">🔍</span> Keywords
+    </div>
+    <div class="nav-item" onclick="showSection('creative')">
+      <span class="nav-icon">🎨</span> Creative Plan
+    </div>
+    <div class="nav-item" onclick="showSection('tracking')">
+      <span class="nav-icon">📡</span> Tracking
+    </div>
+    <div class="nav-item" onclick="showSection('bidding')">
+      <span class="nav-icon">🎯</span> Bidding
+    </div>
+    <div class="nav-item" onclick="showSection('kpis')">
+      <span class="nav-icon">📈</span> KPI Targets
+    </div>
+    <div class="nav-item" onclick="showSection('roadmap')">
+      <span class="nav-icon">🗓️</span> Roadmap
+    </div>
+  </nav>
+
+  <!-- Main content -->
+  <main class="main">
+
+    <!-- ── SETUP ── -->
+    <section class="section active" id="setup">
+      <div class="section-header">
+        <div class="section-title">Account Setup</div>
+        <div class="section-desc">Configure your SaaS business context. All other sections update dynamically.</div>
+      </div>
+
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-title">Business Context</div>
+          <div class="form-group">
+            <label>Company Name</label>
+            <input type="text" id="companyName" placeholder="Acme SaaS" oninput="updateAll()">
+          </div>
+          <div class="form-group">
+            <label>Product Category</label>
+            <input type="text" id="category" placeholder="e.g. Project Management, CRM, Analytics" oninput="updateAll()">
+          </div>
+          <div class="form-group">
+            <label>Conversion Model</label>
+            <select id="convModel" onchange="updateAll()">
+              <option value="trial">Free Trial → Paid</option>
+              <option value="demo">Demo Request → Sales</option>
+              <option value="freemium">Freemium → Upgrade</option>
+              <option value="plg">Product-Led Growth (PLG)</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Sales Motion</label>
+            <select id="salesMotion" onchange="updateAll()">
+              <option value="selfserve">Self-serve (low-touch)</option>
+              <option value="sales">Sales-assisted (high-touch)</option>
+              <option value="hybrid">Hybrid</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">Financials</div>
+          <div class="form-group">
+            <label>Monthly Ad Budget ($)</label>
+            <input type="number" id="totalBudget" value="10000" min="1000" oninput="updateAll()">
+          </div>
+          <div class="form-group">
+            <label>Target CPA / CPL ($)</label>
+            <input type="number" id="targetCPA" value="150" min="10" oninput="updateAll()">
+          </div>
+          <div class="form-group">
+            <label>Average Contract Value / MRR ($)</label>
+            <input type="number" id="acv" value="500" min="10" oninput="updateAll()">
+          </div>
+          <div class="form-group">
+            <label>Average Customer Lifetime (months)</label>
+            <input type="number" id="ltv_months" value="24" min="1" oninput="updateAll()">
+          </div>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-title">ICP (Ideal Customer Profile)</div>
+          <div class="form-group">
+            <label>Primary Job Titles</label>
+            <input type="text" id="jobTitles" placeholder="VP Marketing, Director of Sales, CMO" oninput="updateAll()">
+          </div>
+          <div class="form-group">
+            <label>Company Size</label>
+            <select id="companySize" onchange="updateAll()">
+              <option value="smb">SMB (1–50 employees)</option>
+              <option value="midmarket" selected>Mid-Market (51–500)</option>
+              <option value="enterprise">Enterprise (500+)</option>
+              <option value="mixed">Mixed</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Top Competitor (for bidding)</label>
+            <input type="text" id="competitor" placeholder="e.g. HubSpot, Salesforce" oninput="updateAll()">
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">Computed LTV:CAC</div>
+          <div id="ltvCacDisplay" style="margin-top: 8px;"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── PLATFORM MIX ── -->
+    <section class="section" id="platforms">
+      <div class="section-header">
+        <div class="section-title">Platform Mix</div>
+        <div class="section-desc">Drag sliders to customize budget allocation. Total must equal 100%.</div>
+      </div>
+
+      <div id="allocationWarning" class="warning" style="display:none">
+        ⚠️ Allocations don't add up to 100%. Adjust sliders until the total is exactly 100%.
+      </div>
+
+      <div class="card">
+        <div class="card-title">Budget Allocation by Platform</div>
+
+        <div class="platform-row">
+          <div class="platform-label"><div class="platform-dot" style="background:#4285f4"></div> Google</div>
+          <div class="platform-slider"><input type="range" min="0" max="80" value="40" id="pct_google" oninput="syncSliders('google')"></div>
+          <div class="platform-values">
+            <span class="pct-badge" id="badge_google">40%</span>
+            <span class="amount" id="amt_google">$4,000</span>
+          </div>
+        </div>
+
+        <div class="platform-row">
+          <div class="platform-label"><div class="platform-dot" style="background:#0077b5"></div> LinkedIn</div>
+          <div class="platform-slider"><input type="range" min="0" max="80" value="35" id="pct_linkedin" oninput="syncSliders('linkedin')"></div>
+          <div class="platform-values">
+            <span class="pct-badge" id="badge_linkedin">35%</span>
+            <span class="amount" id="amt_linkedin">$3,500</span>
+          </div>
+        </div>
+
+        <div class="platform-row">
+          <div class="platform-label"><div class="platform-dot" style="background:#1877f2"></div> Meta</div>
+          <div class="platform-slider"><input type="range" min="0" max="80" value="15" id="pct_meta" oninput="syncSliders('meta')"></div>
+          <div class="platform-values">
+            <span class="pct-badge" id="badge_meta">15%</span>
+            <span class="amount" id="amt_meta">$1,500</span>
+          </div>
+        </div>
+
+        <div class="platform-row">
+          <div class="platform-label"><div class="platform-dot" style="background:#ff0000"></div> YouTube</div>
+          <div class="platform-slider"><input type="range" min="0" max="80" value="7" id="pct_youtube" oninput="syncSliders('youtube')"></div>
+          <div class="platform-values">
+            <span class="pct-badge" id="badge_youtube">7%</span>
+            <span class="amount" id="amt_youtube">$700</span>
+          </div>
+        </div>
+
+        <div class="platform-row">
+          <div class="platform-label"><div class="platform-dot" style="background:#00a4ef"></div> Microsoft</div>
+          <div class="platform-slider"><input type="range" min="0" max="80" value="3" id="pct_microsoft" oninput="syncSliders('microsoft')"></div>
+          <div class="platform-values">
+            <span class="pct-badge" id="badge_microsoft">3%</span>
+            <span class="amount" id="amt_microsoft">$300</span>
+          </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <div style="display:flex; justify-content:space-between; align-items:center; font-size:13px;">
+          <span style="color:var(--muted)">Total allocated</span>
+          <span id="totalPct" style="font-weight:700; font-size:16px;">100%</span>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Platform Role & Rationale</div>
+        <div class="scroll-x">
+          <table>
+            <thead><tr>
+              <th>Platform</th><th>Role</th><th>Monthly Budget</th><th>Primary Purpose</th><th>Min Required</th>
+            </tr></thead>
+            <tbody>
+              <tr>
+                <td style="font-weight:600;color:#4285f4">Google Search</td>
+                <td><span class="badge badge-primary">Primary</span></td>
+                <td class="amount" id="tbl_google">$4,000</td>
+                <td>Capture high-intent buyers: trial, demo, pricing, competitor queries</td>
+                <td>$1,000/mo</td>
+              </tr>
+              <tr>
+                <td style="font-weight:600;color:#0077b5">LinkedIn</td>
+                <td><span class="badge badge-primary">Primary</span></td>
+                <td class="amount" id="tbl_linkedin">$3,500</td>
+                <td>B2B job title + company targeting, ABM, Thought Leader Ads</td>
+                <td>$3,000/mo</td>
+              </tr>
+              <tr>
+                <td style="font-weight:600;color:#1877f2">Meta</td>
+                <td><span class="badge badge-secondary">Secondary</span></td>
+                <td class="amount" id="tbl_meta">$1,500</td>
+                <td>Retargeting, lookalikes from customer list, lower-funnel nurture</td>
+                <td>$600/mo</td>
+              </tr>
+              <tr>
+                <td style="font-weight:600;color:#ff6666">YouTube</td>
+                <td><span class="badge badge-testing">Testing</span></td>
+                <td class="amount" id="tbl_youtube">$700</td>
+                <td>Product demos, customer stories, brand awareness at scale</td>
+                <td>$300/mo</td>
+              </tr>
+              <tr>
+                <td style="font-weight:600;color:#00a4ef">Microsoft</td>
+                <td><span class="badge badge-testing">Testing</span></td>
+                <td class="amount" id="tbl_microsoft">$300</td>
+                <td>Google import, desktop-heavy B2B audience, lower CPCs</td>
+                <td>$200/mo</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── BUDGET ── -->
+    <section class="section" id="budget">
+      <div class="section-header">
+        <div class="section-title">Budget Plan</div>
+        <div class="section-desc">Monthly pacing, 70/20/10 framework, and scaling rules.</div>
+      </div>
+
+      <div class="budget-summary" id="budgetStats"></div>
+
+      <div class="card">
+        <div class="card-title">70 / 20 / 10 Framework</div>
+        <div class="grid-3">
+          <div>
+            <div style="font-size:28px;font-weight:800;color:var(--accent)">70%</div>
+            <div style="font-size:13px;font-weight:600;margin:4px 0">Proven</div>
+            <div style="font-size:12px;color:var(--muted)">Platforms with positive ROI → Revenue engine</div>
+            <div class="amount" style="margin-top:8px;font-size:14px" id="proven_amt"></div>
+          </div>
+          <div>
+            <div style="font-size:28px;font-weight:800;color:var(--accent2)">20%</div>
+            <div style="font-size:13px;font-weight:600;margin:4px 0">Scaling</div>
+            <div style="font-size:12px;color:var(--muted)">Promising channels showing traction → Growth engine</div>
+            <div class="amount" style="margin-top:8px;font-size:14px" id="scaling_amt"></div>
+          </div>
+          <div>
+            <div style="font-size:28px;font-weight:800;color:var(--accent4)">10%</div>
+            <div style="font-size:13px;font-weight:600;margin:4px 0">Testing</div>
+            <div style="font-size:12px;color:var(--muted)">New platforms, audiences, formats → Innovation</div>
+            <div class="amount" style="margin-top:8px;font-size:14px" id="testing_amt"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Monthly Pacing Plan</div>
+        <div class="scroll-x">
+          <table>
+            <thead><tr><th>Phase</th><th>Months</th><th>Focus</th><th>Expected CPA vs Target</th><th>Action</th></tr></thead>
+            <tbody id="pacingTable"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Scaling Rules</div>
+        <div class="grid-2">
+          <div style="background:rgba(0,212,170,0.06);border:1px solid rgba(0,212,170,0.2);border-radius:8px;padding:14px">
+            <div style="font-size:12px;font-weight:700;color:var(--accent2);margin-bottom:8px">✅ 20% SCALE-UP RULE</div>
+            <div style="font-size:12px;color:var(--muted);line-height:1.7">
+              Actual CPA &lt; Target by &gt;10%<br>
+              AND 7-day conversions ≥ learning threshold<br>
+              AND NOT in learning phase<br>
+              → Increase budget by max <strong style="color:var(--text)">20%</strong><br>
+              → Wait <strong style="color:var(--text)">3–5 days</strong> before next increase
+            </div>
+          </div>
+          <div style="background:rgba(255,107,107,0.06);border:1px solid rgba(255,107,107,0.2);border-radius:8px;padding:14px">
+            <div style="font-size:12px;font-weight:700;color:var(--accent3);margin-bottom:8px">❌ 3× KILL RULE</div>
+            <div style="font-size:12px;color:var(--muted);line-height:1.7">
+              Spend &gt; 3× target CPA (<strong id="killThreshold" style="color:var(--text)">$450</strong>)<br>
+              AND conversions = 0<br>
+              → <strong style="color:var(--text)">Pause immediately</strong><br>
+              → Review: creative, targeting, landing page, tracking<br>
+              → Don't restart without changes
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── ARCHITECTURE ── -->
+    <section class="section" id="architecture">
+      <div class="section-header">
+        <div class="section-title">Campaign Architecture</div>
+        <div class="section-desc">Account structure with naming conventions.</div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Naming Convention</div>
+        <div style="background:var(--surface2);border-radius:8px;padding:12px 16px;font-family:monospace;font-size:13px;margin-bottom:12px">
+          [PLATFORM]_[OBJECTIVE]_[AUDIENCE]_[GEO]_[DATE]
+        </div>
+        <div style="font-size:12px;color:var(--muted)">Example: <span style="font-family:monospace;color:var(--accent2)">GGL_CONV_Competitor-Alt_US_2026Q2</span></div>
+      </div>
+
+      <div class="tabs">
+        <div class="tab active" onclick="showTab('arch', 'google')">Google</div>
+        <div class="tab" onclick="showTab('arch', 'linkedin')">LinkedIn</div>
+        <div class="tab" onclick="showTab('arch', 'meta')">Meta</div>
+      </div>
+
+      <div id="arch-google" class="tab-content active">
+        <div class="card">
+          <div class="card-title">Google Ads Structure</div>
+          <div class="tree" id="googleTree"></div>
+        </div>
+      </div>
+
+      <div id="arch-linkedin" class="tab-content">
+        <div class="card">
+          <div class="card-title">LinkedIn Ads Structure</div>
+          <div class="tree" id="linkedinTree"></div>
+        </div>
+      </div>
+
+      <div id="arch-meta" class="tab-content">
+        <div class="card">
+          <div class="card-title">Meta Ads Structure</div>
+          <div class="tree" id="metaTree"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── KEYWORDS ── -->
+    <section class="section" id="keywords">
+      <div class="section-header">
+        <div class="section-title">Keyword Strategy</div>
+        <div class="section-desc">Google Search keyword tiers with match types.</div>
+      </div>
+
+      <div id="keywordContent"></div>
+
+      <div class="card">
+        <div class="card-title">Critical Negative Keywords (Add on Day 1)</div>
+        <div style="display:flex;flex-wrap:wrap;gap:6px;font-size:12px" id="negKeywords">
+          <span style="background:rgba(255,107,107,0.1);color:var(--accent3);padding:3px 10px;border-radius:20px">free</span>
+          <span style="background:rgba(255,107,107,0.1);color:var(--accent3);padding:3px 10px;border-radius:20px">open source</span>
+          <span style="background:rgba(255,107,107,0.1);color:var(--accent3);padding:3px 10px;border-radius:20px">jobs</span>
+          <span style="background:rgba(255,107,107,0.1);color:var(--accent3);padding:3px 10px;border-radius:20px">careers</span>
+          <span style="background:rgba(255,107,107,0.1);color:var(--accent3);padding:3px 10px;border-radius:20px">tutorial</span>
+          <span style="background:rgba(255,107,107,0.1);color:var(--accent3);padding:3px 10px;border-radius:20px">DIY</span>
+          <span style="background:rgba(255,107,107,0.1);color:var(--accent3);padding:3px 10px;border-radius:20px">GitHub</span>
+          <span style="background:rgba(255,107,107,0.1);color:var(--accent3);padding:3px 10px;border-radius:20px">Reddit</span>
+          <span style="background:rgba(255,107,107,0.1);color:var(--accent3);padding:3px 10px;border-radius:20px">student</span>
+          <span style="background:rgba(255,107,107,0.1);color:var(--accent3);padding:3px 10px;border-radius:20px">intern</span>
+          <span style="background:rgba(255,107,107,0.1);color:var(--accent3);padding:3px 10px;border-radius:20px">crack</span>
+          <span style="background:rgba(255,107,107,0.1);color:var(--accent3);padding:3px 10px;border-radius:20px">torrent</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── CREATIVE ── -->
+    <section class="section" id="creative">
+      <div class="section-header">
+        <div class="section-title">Creative Plan</div>
+        <div class="section-desc">Production priorities, formats, and funnel stage mapping.</div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Creative by Funnel Stage</div>
+        <div class="scroll-x">
+          <table>
+            <thead><tr><th>Stage</th><th>Format</th><th>Message</th><th>Platforms</th></tr></thead>
+            <tbody>
+              <tr>
+                <td><span class="badge badge-medium">Awareness</span></td>
+                <td>Video 30s, Carousel</td>
+                <td>Industry problem → your category exists</td>
+                <td>YouTube, Meta, LinkedIn</td>
+              </tr>
+              <tr>
+                <td><span class="badge badge-high">Consideration</span></td>
+                <td>Demo video, Comparison</td>
+                <td>Why your product vs alternatives</td>
+                <td>Google Display, Meta, LinkedIn</td>
+              </tr>
+              <tr>
+                <td><span class="badge badge-critical">Decision</span></td>
+                <td>Testimonial, Case Study</td>
+                <td>Specific ROI, social proof, risk reversal</td>
+                <td>Google Search, Meta RTG, LinkedIn</td>
+              </tr>
+              <tr>
+                <td><span class="badge badge-low">Retargeting</span></td>
+                <td>Static image, Urgency CTA</td>
+                <td>Free trial offer, deadline, guarantee</td>
+                <td>Meta, Google Display, LinkedIn</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Production Priority Queue</div>
+        <div class="scroll-x">
+          <table>
+            <thead><tr><th>Priority</th><th>Asset Type</th><th>Platforms</th><th>Qty</th><th>Notes</th></tr></thead>
+            <tbody>
+              <tr>
+                <td><span class="badge badge-critical">P1</span></td>
+                <td>Product demo screen recording (30–60s)</td>
+                <td>Meta, YouTube, LinkedIn</td>
+                <td>3–5</td>
+                <td>Show key workflow, real UI, no voiceover required</td>
+              </tr>
+              <tr>
+                <td><span class="badge badge-critical">P1</span></td>
+                <td>Customer testimonial video (specific metrics)</td>
+                <td>Meta, LinkedIn, YouTube</td>
+                <td>3–5</td>
+                <td>"We saved X hrs/week" — always use numbers</td>
+              </tr>
+              <tr>
+                <td><span class="badge badge-high">P2</span></td>
+                <td>Static images — pain point + solution headline</td>
+                <td>Google Display, Meta, LinkedIn</td>
+                <td>10–15</td>
+                <td>5 pain-point variants + 5 social-proof variants</td>
+              </tr>
+              <tr>
+                <td><span class="badge badge-high">P2</span></td>
+                <td>Competitor comparison carousel</td>
+                <td>Meta, LinkedIn</td>
+                <td>3</td>
+                <td>Feature-by-feature. Keep factual, no FUD.</td>
+              </tr>
+              <tr>
+                <td><span class="badge badge-medium">P3</span></td>
+                <td>Founder / exec Thought Leader posts</td>
+                <td>LinkedIn TLA</td>
+                <td>4–8 posts</td>
+                <td>2–5x lower CPC than standard Sponsored Content</td>
+              </tr>
+              <tr>
+                <td><span class="badge badge-low">P4</span></td>
+                <td>Long-form explainer (1–3 min)</td>
+                <td>YouTube</td>
+                <td>2–3</td>
+                <td>First 5s must earn attention — no logo intros</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Copy Frameworks by Stage</div>
+        <div class="grid-2">
+          <div style="background:var(--surface2);border-radius:8px;padding:14px">
+            <div style="font-size:12px;font-weight:700;color:var(--accent);margin-bottom:6px">PAS — Awareness & Consideration</div>
+            <div style="font-size:12px;color:var(--muted);line-height:1.7"><strong style="color:var(--text)">Problem:</strong> State the pain clearly<br><strong style="color:var(--text)">Agitate:</strong> Amplify the cost of inaction<br><strong style="color:var(--text)">Solution:</strong> Introduce your product as the fix</div>
+          </div>
+          <div style="background:var(--surface2);border-radius:8px;padding:14px">
+            <div style="font-size:12px;font-weight:700;color:var(--accent2);margin-bottom:6px">BAB — Decision & Retargeting</div>
+            <div style="font-size:12px;color:var(--muted);line-height:1.7"><strong style="color:var(--text)">Before:</strong> Where they are now (painful)<br><strong style="color:var(--text)">After:</strong> Where they want to be<br><strong style="color:var(--text)">Bridge:</strong> Your product is the bridge</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── TRACKING ── -->
+    <section class="section" id="tracking">
+      <div class="section-header">
+        <div class="section-title">Tracking Setup</div>
+        <div class="section-desc">Complete before launching any campaigns.</div>
+      </div>
+
+      <div class="warning">⚠️ Never launch campaigns without verified conversion tracking. Bad data will cause Smart Bidding to optimize toward the wrong signals.</div>
+
+      <div class="card">
+        <div class="card-title">Tracking Stack</div>
+        <div class="scroll-x">
+          <table>
+            <thead><tr><th>Platform</th><th>Client-Side</th><th>Server-Side</th><th>Priority</th><th>Status</th></tr></thead>
+            <tbody>
+              <tr>
+                <td style="font-weight:600;color:#4285f4">Google</td>
+                <td>gtag.js / GTM</td>
+                <td>Enhanced Conversions + Offline Import</td>
+                <td><span class="badge badge-critical">P1</span></td>
+                <td><input type="checkbox" class="track-check"> Done</td>
+              </tr>
+              <tr>
+                <td style="font-weight:600;color:#1877f2">Meta</td>
+                <td>Pixel</td>
+                <td>Conversions API (CAPI)</td>
+                <td><span class="badge badge-critical">P1</span></td>
+                <td><input type="checkbox" class="track-check"> Done</td>
+              </tr>
+              <tr>
+                <td style="font-weight:600;color:#0077b5">LinkedIn</td>
+                <td>Insight Tag</td>
+                <td>CAPI (2025)</td>
+                <td><span class="badge badge-high">P2</span></td>
+                <td><input type="checkbox" class="track-check"> Done</td>
+              </tr>
+              <tr>
+                <td style="font-weight:600;color:#ff6666">YouTube</td>
+                <td>gtag.js (shared with Google)</td>
+                <td>Same as Google</td>
+                <td><span class="badge badge-high">P2</span></td>
+                <td><input type="checkbox" class="track-check"> Done</td>
+              </tr>
+              <tr>
+                <td style="font-weight:600;color:#00a4ef">Microsoft</td>
+                <td>UET Tag</td>
+                <td>Enhanced Conversions</td>
+                <td><span class="badge badge-medium">P3</span></td>
+                <td><input type="checkbox" class="track-check"> Done</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Conversion Events to Track</div>
+        <div class="scroll-x">
+          <table>
+            <thead><tr><th>Event</th><th>Type</th><th>Priority</th><th>Attribution Window</th></tr></thead>
+            <tbody id="conversionEvents"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Attribution Settings</div>
+        <div class="grid-2">
+          <div>
+            <div style="font-size:12px;font-weight:600;color:var(--muted);margin-bottom:8px">GOOGLE</div>
+            <div style="font-size:13px;line-height:1.8">
+              Model: <strong>Data-driven</strong> (default)<br>
+              Click window: <strong>30–90 days</strong> (SaaS cycles are long)<br>
+              View window: <strong>1 day</strong><br>
+              Import CRM closed-won as offline conversions
+            </div>
+          </div>
+          <div>
+            <div style="font-size:12px;font-weight:600;color:var(--muted);margin-bottom:8px">META</div>
+            <div style="font-size:13px;line-height:1.8">
+              Click window: <strong>7 days</strong><br>
+              View window: <strong>1 day</strong><br>
+              Always use CAPI alongside Pixel<br>
+              Never trust platform ROAS alone (overclaims 20–40%)
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── BIDDING ── -->
+    <section class="section" id="bidding">
+      <div class="section-header">
+        <div class="section-title">Bidding Strategy</div>
+        <div class="section-desc">Select the right strategy based on your monthly conversion volume.</div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Google Ads — Bidding Decision Tree</div>
+        <div id="googleBidding"></div>
+      </div>
+
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-title">LinkedIn Ads Bidding</div>
+          <table>
+            <thead><tr><th>Situation</th><th>Strategy</th></tr></thead>
+            <tbody>
+              <tr><td>Default / starting out</td><td><strong>Maximum Delivery</strong></td></tr>
+              <tr><td>Efficiency priority</td><td><strong>Manual CPC</strong> or Cost Cap</td></tr>
+              <tr><td>Accelerate campaigns</td><td><strong>Auto-optimized</strong> (42% lower CPA avg)</td></tr>
+              <tr><td>ABM / account list</td><td><strong>Maximum Delivery</strong> + frequency cap</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="card">
+          <div class="card-title">Meta Ads Bidding</div>
+          <table>
+            <thead><tr><th>Situation</th><th>Strategy</th></tr></thead>
+            <tbody>
+              <tr><td>Default / testing</td><td><strong>Lowest Cost</strong></td></tr>
+              <tr><td>Efficiency priority</td><td><strong>Cost Cap</strong></td></tr>
+              <tr><td>ROAS optimization</td><td><strong>Minimum ROAS</strong> (if pipeline tracked)</td></tr>
+              <tr><td>Retargeting</td><td><strong>Lowest Cost</strong> with frequency cap 2–3/week</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Hard Rules (Never Violate)</div>
+        <div style="font-size:13px;line-height:2;">
+          ❌ Never run <strong>Broad Match without Smart Bidding</strong> on Google<br>
+          ❌ Never edit campaigns during <strong>active learning phase</strong><br>
+          ❌ Never use <strong>Target ROAS</strong> before 50 conversions/month with dynamic values<br>
+          ✅ Always add <strong>CPC cap</strong> when using Maximize Clicks<br>
+          ✅ LinkedIn TLA should always run <strong>alongside</strong> standard Sponsored Content for cost comparison
+        </div>
+      </div>
+    </section>
+
+    <!-- ── KPIs ── -->
+    <section class="section" id="kpis">
+      <div class="section-header">
+        <div class="section-title">KPI Targets</div>
+        <div class="section-desc">Benchmarks and monthly milestones based on your inputs.</div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">SaaS Industry Benchmarks</div>
+        <div class="scroll-x">
+          <table>
+            <thead><tr><th>Platform</th><th>Metric</th><th>Industry Benchmark</th></tr></thead>
+            <tbody>
+              <tr><td style="color:#4285f4">Google Search</td><td>CPC</td><td>$4.50 – $8.00</td></tr>
+              <tr><td style="color:#4285f4">Google Search</td><td>CTR</td><td>4.28%</td></tr>
+              <tr><td style="color:#4285f4">Google Search</td><td>CVR</td><td>1.65%</td></tr>
+              <tr><td style="color:#4285f4">Google Search</td><td>CPL</td><td>$100 – $200</td></tr>
+              <tr><td style="color:#0077b5">LinkedIn</td><td>CPC</td><td>$5 – $35 (TLA: $2.29 – $4.14)</td></tr>
+              <tr><td style="color:#0077b5">LinkedIn</td><td>CPL</td><td>$125</td></tr>
+              <tr><td style="color:#1877f2">Meta</td><td>CPC</td><td>$1.50 – $3.00</td></tr>
+              <tr><td style="color:#1877f2">Meta</td><td>CPM</td><td>$35.00</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Your KPI Milestones</div>
+        <div class="scroll-x">
+          <table>
+            <thead><tr><th>Metric</th><th>Month 1</th><th>Month 3</th><th>Month 6</th><th>Month 12</th></tr></thead>
+            <tbody id="kpiTable"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Saturation Warning Thresholds</div>
+        <table>
+          <thead><tr><th>Platform</th><th>Signal</th><th>Threshold</th><th>Action</th></tr></thead>
+          <tbody>
+            <tr><td style="color:#4285f4">Google</td><td>Impression Share</td><td>&gt; 80%</td><td>Diversify to other platforms</td></tr>
+            <tr><td style="color:#1877f2">Meta</td><td>7-day Frequency</td><td>&gt; 4.0</td><td>Refresh creative or expand audience</td></tr>
+            <tr><td style="color:#0077b5">LinkedIn</td><td>Audience Penetration</td><td>&gt; 50%</td><td>Expand targeting or job titles</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ── ROADMAP ── -->
+    <section class="section" id="roadmap">
+      <div class="section-header">
+        <div class="section-title">Implementation Roadmap</div>
+        <div class="section-desc">Check off tasks as you complete them. Progress is saved in your browser.</div>
+      </div>
+
+      <div id="roadmapProgress" style="margin-bottom:20px"></div>
+      <div id="roadmapContent"></div>
+    </section>
+
+  </main>
+</div>
+
+<script>
+// ── State ──
+const PLATFORMS = ['google','linkedin','meta','youtube','microsoft'];
+const PLATFORM_COLORS = { google:'#4285f4', linkedin:'#0077b5', meta:'#1877f2', youtube:'#ff0000', microsoft:'#00a4ef' };
+
+function getVal(id, fallback=0) {
+  const el = document.getElementById(id);
+  if (!el) return fallback;
+  return parseFloat(el.value) || fallback;
+}
+function getStr(id, fallback='') {
+  const el = document.getElementById(id);
+  if (!el) return fallback;
+  return el.value || fallback;
+}
+
+// ── Navigation ──
+function showSection(id) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n => {
+    if (n.getAttribute('onclick')?.includes(id)) n.classList.add('active');
+  });
+}
+
+function showTab(group, id) {
+  document.querySelectorAll(`[id^="${group}-"]`).forEach(el => el.classList.remove('active'));
+  document.querySelectorAll(`[onclick*="'${group}'"]`).forEach(el => el.classList.remove('active'));
+  document.getElementById(`${group}-${id}`).classList.add('active');
+  document.querySelectorAll('.tab').forEach(t => {
+    if (t.getAttribute('onclick') === `showTab('${group}', '${id}')`) t.classList.add('active');
+  });
+}
+
+// ── Slider sync ──
+function syncSliders(changed) {
+  const vals = {};
+  PLATFORMS.forEach(p => vals[p] = getVal('pct_' + p));
+  const total = Object.values(vals).reduce((a,b) => a+b, 0);
+  document.getElementById('totalPct').textContent = total + '%';
+  document.getElementById('totalPct').style.color = total === 100 ? 'var(--accent2)' : 'var(--accent3)';
+  document.getElementById('allocationWarning').style.display = total !== 100 ? 'flex' : 'none';
+  updatePlatformDisplays();
+}
+
+function updatePlatformDisplays() {
+  const budget = getVal('totalBudget', 10000);
+  PLATFORMS.forEach(p => {
+    const pct = getVal('pct_' + p);
+    const amt = Math.round(budget * pct / 100);
+    document.getElementById('badge_' + p).textContent = pct + '%';
+    document.getElementById('amt_' + p).textContent = '$' + amt.toLocaleString();
+    const tbl = document.getElementById('tbl_' + p);
+    if (tbl) tbl.textContent = '$' + amt.toLocaleString();
+  });
+}
+
+// ── Main update ──
+function updateAll() {
+  updatePlatformDisplays();
+  updateLtvCac();
+  updateBudgetSection();
+  updateKillThreshold();
+  updateConversionEvents();
+  updateKpiTable();
+  updateGoogleBidding();
+  updateKeywords();
+  updateTrees();
+  updateRoadmap();
+}
+
+function fmt(n) { return '$' + Math.round(n).toLocaleString(); }
+
+function updateLtvCac() {
+  const acv = getVal('acv', 500);
+  const months = getVal('ltv_months', 24);
+  const cpa = getVal('targetCPA', 150);
+  const ltv = acv * months;
+  const ratio = ltv / cpa;
+
+  let color = 'var(--accent3)';
+  let label = 'Poor — below 2:1';
+  if (ratio >= 4) { color = 'var(--accent2)'; label = 'Excellent — above 4:1'; }
+  else if (ratio >= 3) { color = 'var(--accent2)'; label = 'Healthy — 3:1 target met'; }
+  else if (ratio >= 2) { color = 'var(--accent4)'; label = 'Marginal — below 3:1 target'; }
+
+  document.getElementById('ltvCacDisplay').innerHTML = `
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+      <div class="stat-card">
+        <div class="stat-label">Customer LTV</div>
+        <div class="stat-value" style="color:var(--accent2)">${fmt(ltv)}</div>
+        <div class="stat-sub">${months} months × ${fmt(acv)}/mo</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">LTV:CAC Ratio</div>
+        <div class="stat-value" style="color:${color}">${ratio.toFixed(1)}:1</div>
+        <div class="stat-sub">${label}</div>
+      </div>
+    </div>
+    ${ratio < 2 ? '<div class="warning" style="margin-top:12px">⚠️ LTV:CAC below 2:1. Fix conversion rate or pricing before scaling spend.</div>' : ''}
+    ${ratio >= 3 ? '<div class="info-box" style="margin-top:12px">✅ LTV:CAC is healthy. Paid acquisition is creating value. Scale when CPA is consistently below target.</div>' : ''}
+  `;
+}
+
+function updateBudgetSection() {
+  const budget = getVal('totalBudget', 10000);
+  const cpa = getVal('targetCPA', 150);
+  const googlePct = getVal('pct_google', 40);
+  const linkedinPct = getVal('pct_linkedin', 35);
+  const metaPct = getVal('pct_meta', 15);
+
+  document.getElementById('budgetStats').innerHTML = `
+    <div class="stat-card"><div class="stat-label">Monthly Budget</div><div class="stat-value">${fmt(budget)}</div><div class="stat-sub">Total ad spend</div></div>
+    <div class="stat-card"><div class="stat-label">Target CPA</div><div class="stat-value">${fmt(cpa)}</div><div class="stat-sub">Per trial/demo</div></div>
+    <div class="stat-card"><div class="stat-label">Est. Leads/Mo</div><div class="stat-value">${Math.round(budget / cpa)}</div><div class="stat-sub">At target CPA</div></div>
+    <div class="stat-card"><div class="stat-label">Annual Budget</div><div class="stat-value">${fmt(budget * 12)}</div><div class="stat-sub">Full year</div></div>
+  `;
+
+  document.getElementById('proven_amt').textContent = fmt(budget * 0.7) + '/mo';
+  document.getElementById('scaling_amt').textContent = fmt(budget * 0.2) + '/mo';
+  document.getElementById('testing_amt').textContent = fmt(budget * 0.1) + '/mo';
+
+  document.getElementById('pacingTable').innerHTML = `
+    <tr><td><span class="badge badge-medium">Learning</span></td><td>1–2</td><td>Launch, gather data, conservative bids</td><td style="color:var(--accent3)">+40–60% above target</td><td>Monitor daily; verify tracking fires</td></tr>
+    <tr><td><span class="badge badge-high">Optimize</span></td><td>3–4</td><td>Kill losers (3× rule), tighten targeting, test creatives</td><td style="color:var(--accent4)">+10–20% above target</td><td>First Smart Bidding switch if ≥30 conv/mo</td></tr>
+    <tr><td><span class="badge badge-primary">Scale</span></td><td>5–6</td><td>Increase winners 20% at a time, expand platforms</td><td style="color:var(--accent2)">At or below target</td><td>Launch Meta + Microsoft</td></tr>
+    <tr><td><span class="badge badge-low">Maintain</span></td><td>7+</td><td>70/20/10 cadence, quarterly reviews</td><td style="color:var(--accent2)">Below target</td><td>Incrementality testing, geo-lift</td></tr>
+  `;
+}
+
+function updateKillThreshold() {
+  const cpa = getVal('targetCPA', 150);
+  const el = document.getElementById('killThreshold');
+  if (el) el.textContent = fmt(cpa * 3);
+}
+
+function updateConversionEvents() {
+  const model = getStr('convModel', 'trial');
+  const primaryLabel = model === 'demo' ? 'Demo request submitted' : model === 'freemium' ? 'Free account created' : 'Free trial started';
+
+  document.getElementById('conversionEvents').innerHTML = `
+    <tr><td>${primaryLabel}</td><td><span class="badge badge-critical">Primary</span></td><td><span class="badge badge-critical">P1</span></td><td>Google: 90-day click | Meta: 7-day click</td></tr>
+    <tr><td>Pricing page view</td><td><span class="badge badge-medium">Micro</span></td><td><span class="badge badge-critical">P1</span></td><td>Google: 30-day | Meta: 7-day</td></tr>
+    <tr><td>Feature page visit (3+ pages)</td><td><span class="badge badge-medium">Micro</span></td><td><span class="badge badge-high">P2</span></td><td>Google: 30-day | Meta: 7-day</td></tr>
+    <tr><td>Demo video watch (75%+)</td><td><span class="badge badge-medium">Micro</span></td><td><span class="badge badge-high">P2</span></td><td>Google: 30-day | Meta: 1-day view</td></tr>
+    <tr><td>Trial → paid upgrade</td><td><span class="badge badge-low">Offline (CRM)</span></td><td><span class="badge badge-critical">P1</span></td><td>Import via Google Offline API / Meta CAPI</td></tr>
+  `;
+}
+
+function updateKpiTable() {
+  const cpa = getVal('targetCPA', 150);
+  const acv = getVal('acv', 500);
+  const months = getVal('ltv_months', 24);
+
+  document.getElementById('kpiTable').innerHTML = `
+    <tr><td>Trial/Demo CPA</td><td class="kpi-val">Baseline</td><td class="kpi-val kpi-target">${fmt(cpa * 1.3)}</td><td class="kpi-val kpi-target">${fmt(cpa)}</td><td class="kpi-val kpi-target">${fmt(cpa * 0.9)}</td></tr>
+    <tr><td>MQL → SQL Rate</td><td class="kpi-val">Baseline</td><td class="kpi-val kpi-target">+10%</td><td class="kpi-val kpi-target">+20%</td><td class="kpi-val kpi-target">+30%</td></tr>
+    <tr><td>Pipeline Value (vs spend)</td><td class="kpi-val">Tracking</td><td class="kpi-val kpi-target">3× spend</td><td class="kpi-val kpi-target">5× spend</td><td class="kpi-val kpi-target">7×+ spend</td></tr>
+    <tr><td>LTV:CAC Ratio</td><td class="kpi-val">Tracking</td><td class="kpi-val kpi-target">2:1</td><td class="kpi-val kpi-target">3:1</td><td class="kpi-val kpi-target">4:1+</td></tr>
+    <tr><td>Google Weighted QS</td><td class="kpi-val">Track</td><td class="kpi-val kpi-target">≥ 6</td><td class="kpi-val kpi-target">≥ 7</td><td class="kpi-val kpi-target">≥ 7</td></tr>
+    <tr><td>Meta Event Match Quality</td><td class="kpi-val">Track</td><td class="kpi-val kpi-target">≥ 7.0</td><td class="kpi-val kpi-target">≥ 8.0</td><td class="kpi-val kpi-target">≥ 8.0</td></tr>
+    <tr><td>Brand Search Volume</td><td class="kpi-val">Baseline</td><td class="kpi-val kpi-target">+15%</td><td class="kpi-val kpi-target">+30%</td><td class="kpi-val kpi-target">+50%</td></tr>
+  `;
+}
+
+function updateGoogleBidding() {
+  const cpa = getVal('targetCPA', 150);
+  document.getElementById('googleBidding').innerHTML = `
+    <table>
+      <thead><tr><th>Monthly Conversions</th><th>Recommended Strategy</th><th>Notes</th></tr></thead>
+      <tbody>
+        <tr><td>&lt; 15 conv/mo</td><td><strong>Maximize Clicks</strong> + Manual CPC cap</td><td>Not enough data for Smart Bidding. Cap CPC at ~2× your target CPA.</td></tr>
+        <tr><td>15–29 conv/mo</td><td><strong>Maximize Conversions</strong></td><td>Transitional. Monitor CPA closely.</td></tr>
+        <tr><td>30+ conv/mo</td><td><strong class="kpi-target">Target CPA — ${fmt(cpa)}</strong></td><td>← SaaS default. Set target = your CPA goal.</td></tr>
+        <tr><td>50+ conv/mo + pipeline values</td><td><strong>Target ROAS</strong></td><td>Only if you're importing deal values from CRM.</td></tr>
+      </tbody>
+    </table>
+  `;
+}
+
+function updateKeywords() {
+  const cat = getStr('category', '[category]');
+  const comp = getStr('competitor', '[Competitor]');
+  const company = getStr('companyName', '[Brand]');
+
+  document.getElementById('keywordContent').innerHTML = `
+    <div class="card">
+      <div class="card-title">Keyword Tiers</div>
+      <div class="scroll-x">
+      <table>
+        <thead><tr><th>Tier</th><th>Match Type</th><th>Example Keywords</th><th>Intent</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><span class="badge badge-critical">Brand</span></td>
+            <td>Exact + Phrase</td>
+            <td style="font-family:monospace;font-size:12px">${company}, ${company} pricing, ${company} review, ${company} vs ${comp}</td>
+            <td>Protect brand; capture comparison intent</td>
+          </tr>
+          <tr>
+            <td><span class="badge badge-high">High Intent</span></td>
+            <td>Exact + Phrase</td>
+            <td style="font-family:monospace;font-size:12px">${cat} software, best ${cat} tool, ${cat} platform</td>
+            <td>Buyers actively searching your category</td>
+          </tr>
+          <tr>
+            <td><span class="badge badge-high">Competitor</span></td>
+            <td>Phrase</td>
+            <td style="font-family:monospace;font-size:12px">${comp} alternative, switch from ${comp}, ${comp} vs ${company}</td>
+            <td>Capture competitor's dissatisfied users</td>
+          </tr>
+          <tr>
+            <td><span class="badge badge-medium">Mid Intent</span></td>
+            <td>Broad + Smart Bidding only</td>
+            <td style="font-family:monospace;font-size:12px">how to automate [workflow], best ${cat} tools 2026</td>
+            <td>Problem-aware but not solution-aware</td>
+          </tr>
+        </tbody>
+      </table>
+      </div>
+    </div>
+  `;
+}
+
+function updateTrees() {
+  const cat = getStr('category', '[Category]');
+  const comp = getStr('competitor', '[Competitor]');
+  const company = getStr('companyName', '[Brand]');
+  const model = getStr('convModel', 'trial');
+  const cta = model === 'demo' ? 'Request Demo' : 'Start Free Trial';
+
+  document.getElementById('googleTree').innerHTML = `
+<span style="color:var(--muted)">Account: </span><span style="color:var(--accent2)">${company || 'Your Company'} — Google Ads</span>
+├── <span style="color:var(--accent)">Brand Defense</span> <span class="tree-note">← always-on</span>
+│   ├── [${company}] [${company} pricing] [${company} review]
+│   └── [${company} vs ${comp}] [${comp} alternative]
+│
+├── <span style="color:var(--accent)">Non-Brand — High Intent</span>
+│   ├── [${cat} software] [best ${cat} tool] [${cat} platform]
+│   └── [${cat} pricing] [${cat} for teams]
+│
+├── <span style="color:var(--accent)">Non-Brand — Mid Intent</span> <span class="tree-note">← Broad Match + Smart Bidding only</span>
+│   └── [how to ${cat.toLowerCase()}] [${cat.toLowerCase()} automation]
+│
+├── <span style="color:var(--accent)">Retargeting (RLSA)</span>
+│   ├── Pricing page visitors (7-day) → high urgency ad
+│   └── Blog/resource visitors (30-day) → nurture ad
+│
+└── <span style="color:var(--accent)">Testing</span>
+    └── New angles, long-tail expansions
+`;
+
+  document.getElementById('linkedinTree').innerHTML = `
+<span style="color:var(--muted)">Account: </span><span style="color:var(--accent2)">${company || 'Your Company'} — LinkedIn Ads</span>
+├── <span style="color:var(--accent)">ABM — Target Accounts</span>
+│   ├── CRM upload: target account list (matched audiences)
+│   └── Job title: Decision Maker role at matched companies
+│
+├── <span style="color:var(--accent)">Job Title Prospecting</span>
+│   ├── VP / Director / Manager of [relevant function]
+│   └── Company size: ${getStr('companySize') === 'smb' ? '1–50' : getStr('companySize') === 'enterprise' ? '500+' : '51–500'} employees
+│
+├── <span style="color:var(--accent)">Thought Leader Ads (TLA)</span> <span class="tree-note">← 3–5× lower CPC</span>
+│   ├── Founder/CEO posts (problem + opinion)
+│   └── Exec team posts (thought leadership)
+│
+├── <span style="color:var(--accent)">Lead Gen Forms</span>
+│   └── "${cta}" with pre-filled LinkedIn data
+│
+└── <span style="color:var(--accent)">Retargeting</span>
+    ├── Website visitors (30-day)
+    └── Video viewers (50%+)
+`;
+
+  document.getElementById('metaTree').innerHTML = `
+<span style="color:var(--muted)">Account: </span><span style="color:var(--accent2)">${company || 'Your Company'} — Meta Ads</span>
+├── <span style="color:var(--accent)">Prospecting — Lookalike</span>
+│   ├── 1% LAL from customer list (closed-won CRM export)
+│   └── 2–5% LAL for scale
+│
+├── <span style="color:var(--accent)">Prospecting — Interest</span>
+│   └── Business software, SaaS, entrepreneurship interests
+│
+├── <span style="color:var(--accent)">Retargeting — Hot</span> <span class="tree-note">← highest intent</span>
+│   ├── Pricing page visitors (7-day) — urgency creative
+│   └── Trial starters (30-day) — upgrade push
+│
+├── <span style="color:var(--accent)">Retargeting — Warm</span>
+│   ├── Website visitors (30-day) — demo video creative
+│   └── Blog readers (30-day) — nurture creative
+│
+└── <span style="color:var(--accent)">Testing</span>
+    └── Advantage+ Audience (test vs manual targeting)
+`;
+}
+
+// ── Roadmap ──
+const ROADMAP_TASKS = [
+  { phase: 'Phase 1 — Foundation', weeks: 'Weeks 1–2', tasks: [
+    { id: 'r01', text: 'Install Google Tag Manager + gtag.js on site', meta: 'Critical — needed for all Google tracking' },
+    { id: 'r02', text: 'Set up Google Ads conversion events (trial, demo, pricing page)', meta: 'Verify via Tag Assistant before launching' },
+    { id: 'r03', text: 'Implement Meta Pixel + Conversions API (CAPI)', meta: 'CAPI is mandatory for post-iOS14 accuracy' },
+    { id: 'r04', text: 'Install LinkedIn Insight Tag', meta: 'Required for retargeting + conversion tracking' },
+    { id: 'r05', text: 'Build CRM audience exclusion list (existing customers)', meta: 'Upload customer email list to all platforms' },
+    { id: 'r06', text: 'Create campaign structure + naming conventions', meta: 'Use [PLATFORM]_[OBJ]_[AUDIENCE]_[GEO]_[DATE]' },
+    { id: 'r07', text: 'Produce P1 creative assets: 3 demo videos + 10 static images', meta: 'Don\'t launch without at least 3 creative variants' },
+  ]},
+  { phase: 'Phase 2 — Launch', weeks: 'Weeks 3–4', tasks: [
+    { id: 'r08', text: 'Launch Google Search — Brand Defense campaign (day 1)', meta: 'Never wait on this; protect your brand from day 1' },
+    { id: 'r09', text: 'Launch Google Search — High Intent non-brand campaign', meta: 'Exact match only; add negatives immediately' },
+    { id: 'r10', text: 'Launch LinkedIn Job Title Prospecting', meta: 'Start with Maximum Delivery bidding' },
+    { id: 'r11', text: 'Set conservative bids: Maximize Clicks (Google), Max Delivery (LI)', meta: 'Don\'t use Smart Bidding until 30 conv/mo' },
+    { id: 'r12', text: 'Verify all conversion tracking fires correctly (first 7 days)', meta: 'Check daily; a tracking bug can waste weeks of budget' },
+    { id: 'r13', text: 'Set up daily budget alerts + anomaly detection', meta: 'Alert at 80% daily spend threshold' },
+  ]},
+  { phase: 'Phase 3 — Optimize', weeks: 'Weeks 5–8', tasks: [
+    { id: 'r14', text: 'Review 2 weeks of data before any major changes', meta: 'Minimum data window before conclusions are valid' },
+    { id: 'r15', text: 'Apply 3× Kill Rule: pause ad groups with 0 conv and 3× CPA in spend', meta: 'No exceptions — review before restarting' },
+    { id: 'r16', text: 'Switch to Target CPA on Google if ≥ 30 conversions/month', meta: 'Set target = your actual CPA goal' },
+    { id: 'r17', text: 'Launch Meta Ads — retargeting + lookalike campaigns', meta: 'Separate campaigns for hot vs warm audiences' },
+    { id: 'r18', text: 'Launch LinkedIn Thought Leader Ads (founder/exec content)', meta: 'Test TLA vs standard Sponsored Content side by side' },
+    { id: 'r19', text: 'Begin A/B testing — 1 variable at a time per platform', meta: 'Creative first, then landing page, then audience' },
+  ]},
+  { phase: 'Phase 4 — Scale', weeks: 'Weeks 9–12', tasks: [
+    { id: 'r20', text: 'Scale winners by max 20% per week', meta: 'Never more than 20% at once on Meta (triggers learning reset)' },
+    { id: 'r21', text: 'Launch YouTube — demo videos and customer stories', meta: 'First 5 seconds must earn attention; skip-proof hook' },
+    { id: 'r22', text: 'Launch Microsoft Ads — import from Google campaign', meta: 'Apply bid adjustments; Microsoft audience skews older/enterprise' },
+    { id: 'r23', text: 'Implement offline conversion import (CRM → Google)', meta: 'Import closed-won deals to teach Smart Bidding lead quality' },
+    { id: 'r24', text: 'Set up monthly MER tracking: total pipeline / total ad spend', meta: 'Cross-reference with CRM; never trust platform ROAS alone' },
+    { id: 'r25', text: 'Quarterly creative refresh — replace fatigued assets', meta: 'Meta: frequency > 4 = audience exhausted' },
+  ]},
+];
+
+function updateRoadmap() {
+  const saved = JSON.parse(localStorage.getItem('roadmapChecks') || '{}');
+  const total = ROADMAP_TASKS.flatMap(p => p.tasks).length;
+  const done = Object.values(saved).filter(Boolean).length;
+
+  document.getElementById('roadmapProgress').innerHTML = `
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;margin-bottom:8px;font-size:13px">
+        <span>Overall progress</span>
+        <span style="font-weight:700">${done} / ${total} tasks</span>
+      </div>
+      <div class="progress-track"><div class="progress-fill" style="width:${(done/total*100).toFixed(0)}%;background:var(--accent2)"></div></div>
+    </div>
+  `;
+
+  document.getElementById('roadmapContent').innerHTML = ROADMAP_TASKS.map(phase => `
+    <div class="checklist-phase">
+      <div class="phase-title">
+        ${phase.phase}
+        <span class="phase-badge">${phase.weeks}</span>
+      </div>
+      ${phase.tasks.map(task => `
+        <div class="check-item ${saved[task.id] ? 'done' : ''}" onclick="toggleTask('${task.id}')">
+          <div class="check-box">${saved[task.id] ? '✓' : ''}</div>
+          <div>
+            <div class="check-text">${task.text}</div>
+            <div class="check-meta">${task.meta}</div>
+          </div>
+        </div>
+      `).join('')}
+    </div>
+  `).join('');
+}
+
+function toggleTask(id) {
+  const saved = JSON.parse(localStorage.getItem('roadmapChecks') || '{}');
+  saved[id] = !saved[id];
+  localStorage.setItem('roadmapChecks', JSON.stringify(saved));
+  updateRoadmap();
+}
+
+// ── Init ──
+updateAll();
+</script>
+</body>
+</html>
