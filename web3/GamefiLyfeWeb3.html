@@ -1,0 +1,833 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>GamefiLyfe — Level Up Your Life</title>
+<script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+<script src="https://unpkg.com/three@0.160.0/build/three.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+</head>
+<body style="margin:0;background:#07090B">
+<div id="root"></div>
+<script type="text/babel">
+const { useState, useEffect, useRef, useCallback } = React;
+
+/* ---- Inline SVG icons (Lucide paths) ---- */
+const iconBase = (size, children) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none"
+    stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    {children}
+  </svg>
+);
+const Zap         = ({size=24})=>iconBase(size,<polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>);
+const Gamepad2    = ({size=24})=>iconBase(size,<><line x1="6" y1="12" x2="10" y2="12"/><line x1="8" y1="10" x2="8" y2="14"/><circle cx="15" cy="13" r=".5" fill="currentColor"/><circle cx="18" cy="11" r=".5" fill="currentColor"/><rect x="2" y="6" width="20" height="12" rx="2"/></>);
+const Trophy      = ({size=24})=>iconBase(size,<><path d="M7 4h10l0 6a5 5 0 0 1-10 0l0-6"/><path d="M7 4H4v2a3 3 0 0 0 3 3"/><path d="M17 4h3v2a3 3 0 0 1-3 3"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></>);
+const Users       = ({size=24})=>iconBase(size,<><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></>);
+const ArrowRight  = ({size=24})=>iconBase(size,<><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></>);
+const Cpu         = ({size=24})=>iconBase(size,<><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/><line x1="9" y1="1" x2="9" y2="4"/><line x1="15" y1="1" x2="15" y2="4"/><line x1="9" y1="20" x2="9" y2="23"/><line x1="15" y1="20" x2="15" y2="23"/><line x1="20" y1="9" x2="23" y2="9"/><line x1="20" y1="14" x2="23" y2="14"/><line x1="1" y1="9" x2="4" y2="9"/><line x1="1" y1="14" x2="4" y2="14"/></>);
+const Map         = ({size=24})=>iconBase(size,<><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></>);
+const X           = ({size=24})=>iconBase(size,<><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></>);
+const Check       = ({size=24})=>iconBase(size,<polyline points="20 6 9 17 4 12"/>);
+const Copy        = ({size=24})=>iconBase(size,<><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></>);
+const Wallet      = ({size=24})=>iconBase(size,<><path d="M20 12V8H6a2 2 0 0 1-2-2c0-1.1.9-2 2-2h12v4"/><path d="M4 6v12c0 1.1.9 2 2 2h14v-4"/><path d="M18 12a2 2 0 0 0-2 2c0 1.1.9 2 2 2h4v-4h-4z"/></>);
+const AlertCircle = ({size=24})=>iconBase(size,<><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></>);
+const CheckCircle = ({size=24})=>iconBase(size,<><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></>);
+const RefreshCw   = ({size=24,className=""})=>(<svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>);
+const ExternalLink= ({size=24})=>iconBase(size,<><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></>);
+
+/* ---- Brand tokens ---- */
+const T = {
+  bgVoid:"#07090B", bgSurface:"#0D1117", bgRaised:"#131920",
+  border:"rgba(255,255,255,0.07)", accent:"#FF6500", accentAlt:"#FF8C38",
+  accentDim:"rgba(255,101,0,0.14)", primary:"#EEEEF0", secondary:"#7E8899", muted:"#3D4655",
+};
+const glowSm = "0 0 16px rgba(255,101,0,0.35),0 0 40px rgba(255,101,0,0.15)";
+const glowMd = "0 0 30px rgba(255,101,0,0.45),0 0 70px rgba(255,101,0,0.18)";
+
+/* ---- Web3 config ---- */
+const EVM_RECEIVER = "0x742d35Cc6634C0532925a3b844Bc9e7595f0f0A1";
+const TOKENS = {
+  ETH: {id:"ETH", name:"Ethereum",   symbol:"ETH",  icon:"⟠", color:"#627EEA", bg:"rgba(98,126,234,0.12)",  network:"evm", decimals:18},
+  USDC:{id:"USDC",name:"USD Coin",    symbol:"USDC", icon:"◎", color:"#2775CA", bg:"rgba(39,117,202,0.12)",  network:"evm", decimals:6,  contract:"0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48"},
+  USDT:{id:"USDT",name:"Tether USD",  symbol:"USDT", icon:"₮", color:"#26A17B", bg:"rgba(38,161,123,0.12)",  network:"evm", decimals:6,  contract:"0xdAC17F958D2ee523a2206206994597C13D831ec7"},
+  USD1:{id:"USD1",name:"USD1",        symbol:"USD1", icon:"①", color:"#FF8C38", bg:"rgba(255,140,56,0.12)",  network:"evm", decimals:18, contract:"0x8d0D000Ee44948FC98c9B98A4FA4921476f08B0B"},
+  BTC: {id:"BTC", name:"Bitcoin",     symbol:"BTC",  icon:"₿", color:"#F7931A", bg:"rgba(247,147,26,0.12)",  network:"btc", address:"bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh"},
+  XRP: {id:"XRP", name:"XRP",         symbol:"XRP",  icon:"✕", color:"#00AAE4", bg:"rgba(0,170,228,0.12)",   network:"xrp", address:"rHb9CJAWyB4rj91VRWn96DkukG4bwdtyTh", destTag:"1234567"},
+};
+const RATES = {ETH:3420, BTC:67340, XRP:0.52, USDC:1, USDT:1, USD1:1};
+const PLANS = [
+  {id:"explorer",name:"Explorer",price:9.99,  tag:"STARTER", highlight:false, perks:["50 daily quests","City map access","1× XP multiplier","Basic rewards pool","Community chat"]},
+  {id:"warrior", name:"Warrior", price:29.99, tag:"POPULAR",  highlight:true,  perks:["Unlimited quests","AR city overlay","3× XP multiplier","Squad & guild features","Priority reward drops","NFT loot access"]},
+  {id:"legend",  name:"Legend",  price:99.99, tag:"ELITE",    highlight:false, perks:["Everything in Warrior","10× XP multiplier","City district ownership","Guild creation","VIP events","Early-access drops"]},
+];
+const FEATURES = [
+  {Icon:Gamepad2,title:"Quest Engine",  sub:"GAMEPLAY",    desc:"Turn every commute, workout, and meal into a live mission with dynamic XP."},
+  {Icon:Trophy,  title:"Win Real Value",sub:"REWARDS",     desc:"Compete city-wide. Prizes, crypto drops, and exclusive status tiers await."},
+  {Icon:Users,   title:"Squad Dynamics",sub:"SOCIAL",      desc:"Assemble your crew. Shared quests, leaderboards, and guild warfare."},
+  {Icon:Zap,     title:"Instant XDrop", sub:"ECONOMY",     desc:"On-chain reward settlement. Earn, trade, and own your assets — no middleman."},
+  {Icon:Map,     title:"Live City Map",  sub:"EXPLORATION", desc:"AR-powered map layer over your city. Hotspots, dungeons, and hidden loot."},
+  {Icon:Cpu,     title:"AI Companion",   sub:"INTELLIGENCE",desc:"Your personal quest AI learns your play style and customizes challenges."},
+];
+const STATS = [{v:"2.4M+",l:"Active Players"},{v:"$68M",l:"Rewards Paid Out"},{v:"190+",l:"Cities Live"},{v:"4.97★",l:"App Store Rating"}];
+const ECOSYSTEM = [
+  {tag:"GOVERNANCE",title:"Vote on quests & city expansions with your GFL tokens."},
+  {tag:"STAKING",   title:"Lock XP to multiply your reward multiplier up to 10×."},
+  {tag:"NFT LOOT",  title:"Discover rare digital artifacts tied to real locations."},
+  {tag:"GUILDS",    title:"Form guilds, claim city districts, earn passive yield."},
+];
+
+/* ---- CSS ---- */
+const CSS = `
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;800;900&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500&display=swap');
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --acc:#FF6500;--acc-alt:#FF8C38;--acc-dim:rgba(255,101,0,0.14);
+  --bg0:#07090B;--bg1:#0D1117;--bg2:#131920;
+  --border:rgba(255,255,255,0.07);
+  --t1:#EEEEF0;--t2:#7E8899;--t3:#3D4655;
+}
+html{scroll-behavior:smooth}
+body{font-family:'DM Sans',sans-serif;background:var(--bg0);color:var(--t1);overflow-x:hidden}
+::-webkit-scrollbar{width:3px}::-webkit-scrollbar-track{background:var(--bg0)}::-webkit-scrollbar-thumb{background:rgba(255,101,0,0.5);border-radius:2px}
+
+@keyframes floatA{0%,100%{transform:translateY(0)rotate(0deg)}33%{transform:translateY(-14px)rotate(.5deg)}66%{transform:translateY(-6px)rotate(-.3deg)}}
+@keyframes floatB{0%,100%{transform:translateY(-8px)rotate(-.4deg)}50%{transform:translateY(8px)rotate(.4deg)}}
+@keyframes floatC{0%,100%{transform:translateY(4px)rotate(.3deg)}60%{transform:translateY(-10px)rotate(-.5deg)}}
+@keyframes pulseRing{0%{transform:translate(-50%,-50%)scale(1);opacity:.7}100%{transform:translate(-50%,-50%)scale(2.4);opacity:0}}
+@keyframes scanLine{0%{transform:translateY(-100%);opacity:0}10%{opacity:1}90%{opacity:1}100%{transform:translateY(2000%);opacity:0}}
+@keyframes glitch{0%,94%,100%{clip-path:none;transform:none}95%{clip-path:inset(30% 0 50% 0);transform:translateX(-4px)}97%{clip-path:inset(60% 0 10% 0);transform:translateX(4px)}99%{clip-path:inset(10% 0 80% 0);transform:translateX(-2px)}}
+@keyframes shimmer{0%{background-position:-200% center}100%{background-position:200% center}}
+@keyframes heroIn{from{opacity:0;transform:translateY(48px)}to{opacity:1;transform:translateY(0)}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(32px)}to{opacity:1;transform:translateY(0)}}
+@keyframes pingScale{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.12);opacity:.8}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes modalIn{from{opacity:0;transform:scale(.94)translateY(20px)}to{opacity:1;transform:scale(1)translateY(0)}}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes successPop{0%{transform:scale(0);opacity:0}60%{transform:scale(1.2);opacity:1}100%{transform:scale(1);opacity:1}}
+
+.hero-in{animation:heroIn .9s cubic-bezier(.22,.68,0,1.2) both}
+.d1{animation-delay:.15s}.d2{animation-delay:.3s}.d3{animation-delay:.45s}.d4{animation-delay:.6s}
+.float-a{animation:floatA 5.5s ease-in-out infinite}
+.float-b{animation:floatB 6.2s ease-in-out infinite}
+.float-c{animation:floatC 4.8s ease-in-out infinite}
+.glitch{animation:glitch 7s infinite}
+.spin{animation:spin .9s linear infinite}
+.orange-grad{background:linear-gradient(120deg,#FF6500,#FF8C38,#FFBA6A);background-size:200% auto;-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;animation:shimmer 4s linear infinite}
+.glass{background:rgba(13,17,23,.82);backdrop-filter:blur(22px) saturate(160%);-webkit-backdrop-filter:blur(22px) saturate(160%);border:1px solid rgba(255,255,255,.08);border-radius:16px}
+.card-hover{transition:transform .3s cubic-bezier(.22,.68,0,1.2),border-color .3s,box-shadow .3s,background .3s}
+.card-hover:hover{transform:translateY(-6px);border-color:rgba(255,101,0,.28)!important;box-shadow:0 24px 48px rgba(0,0,0,.5),0 0 32px rgba(255,101,0,.1);background:var(--bg2)!important}
+.btn-acc{display:inline-flex;align-items:center;gap:8px;background:var(--acc);color:#07090B;font-family:'DM Sans',sans-serif;font-weight:600;font-size:.85rem;letter-spacing:.07em;text-transform:uppercase;border:none;padding:14px 30px;border-radius:6px;cursor:pointer;transition:transform .2s,box-shadow .2s,filter .2s}
+.btn-acc:hover{transform:translateY(-2px);box-shadow:${glowMd};filter:brightness(1.1)}
+.btn-acc:disabled{opacity:.55;cursor:not-allowed;transform:none}
+.btn-ghost{display:inline-flex;align-items:center;gap:8px;background:transparent;color:var(--t1);font-family:'DM Sans',sans-serif;font-weight:500;font-size:.85rem;letter-spacing:.05em;text-transform:uppercase;border:1px solid var(--border);padding:14px 30px;border-radius:6px;cursor:pointer;transition:border-color .2s,color .2s,box-shadow .2s}
+.btn-ghost:hover{border-color:var(--acc);color:var(--acc);box-shadow:0 0 20px rgba(255,101,0,.12)}
+.nav-link{color:var(--t2);text-decoration:none;font-size:.875rem;font-weight:500;transition:color .2s;position:relative}
+.nav-link::after{content:'';position:absolute;bottom:-3px;left:0;width:0;height:1px;background:var(--acc);transition:width .25s}
+.nav-link:hover{color:var(--t1)}.nav-link:hover::after{width:100%}
+.section-tag{font-size:.62rem;font-weight:600;letter-spacing:.22em;text-transform:uppercase;color:var(--acc);margin-bottom:18px;display:block}
+.reveal{opacity:0;transform:translateY(28px);transition:opacity .75s ease,transform .75s cubic-bezier(.22,.68,0,1.2)}
+.reveal.vis{opacity:1;transform:translateY(0)}
+.scan-line{position:absolute;inset:0;background:linear-gradient(to bottom,transparent 0%,rgba(255,101,0,.04) 50%,transparent 100%);height:60px;animation:scanLine 8s linear infinite;pointer-events:none;z-index:1}
+.modal-backdrop{position:fixed;inset:0;z-index:800;background:rgba(7,9,11,.88);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);display:flex;align-items:center;justify-content:center;padding:1rem;animation:fadeIn .2s ease}
+.modal-box{animation:modalIn .35s cubic-bezier(.22,.68,0,1.2);max-height:92vh;overflow-y:auto}
+.crypto-opt{transition:transform .2s cubic-bezier(.22,.68,0,1.2),border-color .2s,background .2s,box-shadow .2s;cursor:pointer}
+.crypto-opt:hover{transform:translateY(-4px)}
+.plan-card-w3{transition:transform .3s cubic-bezier(.22,.68,0,1.2),box-shadow .3s,border-color .3s;cursor:pointer}
+.plan-card-w3:hover{transform:translateY(-8px)}
+.address-box{font-family:'Courier New',monospace;font-size:.75rem;word-break:break-all;background:var(--bg0);border:1px solid var(--border);border-radius:8px;padding:14px 80px 14px 16px;color:var(--t2);position:relative;line-height:1.6}
+.copy-btn{position:absolute;top:50%;right:10px;transform:translateY(-50%);background:var(--acc-dim);border:1px solid rgba(255,101,0,.25);border-radius:5px;color:var(--acc);padding:5px 9px;cursor:pointer;font-size:.67rem;font-weight:600;font-family:'DM Sans',sans-serif;display:flex;align-items:center;gap:4px;transition:background .15s;white-space:nowrap}
+.copy-btn:hover{background:rgba(255,101,0,.22)}
+.wallet-btn{width:100%;display:flex;align-items:center;gap:14px;background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:16px 20px;cursor:pointer;transition:border-color .2s,background .2s;text-align:left}
+.wallet-btn:hover:not(:disabled){border-color:rgba(255,101,0,.4);background:var(--bg1)}
+.wallet-btn:disabled{opacity:.5;cursor:not-allowed}
+@media(max-width:768px){.hide-mobile{display:none!important}.hero-cards{display:none!important}.showcase-grid{grid-template-columns:1fr!important}.footer-grid{grid-template-columns:1fr!important}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+`;
+
+/* ---- Utilities ---- */
+function usdToTokenAmount(usd, token) {
+  if (token.id==="ETH") {
+    const eth=usd/RATES.ETH;
+    const wei=BigInt(Math.round(eth*1e15))*BigInt(1000);
+    return {display:eth.toFixed(6)+" ETH", hex:"0x"+wei.toString(16)};
+  }
+  if (token.id==="BTC") return {display:(usd/RATES.BTC).toFixed(8)+" BTC"};
+  if (token.id==="XRP") return {display:(usd/RATES.XRP).toFixed(4)+" XRP"};
+  if (token.decimals===6) {
+    const raw=Math.round(usd*1e6);
+    return {display:usd.toFixed(2)+" "+token.symbol, hex:"0x"+raw.toString(16)};
+  }
+  const raw=BigInt(Math.round(usd*1e16))*BigInt(100);
+  return {display:usd.toFixed(2)+" "+token.symbol, hex:"0x"+raw.toString(16)};
+}
+function encodeERC20Transfer(to, amountHex) {
+  return "0x"+"a9059cbb"+to.replace("0x","").toLowerCase().padStart(64,"0")+amountHex.replace("0x","").padStart(64,"0");
+}
+async function sendEVMPayment(token, amountHex, from) {
+  if (token.id==="ETH")
+    return window.ethereum.request({method:"eth_sendTransaction",params:[{from,to:EVM_RECEIVER,value:amountHex,gas:"0x5208"}]});
+  const data=encodeERC20Transfer(EVM_RECEIVER, amountHex);
+  return window.ethereum.request({method:"eth_sendTransaction",params:[{from,to:token.contract,data,gas:"0x30D40"}]});
+}
+function shortAddr(a){return a?a.slice(0,6)+"…"+a.slice(-4):""}
+function clip(text){try{navigator.clipboard.writeText(text)}catch(e){const t=document.createElement("textarea");t.value=text;t.style.cssText="position:fixed;opacity:0";document.body.appendChild(t);t.select();document.execCommand("copy");document.body.removeChild(t);}}
+
+/* ---- useWallet ---- */
+function useWallet() {
+  const [wallet,setWallet]=useState({connected:false,address:null,chainId:null});
+  const update=useCallback((accs,chainId)=>{
+    if(accs&&accs.length>0) setWallet({connected:true,address:accs[0],chainId});
+    else setWallet({connected:false,address:null,chainId:null});
+  },[]);
+  const connect=useCallback(async()=>{
+    if(!window.ethereum) return {error:"no_metamask"};
+    try {
+      const accs=await window.ethereum.request({method:"eth_requestAccounts"});
+      const chainId=await window.ethereum.request({method:"eth_chainId"});
+      update(accs,chainId); return {address:accs[0],chainId};
+    } catch(err){return {error:err.code===4001?"user_rejected":"failed"};}
+  },[update]);
+  const disconnect=useCallback(()=>setWallet({connected:false,address:null,chainId:null}),[]);
+  useEffect(()=>{
+    const eth=window.ethereum; if(!eth) return;
+    eth.request({method:"eth_accounts"}).then(accs=>{
+      if(accs.length>0) eth.request({method:"eth_chainId"}).then(id=>update(accs,id));
+    }).catch(()=>{});
+    const onAcc=accs=>update(accs,null);
+    const onChain=id=>setWallet(w=>({...w,chainId:id}));
+    eth.on("accountsChanged",onAcc); eth.on("chainChanged",onChain);
+    return()=>{eth.removeListener("accountsChanged",onAcc);eth.removeListener("chainChanged",onChain);};
+  },[update]);
+  return {wallet,connect,disconnect};
+}
+
+/* ---- useCityScene ---- */
+function useCityScene(mountRef) {
+  useEffect(()=>{
+    const el=mountRef.current; if(!el) return;
+    const W=el.clientWidth, H=el.clientHeight;
+    const renderer=new THREE.WebGLRenderer({antialias:true,alpha:true});
+    renderer.setSize(W,H); renderer.setPixelRatio(Math.min(devicePixelRatio,1.8));
+    renderer.toneMapping=THREE.ACESFilmicToneMapping; renderer.toneMappingExposure=1.1;
+    el.appendChild(renderer.domElement);
+    const scene=new THREE.Scene(); scene.fog=new THREE.FogExp2(0x07090B,0.018);
+    const camera=new THREE.PerspectiveCamera(38,W/H,.1,300);
+    camera.position.set(28,20,28); camera.lookAt(0,2,0);
+    scene.add(new THREE.AmbientLight(0x0a1020,1.2));
+    const sun=new THREE.DirectionalLight(0xffffff,.4); sun.position.set(12,25,12); scene.add(sun);
+    const oP=new THREE.PointLight(0xFF6500,6,22); oP.position.set(0,9,0); scene.add(oP);
+    const bP=new THREE.PointLight(0x003AFF,1.5,50); bP.position.set(-22,4,-22); scene.add(bP);
+    const gnd=new THREE.Mesh(new THREE.PlaneGeometry(60,60),new THREE.MeshPhongMaterial({color:0x080C10,shininess:60,specular:0x111833}));
+    gnd.rotation.x=-Math.PI/2; scene.add(gnd);
+    const grid=new THREE.GridHelper(60,48,0xFF6500,0x101620);
+    grid.material.opacity=.25; grid.material.transparent=true; scene.add(grid);
+    const bMat=new THREE.MeshPhongMaterial({color:0x0C1118,emissive:0x050810,shininess:90,specular:0x223355});
+    [[0,0,3,14,3],[0,0,1.4,18,1.4],[5,1,2.2,9,2.2],[-5,-1,2.2,10,2.2],[1,5,2,7,2],[-2,-5,2,8,2],
+     [8,0,1.6,6,1.6],[-8,2,1.6,7,1.6],[4,-6,1.4,5,1.4],[-4,6,1.4,5,1.4],[10,4,1.2,4,1.2],[-10,-4,1.2,4,1.2],
+     [2,9,1,3.5,1],[-2,-9,1,4,1],[7,-8,.9,3,.9],[-7,8,.9,3,.9],[12,-2,.8,2.5,.8],[-12,2,.8,2.5,.8]]
+    .forEach(([x,z,w,h,d])=>{
+      const geo=new THREE.BoxGeometry(w,h,d);
+      const m=new THREE.Mesh(geo,bMat); m.position.set(x,h/2,z); scene.add(m);
+      const e=new THREE.LineSegments(new THREE.EdgesGeometry(geo),new THREE.LineBasicMaterial({color:0xFF6500,transparent:true,opacity:.22}));
+      e.position.copy(m.position); scene.add(e);
+    });
+    const rMat=new THREE.LineBasicMaterial({color:0xFF6500,transparent:true,opacity:.65});
+    const routes=[
+      [new THREE.Vector3(-18,.06,0),new THREE.Vector3(18,.06,0)],
+      [new THREE.Vector3(0,.06,-18),new THREE.Vector3(0,.06,18)],
+      [new THREE.Vector3(-14,.06,-8),new THREE.Vector3(14,.06,8)],
+      [new THREE.Vector3(-12,5,-4),new THREE.Vector3(12,5,4)],
+    ];
+    routes.forEach(pts=>scene.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts),rMat)));
+    const podGeo=new THREE.SphereGeometry(.22,8,8), podMat=new THREE.MeshBasicMaterial({color:0xFF6500});
+    const pods=routes.map(pts=>{
+      const p=new THREE.Mesh(podGeo,podMat);
+      p.userData={pts,t:Math.random(),speed:.003+Math.random()*.004,dir:Math.random()>.5?1:-1};
+      scene.add(p); return p;
+    });
+    const PC=900, pPos=new Float32Array(PC*3);
+    for(let i=0;i<PC;i++){pPos[i*3]=(Math.random()-.5)*70;pPos[i*3+1]=Math.random()*30+.5;pPos[i*3+2]=(Math.random()-.5)*70;}
+    const pGeo=new THREE.BufferGeometry(); pGeo.setAttribute("position",new THREE.BufferAttribute(pPos,3));
+    const particles=new THREE.Points(pGeo,new THREE.PointsMaterial({color:0xFF7A20,size:.07,transparent:true,opacity:.45}));
+    scene.add(particles);
+    let mx=0,my=0;
+    const onMove=e=>{mx=e.clientX/innerWidth-.5;my=e.clientY/innerHeight-.5;};
+    window.addEventListener("mousemove",onMove);
+    const onResize=()=>{const nw=el.clientWidth,nh=el.clientHeight;renderer.setSize(nw,nh);camera.aspect=nw/nh;camera.updateProjectionMatrix();};
+    window.addEventListener("resize",onResize);
+    let t=0,raf;
+    const tick=()=>{
+      raf=requestAnimationFrame(tick); t+=.01;
+      oP.intensity=5+Math.sin(t*1.8)*1.2;
+      pods.forEach(p=>{
+        p.userData.t+=p.userData.speed*p.userData.dir;
+        if(p.userData.t>=1){p.userData.t=1;p.userData.dir=-1;}
+        if(p.userData.t<=0){p.userData.t=0;p.userData.dir=1;}
+        p.position.lerpVectors(p.userData.pts[0],p.userData.pts[1],p.userData.t);
+      });
+      particles.rotation.y+=.00025;
+      camera.position.x+=(28+mx*5-camera.position.x)*.04;
+      camera.position.y+=(20-my*4-camera.position.y)*.04;
+      camera.lookAt(0,2,0); renderer.render(scene,camera);
+    };
+    tick();
+    return()=>{
+      cancelAnimationFrame(raf);
+      window.removeEventListener("mousemove",onMove);
+      window.removeEventListener("resize",onResize);
+      renderer.dispose();
+      if(el.contains(renderer.domElement)) el.removeChild(renderer.domElement);
+    };
+  },[]);
+}
+
+function useReveal(){
+  useEffect(()=>{
+    const els=document.querySelectorAll(".reveal");
+    const io=new IntersectionObserver(entries=>entries.forEach(e=>{if(e.isIntersecting){e.target.classList.add("vis");io.unobserve(e.target);}}),{threshold:.12});
+    els.forEach(el=>io.observe(el)); return()=>io.disconnect();
+  },[]);
+}
+
+/* ---- MockQR ---- */
+function MockQR({seed="x",size=130}){
+  const cells=17;
+  const hash=seed.split("").reduce((a,c,i)=>(a+c.charCodeAt(0)*(i+1))|0,0);
+  const isDark=(r,c)=>{
+    if(r<7&&c<7) return r===0||r===6||c===0||c===6||(r>=2&&r<=4&&c>=2&&c<=4);
+    if(r<7&&c>=cells-7){const lc=c-(cells-7);return r===0||r===6||lc===0||lc===6||(r>=2&&r<=4&&lc>=2&&lc<=4);}
+    if(r>=cells-7&&c<7){const lr=r-(cells-7);return lr===0||lr===6||c===0||c===6||(lr>=2&&lr<=4&&c>=2&&c<=4);}
+    return((r*13+c*7+hash+r*c)%3)!==0;
+  };
+  const cp=(size-16)/cells;
+  return(
+    <div style={{background:"#fff",padding:8,borderRadius:10,display:"inline-block",boxShadow:"0 4px 24px rgba(0,0,0,.5)"}}>
+      <div style={{display:"grid",gridTemplateColumns:`repeat(${cells},${cp}px)`,gridTemplateRows:`repeat(${cells},${cp}px)`}}>
+        {Array.from({length:cells*cells},(_,i)=>{
+          const r=Math.floor(i/cells),c=i%cells;
+          return <div key={i} style={{background:isDark(r,c)?"#0a0a0a":"#fff"}}/>;
+        })}
+      </div>
+    </div>
+  );
+}
+
+/* ---- Toast ---- */
+function Toast({message,type="success",onDone}){
+  useEffect(()=>{const t=setTimeout(onDone,2800);return()=>clearTimeout(t);},[onDone]);
+  const err=type==="error";
+  return(
+    <div style={{position:"fixed",bottom:28,right:28,zIndex:9999,display:"flex",alignItems:"center",gap:10,background:err?"rgba(43,13,13,.97)":"rgba(13,43,26,.97)",border:`1px solid ${err?"rgba(255,80,80,.3)":"rgba(0,255,136,.3)"}`,borderRadius:10,padding:"12px 18px",color:err?"#FF7070":"#00FF88",fontSize:".85rem",fontWeight:500,animation:"fadeIn .3s ease",boxShadow:"0 8px 32px rgba(0,0,0,.6)",maxWidth:320}}>
+      {err?<AlertCircle size={15}/>:<Check size={15}/>}
+      {message}
+    </div>
+  );
+}
+
+/* ---- WalletModal ---- */
+function WalletModal({onClose,onConnect,hasMetaMask}){
+  const [connecting,setConnecting]=useState(false);
+  const [err,setErr]=useState(null);
+  const handleMM=async()=>{
+    setConnecting(true);setErr(null);
+    const r=await onConnect(); setConnecting(false);
+    if(r&&r.error) setErr(r.error==="no_metamask"?"MetaMask not detected. Install the browser extension.":r.error==="user_rejected"?"Connection rejected. Try again.":"Connection failed. Try again.");
+    else onClose();
+  };
+  return(
+    <div className="modal-backdrop" onClick={onClose}>
+      <div className="modal-box glass" onClick={e=>e.stopPropagation()} style={{width:"100%",maxWidth:420,borderRadius:20,padding:"32px 28px"}}>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:28}}>
+          <div>
+            <div style={{fontFamily:"Orbitron,sans-serif",fontWeight:700,fontSize:"1.1rem"}}>Connect Wallet</div>
+            <div style={{color:T.secondary,fontSize:".8rem",marginTop:4}}>Choose your wallet provider</div>
+          </div>
+          <button onClick={onClose} style={{background:"none",border:"none",color:T.secondary,cursor:"pointer",padding:4,display:"flex"}}><X size={20}/></button>
+        </div>
+        {err&&<div style={{background:"rgba(255,80,80,.08)",border:"1px solid rgba(255,80,80,.22)",borderRadius:8,padding:"10px 14px",color:"#FF8080",fontSize:".82rem",marginBottom:16,display:"flex",gap:8,alignItems:"flex-start"}}><AlertCircle size={13} style={{flexShrink:0,marginTop:2}}/>{err}</div>}
+        <button className="wallet-btn" onClick={handleMM} disabled={connecting} style={{marginBottom:10,color:T.primary}}>
+          <div style={{width:40,height:40,borderRadius:10,background:"#F6851B",display:"flex",alignItems:"center",justifyContent:"center",fontSize:"1.4rem",flexShrink:0}}>&#x1F98A;</div>
+          <div style={{flex:1}}>
+            <div style={{fontWeight:600,fontSize:".92rem"}}>MetaMask</div>
+            <div style={{color:T.secondary,fontSize:".75rem"}}>{hasMetaMask?"Browser extension detected":"Install extension required"}</div>
+          </div>
+          {connecting&&<RefreshCw size={16} className="spin" style={{color:T.accent}}/>}
+        </button>
+        <button className="wallet-btn" disabled style={{marginBottom:10,color:T.secondary}}>
+          <div style={{width:40,height:40,borderRadius:10,background:"#3B99FC",display:"flex",alignItems:"center",justifyContent:"center",fontSize:"1.3rem",flexShrink:0}}>&#x1F517;</div>
+          <div style={{flex:1}}><div style={{fontWeight:600,fontSize:".92rem",color:T.primary}}>WalletConnect</div><div style={{fontSize:".75rem"}}>Coming soon</div></div>
+        </button>
+        <button className="wallet-btn" disabled style={{color:T.secondary}}>
+          <div style={{width:40,height:40,borderRadius:10,background:"#0052FF",display:"flex",alignItems:"center",justifyContent:"center",fontSize:"1.1rem",fontWeight:700,color:"#fff",flexShrink:0}}>C</div>
+          <div style={{flex:1}}><div style={{fontWeight:600,fontSize:".92rem",color:T.primary}}>Coinbase Wallet</div><div style={{fontSize:".75rem"}}>Coming soon</div></div>
+        </button>
+        <p style={{textAlign:"center",color:T.muted,fontSize:".7rem",marginTop:22,lineHeight:1.65}}>By connecting you agree to our Terms &amp; Privacy Policy.<br/>GamefiLyfe never stores your private keys.</p>
+      </div>
+    </div>
+  );
+}
+
+/* ---- PaymentStep ---- */
+function PaymentStep({token,plan,wallet,txStatus,txHash,txError,onCopy,copied,onEVMPay,onManualConfirm,onConnectWallet,onClose}){
+  const amt=usdToTokenAmount(plan.price,token);
+  const isEVM=token.network==="evm", isBTC=token.network==="btc", isXRP=token.network==="xrp";
+  if(txStatus==="success") return(
+    <div style={{textAlign:"center",padding:"20px 0"}}>
+      <div style={{width:80,height:80,borderRadius:"50%",background:"rgba(0,255,136,.1)",border:"2px solid rgba(0,255,136,.35)",display:"flex",alignItems:"center",justifyContent:"center",margin:"0 auto 24px",animation:"successPop .5s cubic-bezier(.22,.68,0,1.2) both"}}><CheckCircle size={38} style={{color:"#00FF88"}}/></div>
+      <div style={{fontFamily:"Orbitron,sans-serif",fontWeight:800,fontSize:"1.4rem",marginBottom:10}}>Payment Confirmed!</div>
+      <p style={{color:T.secondary,fontSize:".88rem",lineHeight:1.7,maxWidth:"34ch",margin:"0 auto 24px"}}>You're now a <span style={{color:T.primary,fontWeight:600}}>{plan.name}</span> player. Your quest engine activates shortly.</p>
+      {txHash&&<a href={`https://etherscan.io/tx/${txHash}`} target="_blank" rel="noopener noreferrer" style={{display:"inline-flex",alignItems:"center",gap:6,color:T.accent,fontSize:".78rem",textDecoration:"none",marginBottom:20}}>View on Etherscan <ExternalLink size={12}/></a>}
+      <button className="btn-acc" onClick={onClose} style={{width:"100%",justifyContent:"center",marginTop:12}}>Start Playing <ArrowRight size={16}/></button>
+    </div>
+  );
+  if(txStatus==="confirming") return(
+    <div style={{textAlign:"center",padding:"24px 0"}}>
+      <div style={{width:80,height:80,borderRadius:"50%",background:T.accentDim,border:`2px solid rgba(255,101,0,.3)`,display:"flex",alignItems:"center",justifyContent:"center",margin:"0 auto 24px"}}><RefreshCw size={36} className="spin" style={{color:T.accent}}/></div>
+      <div style={{fontFamily:"Orbitron,sans-serif",fontWeight:700,fontSize:"1.05rem",marginBottom:10}}>Confirming Payment…</div>
+      <p style={{color:T.secondary,fontSize:".84rem",lineHeight:1.7}}>Waiting for blockchain confirmation. Usually 15–60 seconds.</p>
+      {txHash&&<div style={{marginTop:20}}><div style={{fontSize:".68rem",color:T.muted,marginBottom:6,textTransform:"uppercase",letterSpacing:".08em"}}>Tx Hash</div><div className="address-box" style={{fontSize:".68rem",paddingRight:16}}>{txHash.slice(0,22)}…{txHash.slice(-14)}</div></div>}
+    </div>
+  );
+  if(txStatus==="failed") return(
+    <div style={{textAlign:"center",padding:"24px 0"}}>
+      <div style={{width:80,height:80,borderRadius:"50%",background:"rgba(255,80,80,.09)",border:"2px solid rgba(255,80,80,.28)",display:"flex",alignItems:"center",justifyContent:"center",margin:"0 auto 24px"}}><AlertCircle size={38} style={{color:"#FF5050"}}/></div>
+      <div style={{fontFamily:"Orbitron,sans-serif",fontWeight:700,fontSize:"1.05rem",marginBottom:10,color:"#FF6060"}}>Transaction Failed</div>
+      <p style={{color:T.secondary,fontSize:".84rem",lineHeight:1.7,marginBottom:24}}>{txError||"Something went wrong. Please try again."}</p>
+      <button className="btn-acc" onClick={onEVMPay} style={{width:"100%",justifyContent:"center"}}>Try Again</button>
+    </div>
+  );
+  return(
+    <div>
+      <div style={{background:token.bg,border:`1px solid ${token.color}50`,borderRadius:12,padding:"18px 22px",marginBottom:22,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+        <div><div style={{fontSize:".7rem",color:T.muted,marginBottom:4}}>Amount Due</div><div style={{fontFamily:"Orbitron,sans-serif",fontWeight:800,fontSize:"1.25rem",color:token.color}}>{amt.display}</div><div style={{fontSize:".7rem",color:T.secondary,marginTop:2}}>≈ ${plan.price} USD · {plan.name} Plan</div></div>
+        <div style={{fontSize:"2.4rem",color:token.color}}>{token.icon}</div>
+      </div>
+      {isEVM&&<>
+        <div style={{marginBottom:16}}>
+          <div style={{fontSize:".68rem",color:T.muted,marginBottom:8,letterSpacing:".1em",textTransform:"uppercase"}}>Payment Address (Ethereum)</div>
+          <div className="address-box">{EVM_RECEIVER}<button className="copy-btn" onClick={()=>onCopy(EVM_RECEIVER)}>{copied?<><Check size={11}/>Copied!</>:<><Copy size={11}/>Copy</>}</button></div>
+        </div>
+        {!wallet.connected
+          ?<button className="btn-acc" onClick={onConnectWallet} style={{width:"100%",justifyContent:"center",marginBottom:10}}><Wallet size={15}/> Connect Wallet to Pay</button>
+          :<button className="btn-acc" onClick={onEVMPay} disabled={txStatus==="sending"} style={{width:"100%",justifyContent:"center",marginBottom:10}}>{txStatus==="sending"?<><RefreshCw size={14} className="spin"/>Broadcasting…</>:<>&#x1F98A; Pay with MetaMask</>}</button>
+        }
+        <div style={{textAlign:"center",color:T.muted,fontSize:".7rem",marginBottom:14}}>or copy address and send manually</div>
+        <div style={{background:"rgba(255,200,0,.05)",border:"1px solid rgba(255,200,0,.18)",borderRadius:8,padding:"10px 14px",display:"flex",gap:8,alignItems:"flex-start",color:"#FFD060",fontSize:".74rem"}}><AlertCircle size={13} style={{flexShrink:0,marginTop:1}}/>Ensure you're on <strong style={{margin:"0 3px"}}>Ethereum Mainnet</strong>. Only send {token.symbol} to this address.</div>
+      </>}
+      {isBTC&&<>
+        <div style={{display:"flex",justifyContent:"center",marginBottom:20}}><MockQR seed={token.address} size={130}/></div>
+        <div style={{marginBottom:16}}><div style={{fontSize:".68rem",color:T.muted,marginBottom:8,letterSpacing:".1em",textTransform:"uppercase"}}>Bitcoin Address (Bech32)</div><div className="address-box">{token.address}<button className="copy-btn" onClick={()=>onCopy(token.address)}>{copied?<><Check size={11}/>Copied!</>:<><Copy size={11}/>Copy</>}</button></div></div>
+        <button className="btn-acc" onClick={onManualConfirm} style={{width:"100%",justifyContent:"center",marginBottom:12}}><Check size={15}/> I've Sent the Payment</button>
+        <div style={{background:"rgba(247,147,26,.06)",border:"1px solid rgba(247,147,26,.2)",borderRadius:8,padding:"10px 14px",display:"flex",gap:8,alignItems:"flex-start",color:"#F7931A",fontSize:".74rem"}}><AlertCircle size={13} style={{flexShrink:0,marginTop:1}}/>Send exactly <strong style={{margin:"0 3px"}}>{amt.display}</strong> to the address above. BTC confirms in 10–30 minutes.</div>
+      </>}
+      {isXRP&&<>
+        <div style={{display:"flex",justifyContent:"center",marginBottom:20}}><MockQR seed={token.address} size={130}/></div>
+        <div style={{marginBottom:12}}><div style={{fontSize:".68rem",color:T.muted,marginBottom:8,letterSpacing:".1em",textTransform:"uppercase"}}>XRP Address</div><div className="address-box">{token.address}<button className="copy-btn" onClick={()=>onCopy(token.address)}>{copied?<><Check size={11}/>Copied!</>:<><Copy size={11}/>Copy</>}</button></div></div>
+        <div style={{marginBottom:16}}><div style={{fontSize:".68rem",color:"#FF6060",marginBottom:8,letterSpacing:".1em",textTransform:"uppercase",fontWeight:700}}>Destination Tag (Required)</div><div className="address-box" style={{fontFamily:"Orbitron,sans-serif",fontWeight:700,color:T.accent,paddingRight:80}}>{token.destTag}<button className="copy-btn" onClick={()=>onCopy(token.destTag)}>{copied?<><Check size={11}/>Copied!</>:<><Copy size={11}/>Copy</>}</button></div></div>
+        <button className="btn-acc" onClick={onManualConfirm} style={{width:"100%",justifyContent:"center",marginBottom:12}}><Check size={15}/> I've Sent the Payment</button>
+        <div style={{background:"rgba(0,170,228,.06)",border:"1px solid rgba(0,170,228,.2)",borderRadius:8,padding:"10px 14px",display:"flex",gap:8,alignItems:"flex-start",color:"#00AAE4",fontSize:".74rem"}}><AlertCircle size={13} style={{flexShrink:0,marginTop:1}}/><strong>Always include the Destination Tag.</strong>&nbsp;Omitting it may result in permanent loss of funds.</div>
+      </>}
+    </div>
+  );
+}
+
+/* ---- PaymentModal ---- */
+function PaymentModal({initialPlan,onClose,wallet,onConnectWallet}){
+  const [step,setStep]=useState(initialPlan?"currency":"plan");
+  const [selPlan,setSelPlan]=useState(initialPlan||null);
+  const [selToken,setSelToken]=useState(null);
+  const [txStatus,setTxStatus]=useState("idle");
+  const [txHash,setTxHash]=useState(null);
+  const [txError,setTxError]=useState(null);
+  const [copied,setCopied]=useState(false);
+  const steps=initialPlan?["currency","payment"]:["plan","currency","payment"];
+  const idx=steps.indexOf(step);
+  const handleCopy=t=>{clip(t);setCopied(true);setTimeout(()=>setCopied(false),2200);};
+  const handleEVMPay=async()=>{
+    if(!wallet.connected){onConnectWallet();return;}
+    setTxStatus("sending");
+    try{
+      const {hex}=usdToTokenAmount(selPlan.price,selToken);
+      const hash=await sendEVMPayment(selToken,hex,wallet.address);
+      setTxHash(hash); setTxStatus("confirming");
+      setTimeout(()=>setTxStatus("success"),6000);
+    }catch(err){
+      setTxError(err.code===4001?"Transaction rejected by user.":(err.message||"Transaction failed."));
+      setTxStatus("failed");
+    }
+  };
+  const handleManual=()=>{setTxStatus("confirming");setTimeout(()=>setTxStatus("success"),4000);};
+  const titles={plan:"Choose Your Plan",currency:"Select Currency",payment:"Complete Payment"};
+  const terminal=["success","confirming","failed"].includes(txStatus);
+  return(
+    <div className="modal-backdrop" onClick={onClose}>
+      <div className="modal-box glass" onClick={e=>e.stopPropagation()} style={{width:"100%",maxWidth:520,borderRadius:20,overflow:"hidden",maxHeight:"92vh",display:"flex",flexDirection:"column"}}>
+        {!terminal&&(
+          <div style={{padding:"20px 26px",borderBottom:`1px solid ${T.border}`,display:"flex",alignItems:"center",justifyContent:"space-between",flexShrink:0}}>
+            <div style={{display:"flex",alignItems:"center",gap:14}}>
+              {idx>0&&txStatus==="idle"&&<button onClick={()=>{setStep(steps[idx-1]);setTxStatus("idle");setTxError(null);}} style={{background:"none",border:"none",color:T.secondary,cursor:"pointer",fontSize:".82rem",padding:0}}>← Back</button>}
+              <div style={{fontFamily:"Orbitron,sans-serif",fontWeight:700,fontSize:".92rem"}}>{titles[step]}</div>
+            </div>
+            <div style={{display:"flex",alignItems:"center",gap:12}}>
+              <div style={{display:"flex",gap:4}}>{steps.map((s,i)=><div key={s} style={{width:i<=idx?18:6,height:5,borderRadius:3,background:i<=idx?T.accent:T.muted,transition:"width .3s,background .3s"}}/>)}</div>
+              <button onClick={onClose} style={{background:"none",border:"none",color:T.secondary,cursor:"pointer",padding:4,display:"flex"}}><X size={17}/></button>
+            </div>
+          </div>
+        )}
+        <div style={{padding:"26px",overflowY:"auto",flex:1}}>
+          {step==="plan"&&(
+            <div style={{display:"flex",flexDirection:"column",gap:12}}>
+              {PLANS.map(p=>(
+                <div key={p.id} className="plan-card-w3" onClick={()=>{setSelPlan(p);setStep("currency");}} style={{background:p.highlight?T.accentDim:T.bgRaised,border:`1px solid ${p.highlight?"rgba(255,101,0,.4)":T.border}`,borderRadius:12,padding:"20px 22px",cursor:"pointer",boxShadow:p.highlight?"0 0 30px rgba(255,101,0,.1)":"none"}}>
+                  <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:12}}>
+                    <div><span style={{fontSize:".58rem",fontWeight:700,letterSpacing:".2em",textTransform:"uppercase",color:p.highlight?T.accent:T.muted}}>{p.tag}</span><div style={{fontFamily:"Orbitron,sans-serif",fontWeight:700,fontSize:"1rem",marginTop:4}}>{p.name}</div></div>
+                    <div style={{textAlign:"right"}}><div style={{fontFamily:"Orbitron,sans-serif",fontWeight:800,fontSize:"1.5rem",color:p.highlight?T.accent:T.primary}}>${p.price}</div><div style={{fontSize:".68rem",color:T.muted}}>/month</div></div>
+                  </div>
+                  <div style={{display:"flex",flexWrap:"wrap",gap:5}}>
+                    {p.perks.slice(0,3).map(pk=><span key={pk} style={{fontSize:".7rem",color:T.secondary,background:"rgba(255,255,255,.04)",borderRadius:4,padding:"3px 8px",border:`1px solid ${T.border}`}}>{pk}</span>)}
+                    {p.perks.length>3&&<span style={{fontSize:".7rem",color:T.accent}}>+{p.perks.length-3} more</span>}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+          {step==="currency"&&(
+            <div>
+              {selPlan&&<div style={{background:T.bgRaised,border:`1px solid ${T.border}`,borderRadius:10,padding:"12px 16px",marginBottom:20,display:"flex",justifyContent:"space-between",alignItems:"center"}}><span style={{color:T.secondary,fontSize:".82rem"}}>{selPlan.name} Plan</span><span style={{fontFamily:"Orbitron,sans-serif",fontWeight:700,color:T.accent}}>${selPlan.price}/mo</span></div>}
+              <div style={{fontSize:".78rem",color:T.secondary,marginBottom:14}}>Select your preferred cryptocurrency:</div>
+              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:10,marginBottom:22}}>
+                {Object.values(TOKENS).map(tk=>(
+                  <div key={tk.id} className="crypto-opt" onClick={()=>setSelToken(tk)} style={{background:selToken?.id===tk.id?tk.bg:T.bgRaised,border:`1px solid ${selToken?.id===tk.id?tk.color+"70":T.border}`,borderRadius:12,padding:"16px 10px",textAlign:"center",boxShadow:selToken?.id===tk.id?`0 0 22px ${tk.color}28`:"none"}}>
+                    <div style={{fontSize:"1.8rem",marginBottom:5,color:tk.color}}>{tk.icon}</div>
+                    <div style={{fontFamily:"Orbitron,sans-serif",fontWeight:700,fontSize:".68rem",color:T.primary}}>{tk.symbol}</div>
+                    <div style={{fontSize:".6rem",color:T.muted,marginTop:2}}>{tk.name.split(" ")[0]}</div>
+                    {RATES[tk.id]!==1&&<div style={{fontSize:".58rem",color:T.secondary,marginTop:4}}>${RATES[tk.id]>=1000?(RATES[tk.id]/1000).toFixed(1)+"K":RATES[tk.id]}</div>}
+                  </div>
+                ))}
+              </div>
+              {selToken&&selPlan&&<div style={{background:"rgba(255,101,0,.06)",border:"1px solid rgba(255,101,0,.14)",borderRadius:10,padding:"14px 18px",marginBottom:18,display:"flex",justifyContent:"space-between",alignItems:"center"}}><div><div style={{fontSize:".7rem",color:T.muted,marginBottom:2}}>You'll pay</div><div style={{fontFamily:"Orbitron,sans-serif",fontWeight:700,color:T.accent}}>{usdToTokenAmount(selPlan.price,selToken).display}</div></div><div style={{textAlign:"right"}}><div style={{fontSize:".7rem",color:T.muted,marginBottom:2}}>USD Value</div><div style={{fontWeight:600}}>${selPlan.price}</div></div></div>}
+              <button className="btn-acc" disabled={!selToken} onClick={()=>selToken&&setStep("payment")} style={{width:"100%",justifyContent:"center",opacity:selToken?1:.45,cursor:selToken?"pointer":"not-allowed"}}>Continue to Payment <ArrowRight size={15}/></button>
+            </div>
+          )}
+          {step==="payment"&&selToken&&selPlan&&(
+            <PaymentStep token={selToken} plan={selPlan} wallet={wallet} txStatus={txStatus} txHash={txHash} txError={txError} copied={copied} onCopy={handleCopy} onEVMPay={handleEVMPay} onManualConfirm={handleManual} onConnectWallet={onConnectWallet} onClose={onClose}/>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ---- PricingSection ---- */
+function PricingSection({onSelectPlan}){
+  return(
+    <section style={{padding:"clamp(6rem,12vw,13rem) clamp(1.5rem,5vw,5rem)",maxWidth:1280,margin:"0 auto"}}>
+      <div className="reveal" style={{textAlign:"center",marginBottom:56}}>
+        <span className="section-tag" style={{display:"inline-block"}}>Pricing</span>
+        <h2 style={{fontFamily:"Orbitron,sans-serif",fontSize:"clamp(2.2rem,5vw,4.5rem)",fontWeight:800,letterSpacing:"-.03em",lineHeight:.95,marginBottom:16}}>Pay with <span className="orange-grad">Crypto</span></h2>
+        <p style={{color:T.secondary,fontSize:".96rem",maxWidth:"46ch",margin:"0 auto 28px",lineHeight:1.75}}>Fully on-chain payments. No credit cards required. Every plan billed monthly — cancel anytime.</p>
+        <div style={{display:"flex",gap:8,justifyContent:"center",flexWrap:"wrap"}}>
+          {Object.values(TOKENS).map(t=>(<div key={t.id} style={{display:"flex",alignItems:"center",gap:5,background:t.bg,border:`1px solid ${t.color}40`,borderRadius:20,padding:"5px 12px"}}><span style={{color:t.color,fontSize:".88rem"}}>{t.icon}</span><span style={{fontSize:".68rem",fontWeight:700,fontFamily:"Orbitron,sans-serif",color:t.color}}>{t.symbol}</span></div>))}
+        </div>
+      </div>
+      <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(272px,1fr))",gap:20,alignItems:"start"}}>
+        {PLANS.map((p,i)=>(
+          <div key={p.id} className="reveal plan-card-w3" style={{transitionDelay:`${i*.1}s`,background:p.highlight?T.accentDim:T.bgSurface,border:`1px solid ${p.highlight?"rgba(255,101,0,.42)":T.border}`,borderRadius:18,padding:"34px 28px",position:"relative",overflow:"hidden",boxShadow:p.highlight?"0 0 50px rgba(255,101,0,.12),0 24px 48px rgba(0,0,0,.4)":"none"}}>
+            {p.highlight&&<div style={{position:"absolute",top:22,right:-26,background:T.accent,color:"#07090B",fontSize:".58rem",fontWeight:700,letterSpacing:".1em",textTransform:"uppercase",padding:"5px 34px",transform:"rotate(45deg)"}}>Most Popular</div>}
+            <span style={{fontSize:".58rem",fontWeight:700,letterSpacing:".22em",textTransform:"uppercase",color:p.highlight?T.accent:T.muted}}>{p.tag}</span>
+            <div style={{fontFamily:"Orbitron,sans-serif",fontWeight:800,fontSize:"1.3rem",marginTop:10,marginBottom:6}}>{p.name}</div>
+            <div style={{display:"flex",alignItems:"flex-end",gap:4,marginBottom:6}}>
+              <span style={{fontFamily:"Orbitron,sans-serif",fontWeight:900,fontSize:"2.8rem",lineHeight:1,color:p.highlight?T.accent:T.primary}}>${p.price}</span>
+              <span style={{color:T.muted,fontSize:".82rem",marginBottom:7}}>/month</span>
+            </div>
+            <div style={{height:1,background:T.border,margin:"18px 0"}}/>
+            <ul style={{listStyle:"none",display:"flex",flexDirection:"column",gap:9,marginBottom:26}}>
+              {p.perks.map(pk=>(<li key={pk} style={{display:"flex",alignItems:"flex-start",gap:10,fontSize:".86rem",color:T.secondary}}><div style={{width:18,height:18,borderRadius:"50%",flexShrink:0,background:p.highlight?T.accentDim:"rgba(255,255,255,.05)",border:`1px solid ${p.highlight?"rgba(255,101,0,.3)":T.border}`,display:"flex",alignItems:"center",justifyContent:"center",marginTop:1}}><Check size={9} style={{color:p.highlight?T.accent:T.muted}}/></div>{pk}</li>))}
+            </ul>
+            <button className={p.highlight?"btn-acc":"btn-ghost"} onClick={()=>onSelectPlan(p)} style={{width:"100%",justifyContent:"center"}}>Pay with Crypto <ArrowRight size={14}/></button>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+/* ---- Main App ---- */
+function App(){
+  const mountRef=useRef(null);
+  const [scrolled,setScrolled]=useState(false);
+  const [walletOpen,setWalletOpen]=useState(false);
+  const [pmModal,setPmModal]=useState({open:false,plan:null});
+  const [toast,setToast]=useState(null);
+  const {wallet,connect,disconnect}=useWallet();
+  useCityScene(mountRef);
+  useReveal();
+  useEffect(()=>{
+    const fn=()=>setScrolled(scrollY>60);
+    window.addEventListener("scroll",fn);
+    return()=>window.removeEventListener("scroll",fn);
+  },[]);
+  const hasMM=typeof window!=="undefined"&&Boolean(window.ethereum);
+  const doConnect=async()=>{
+    const r=await connect();
+    if(r&&r.error) setToast({message:r.error==="no_metamask"?"MetaMask not detected":r.error==="user_rejected"?"Wallet connection rejected":"Connection failed",type:"error"});
+    return r;
+  };
+  const openPM=plan=>setPmModal({open:true,plan:plan||null});
+  return(
+    <div style={{fontFamily:"'DM Sans',sans-serif",background:T.bgVoid,color:T.primary,overflowX:"hidden"}}>
+      <style>{CSS}</style>
+      {walletOpen&&<WalletModal onClose={()=>setWalletOpen(false)} onConnect={async()=>{const r=await doConnect();setWalletOpen(false);return r;}} hasMetaMask={hasMM}/>}
+      {pmModal.open&&<PaymentModal initialPlan={pmModal.plan} onClose={()=>setPmModal({open:false,plan:null})} wallet={wallet} onConnectWallet={()=>setWalletOpen(true)}/>}
+      {toast&&<Toast message={toast.message} type={toast.type} onDone={()=>setToast(null)}/>}
+
+      {/* NAV */}
+      <nav style={{position:"fixed",top:0,left:0,right:0,zIndex:200,display:"flex",alignItems:"center",justifyContent:"space-between",padding:"0 clamp(1.5rem,5vw,5rem)",height:70,background:scrolled?"rgba(7,9,11,.94)":"transparent",borderBottom:scrolled?`1px solid ${T.border}`:"1px solid transparent",backdropFilter:scrolled?"blur(24px)":"none",transition:"background .35s,border-color .35s"}}>
+        <div style={{display:"flex",alignItems:"center",gap:10}}>
+          <div style={{width:38,height:38,borderRadius:9,background:`linear-gradient(135deg,${T.accent},${T.accentAlt})`,boxShadow:glowSm,display:"flex",alignItems:"center",justifyContent:"center"}}>
+            <span style={{fontFamily:"Orbitron,sans-serif",fontWeight:900,fontSize:"1rem",color:"#07090B"}}>G</span>
+          </div>
+          <span style={{fontFamily:"Orbitron,sans-serif",fontWeight:700,fontSize:"1rem",letterSpacing:".04em"}}>game<span style={{color:T.accent}}>fi</span>lyfe</span>
+        </div>
+        <div className="hide-mobile" style={{display:"flex",gap:36}}>
+          {["Features","Ecosystem","Pricing","Docs"].map(l=><a key={l} href="#" className="nav-link">{l}</a>)}
+        </div>
+        <div style={{display:"flex",gap:10,alignItems:"center"}}>
+          {wallet.connected?(
+            <>
+              <div style={{display:"flex",alignItems:"center",gap:7,background:T.bgRaised,border:`1px solid ${T.border}`,borderRadius:8,padding:"7px 13px",fontSize:".78rem"}}>
+                <div style={{width:7,height:7,borderRadius:"50%",background:"#00FF88",boxShadow:"0 0 6px #00FF88"}}/>
+                <span style={{fontFamily:"monospace",color:T.primary}}>{shortAddr(wallet.address)}</span>
+              </div>
+              <button onClick={disconnect} className="btn-ghost hide-mobile" style={{padding:"8px 14px",fontSize:".75rem"}}>Disconnect</button>
+              <button className="btn-acc" style={{padding:"10px 22px",fontSize:".78rem"}} onClick={()=>openPM()}>Subscribe</button>
+            </>
+          ):(
+            <>
+              <button onClick={()=>setWalletOpen(true)} className="btn-ghost hide-mobile" style={{padding:"10px 20px",fontSize:".78rem"}}><Wallet size={14}/> Connect</button>
+              <button className="btn-acc" style={{padding:"10px 22px",fontSize:".78rem"}} onClick={()=>openPM()}>Get Early Access</button>
+            </>
+          )}
+        </div>
+      </nav>
+
+      {/* HERO */}
+      <section style={{position:"relative",height:"100vh",minHeight:680,overflow:"hidden"}}>
+        <div ref={mountRef} style={{position:"absolute",inset:0,width:"100%",height:"100%"}}/>
+        <div style={{position:"absolute",inset:0,pointerEvents:"none",background:"linear-gradient(to bottom,rgba(7,9,11,.15) 0%,rgba(7,9,11,.4) 50%,rgba(7,9,11,1) 100%)"}}/>
+        <div style={{position:"absolute",inset:0,pointerEvents:"none",background:"radial-gradient(ellipse 80% 60% at 50% 70%,rgba(255,101,0,.06) 0%,transparent 70%)"}}/>
+        <div className="scan-line"/>
+        {/* Floating cards */}
+        <div className="hero-cards">
+          <div className="float-a" style={{position:"absolute",top:"22%",right:"6%",zIndex:10,width:210}}>
+            <div className="glass" style={{padding:"18px 22px"}}>
+              <span className="section-tag" style={{marginBottom:10}}>Live Activity</span>
+              <div style={{fontSize:"2rem",fontFamily:"Orbitron,sans-serif",fontWeight:700,lineHeight:1}}>47,293</div>
+              <div style={{fontSize:".76rem",color:T.secondary,marginTop:4}}>Players Online Now</div>
+              <div style={{marginTop:14,height:3,background:T.bgRaised,borderRadius:2,overflow:"hidden"}}><div style={{width:"76%",height:"100%",background:`linear-gradient(90deg,${T.accent},${T.accentAlt})`}}/></div>
+              <div style={{display:"flex",justifyContent:"space-between",marginTop:6}}><span style={{fontSize:".65rem",color:T.muted}}>Server load</span><span style={{fontSize:".65rem",color:T.accent}}>76%</span></div>
+            </div>
+          </div>
+          <div className="float-b" style={{position:"absolute",top:"38%",left:"4%",zIndex:10,width:196}}>
+            <div className="glass" style={{padding:"16px 20px"}}>
+              <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:12}}>
+                <div style={{width:36,height:36,borderRadius:"50%",background:`linear-gradient(135deg,${T.accent},${T.accentAlt})`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:"1rem",boxShadow:glowSm,flexShrink:0}}>&#x26A1;</div>
+                <div><div style={{fontSize:".72rem",color:T.secondary,marginBottom:2}}>XP Earned</div><div style={{fontFamily:"Orbitron,sans-serif",fontWeight:700,fontSize:"1rem",color:T.accent}}>+1,840</div></div>
+              </div>
+              <div style={{fontSize:".75rem",fontWeight:500}}>City Explorer Quest</div>
+              <div style={{fontSize:".67rem",color:T.muted,marginTop:2}}>2 minutes ago · Tier S</div>
+            </div>
+          </div>
+          <div className="float-c" style={{position:"absolute",bottom:"22%",right:"10%",zIndex:10,width:200}}>
+            <div className="glass" style={{padding:"16px 20px"}}>
+              <span className="section-tag" style={{marginBottom:10}}>Leaderboard</span>
+              {[{r:"01",n:"xNova_7",x:"98.4K"},{r:"02",n:"Lyfe_Blaze",x:"91.2K"},{r:"03",n:"UrbanGhost",x:"87.6K"}].map(p=>(
+                <div key={p.r} style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8}}>
+                  <div style={{display:"flex",alignItems:"center",gap:8}}><span style={{fontSize:".62rem",color:T.accent,fontFamily:"Orbitron,sans-serif",fontWeight:700}}>{p.r}</span><span style={{fontSize:".76rem"}}>{p.n}</span></div>
+                  <span style={{fontSize:".7rem",color:T.secondary}}>{p.x}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+        {/* Hero copy */}
+        <div style={{position:"absolute",bottom:"12%",left:0,right:0,zIndex:10,textAlign:"center",padding:"0 clamp(1.5rem,5vw,5rem)"}}>
+          <span className="section-tag hero-in" style={{display:"inline-block"}}>The World's First Gamified Super App</span>
+          <h1 className="hero-in d1 glitch" style={{fontFamily:"Orbitron,sans-serif",fontSize:"clamp(3rem,9vw,8.5rem)",fontWeight:900,letterSpacing:"-.03em",lineHeight:.9,marginBottom:22}}>LEVEL UP<br/><span className="orange-grad">YOUR LIFE</span></h1>
+          <p className="hero-in d2" style={{fontSize:"clamp(.95rem,1.8vw,1.15rem)",color:T.secondary,maxWidth:"52ch",margin:"0 auto 36px",lineHeight:1.75}}>GamefiLyfe overlays a live quest engine on your real world. Every street, every habit, every choice — earn XP, win rewards, own your journey.</p>
+          <div className="hero-in d3" style={{display:"flex",gap:14,justifyContent:"center",flexWrap:"wrap"}}>
+            <button className="btn-acc" style={{fontSize:".9rem",padding:"15px 34px"}} onClick={()=>openPM()}>Start Playing — Free <ArrowRight size={16}/></button>
+            <button className="btn-ghost" style={{fontSize:".9rem",padding:"15px 34px"}}>Explore the Map</button>
+          </div>
+          <div className="hero-in d4" style={{marginTop:28,display:"flex",gap:6,justifyContent:"center",alignItems:"center"}}>
+            <div style={{display:"flex"}}>{["\u{1F7E0}","\u{1F535}","\u{1F7E3}","\u{1F7E2}","⚫"].map((c,i)=><div key={i} style={{width:26,height:26,borderRadius:"50%",background:T.bgRaised,border:`2px solid ${T.bgVoid}`,marginLeft:i>0?-8:0,display:"flex",alignItems:"center",justifyContent:"center",fontSize:".55rem"}}>{c}</div>)}</div>
+            <span style={{fontSize:".78rem",color:T.secondary,marginLeft:6}}>Joined by <span style={{fontWeight:600,color:T.primary}}>2.4M+ players</span> worldwide</span>
+          </div>
+        </div>
+        <div style={{position:"absolute",bottom:26,left:"50%",transform:"translateX(-50%)",zIndex:10,display:"flex",flexDirection:"column",alignItems:"center",gap:6}}>
+          <div style={{width:1,height:44,background:`linear-gradient(to bottom,${T.accent},transparent)`}}/>
+          <span style={{fontSize:".58rem",color:T.accent,letterSpacing:".25em",textTransform:"uppercase"}}>Scroll</span>
+        </div>
+      </section>
+
+      {/* STATS */}
+      <section style={{borderTop:`1px solid ${T.border}`,borderBottom:`1px solid ${T.border}`,background:T.bgSurface}}>
+        <div style={{maxWidth:1280,margin:"0 auto",padding:"clamp(3rem,7vw,7rem) clamp(1.5rem,5vw,5rem)",display:"flex",justifyContent:"space-around",alignItems:"center",flexWrap:"wrap",gap:40}}>
+          {STATS.map((s,i)=>(
+            <div key={i} className="reveal" style={{textAlign:"center",transitionDelay:`${i*.1}s`}}>
+              <div style={{fontFamily:"Orbitron,sans-serif",fontSize:"clamp(2.2rem,5vw,4.2rem)",fontWeight:800,letterSpacing:"-.02em",lineHeight:1,background:`linear-gradient(120deg,${T.accent},${T.accentAlt},#FFBA6A)`,backgroundSize:"200% auto",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",backgroundClip:"text"}}>{s.v}</div>
+              <div style={{fontSize:".7rem",color:T.muted,letterSpacing:".15em",textTransform:"uppercase",fontWeight:600,marginTop:8}}>{s.l}</div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* FEATURES */}
+      <section style={{padding:"clamp(6rem,12vw,13rem) clamp(1.5rem,5vw,5rem)",maxWidth:1280,margin:"0 auto"}}>
+        <div className="reveal" style={{marginBottom:64}}>
+          <span className="section-tag">Core Features</span>
+          <h2 style={{fontFamily:"Orbitron,sans-serif",fontSize:"clamp(2.2rem,5vw,4.8rem)",fontWeight:800,letterSpacing:"-.03em",lineHeight:.95,maxWidth:"16ch"}}>Everything<br/>in one<br/><span className="orange-grad">arena</span></h2>
+        </div>
+        <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(288px,1fr))",gap:18}}>
+          {FEATURES.map((f,i)=>(
+            <div key={i} className="reveal card-hover" style={{background:T.bgSurface,border:`1px solid ${T.border}`,borderRadius:14,padding:"32px 28px",transitionDelay:`${i*.07}s`,cursor:"pointer"}}>
+              <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:20}}>
+                <div style={{width:50,height:50,borderRadius:11,background:T.accentDim,border:`1px solid rgba(255,101,0,.18)`,display:"flex",alignItems:"center",justifyContent:"center",color:T.accent}}><f.Icon size={22}/></div>
+                <span style={{fontSize:".58rem",fontWeight:700,letterSpacing:".2em",textTransform:"uppercase",color:T.muted}}>{f.sub}</span>
+              </div>
+              <h3 style={{fontFamily:"Orbitron,sans-serif",fontSize:"1rem",fontWeight:700,marginBottom:12,letterSpacing:".02em"}}>{f.title}</h3>
+              <p style={{fontSize:".9rem",color:T.secondary,lineHeight:1.72}}>{f.desc}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* SHOWCASE */}
+      <section style={{padding:"clamp(4rem,10vw,10rem) clamp(1.5rem,5vw,5rem)",maxWidth:1280,margin:"0 auto"}}>
+        <div className="showcase-grid" style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"clamp(3rem,6vw,8rem)",alignItems:"center"}}>
+          <div>
+            <span className="section-tag reveal">The Ecosystem</span>
+            <h2 className="reveal" style={{fontFamily:"Orbitron,sans-serif",fontSize:"clamp(2rem,4vw,4rem)",fontWeight:800,letterSpacing:"-.03em",lineHeight:.95,marginBottom:28}}>Your city is<br/>your<br/><span className="orange-grad">playground</span></h2>
+            <p className="reveal" style={{color:T.secondary,lineHeight:1.82,fontSize:".98rem",maxWidth:"44ch",marginBottom:36}}>An immersive quest layer maps over your real city. Every street, park, and neighborhood is alive with missions, loot, and rival players — all powered by on-chain economics.</p>
+            <div style={{display:"flex",flexDirection:"column",gap:14}}>
+              {["Real-world AR quests & missions","On-chain GFL token economy","City-district ownership NFTs","Live AI-matched quest events"].map((item,i)=>(
+                <div key={i} className="reveal" style={{display:"flex",alignItems:"center",gap:12,transitionDelay:`${i*.08}s`}}>
+                  <div style={{width:5,height:5,borderRadius:"50%",background:T.accent,flexShrink:0,boxShadow:glowSm}}/>
+                  <span style={{color:T.secondary,fontSize:".92rem"}}>{item}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+          <div className="reveal" style={{position:"relative",height:480}}>
+            <div className="glass" style={{position:"absolute",inset:0,overflow:"hidden",display:"flex",flexDirection:"column"}}>
+              <div style={{padding:"18px 22px",borderBottom:`1px solid ${T.border}`,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                <span style={{fontFamily:"Orbitron,sans-serif",fontSize:".72rem",fontWeight:700,letterSpacing:".1em",textTransform:"uppercase",color:T.accent}}>Live Map</span>
+                <div style={{display:"flex",alignItems:"center",gap:6}}><div style={{width:6,height:6,borderRadius:"50%",background:"#00FF88",boxShadow:"0 0 6px #00FF88"}}/><span style={{fontSize:".68rem",color:T.secondary}}>San Francisco, CA</span></div>
+              </div>
+              <div style={{flex:1,position:"relative",background:"#08090E",overflow:"hidden"}}>
+                {[...Array(9)].map((_,i)=><div key={i} style={{position:"absolute",top:0,bottom:0,left:`${i*12.5}%`,width:1,background:"rgba(255,101,0,.07)"}}/>)}
+                {[...Array(9)].map((_,i)=><div key={i} style={{position:"absolute",left:0,right:0,top:`${i*12.5}%`,height:1,background:"rgba(255,101,0,.07)"}}/>)}
+                <svg style={{position:"absolute",inset:0,width:"100%",height:"100%"}} viewBox="0 0 420 320" preserveAspectRatio="none">
+                  <defs><filter id="mg"><feGaussianBlur stdDeviation="2" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>
+                  <line x1="40" y1="160" x2="380" y2="160" stroke={T.accent} strokeWidth="1.5" strokeOpacity=".7" filter="url(#mg)"/>
+                  <line x1="210" y1="20" x2="210" y2="300" stroke={T.accent} strokeWidth="1.5" strokeOpacity=".7" filter="url(#mg)"/>
+                  <line x1="40" y1="70" x2="340" y2="240" stroke={T.accent} strokeWidth="1" strokeOpacity=".45"/>
+                  <line x1="100" y1="300" x2="320" y2="40" stroke={T.accent} strokeWidth="1" strokeOpacity=".45"/>
+                  {[[210,160],[100,80],[320,240],[280,110],[140,210],[360,160],[210,55]].map(([cx,cy],i)=>(<g key={i}><circle cx={cx} cy={cy} r={i===0?7:4} fill={T.accent} opacity={i===0?1:.75} filter="url(#mg)"/>{i===0&&<circle cx={cx} cy={cy} r={14} fill="none" stroke={T.accent} strokeWidth="1" strokeOpacity=".4"/>}</g>))}
+                </svg>
+                <div className="scan-line"/>
+                <div style={{position:"absolute",top:"50%",left:"50%",width:12,height:12,borderRadius:"50%",background:T.accent,transform:"translate(-50%,-50%)",boxShadow:`0 0 18px ${T.accent},0 0 36px rgba(255,101,0,.4)`,animation:"pingScale 2s ease-in-out infinite"}}/>
+              </div>
+              <div style={{padding:"14px 22px",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                <div><div style={{fontSize:".62rem",color:T.muted,letterSpacing:".1em",textTransform:"uppercase"}}>Active Quests Nearby</div><div style={{fontFamily:"Orbitron,sans-serif",fontSize:"1.15rem",fontWeight:700}}>14 Quests</div></div>
+                <button className="btn-acc" style={{padding:"8px 18px",fontSize:".73rem"}}>View All</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ECOSYSTEM */}
+      <section style={{padding:"clamp(6rem,12vw,13rem) clamp(1.5rem,5vw,5rem)",background:T.bgSurface,borderTop:`1px solid ${T.border}`,borderBottom:`1px solid ${T.border}`}}>
+        <div style={{maxWidth:1280,margin:"0 auto"}}>
+          <div className="reveal" style={{marginBottom:60}}>
+            <span className="section-tag">GFL Ecosystem</span>
+            <h2 style={{fontFamily:"Orbitron,sans-serif",fontSize:"clamp(2rem,4.5vw,4.5rem)",fontWeight:800,letterSpacing:"-.03em",lineHeight:.95,maxWidth:"18ch"}}>Own the game.<br/>Own the <span className="orange-grad">economy.</span></h2>
+          </div>
+          <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(230px,1fr))",gap:16}}>
+            {ECOSYSTEM.map((e,i)=>(
+              <div key={i} className="reveal card-hover" style={{background:T.bgRaised,border:`1px solid ${T.border}`,borderRadius:14,padding:"28px 26px",transitionDelay:`${i*.09}s`}}>
+                <span style={{fontSize:".58rem",fontWeight:700,letterSpacing:".22em",textTransform:"uppercase",color:T.accent}}>{e.tag}</span>
+                <p style={{fontSize:".95rem",color:T.secondary,lineHeight:1.7,marginTop:14}}>{e.title}</p>
+                <div style={{marginTop:20,display:"flex",alignItems:"center",gap:6,color:T.accent}}><span style={{fontSize:".75rem",fontWeight:600}}>Learn more</span><ArrowRight size={13}/></div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* PRICING */}
+      <PricingSection onSelectPlan={plan=>openPM(plan)}/>
+
+      {/* TESTIMONIAL */}
+      <section style={{padding:"clamp(6rem,12vw,13rem) clamp(1.5rem,5vw,5rem)",maxWidth:1280,margin:"0 auto",textAlign:"center"}}>
+        <div className="reveal">
+          <span className="section-tag" style={{display:"inline-block"}}>Community</span>
+          <blockquote style={{fontFamily:"Orbitron,sans-serif",fontSize:"clamp(1.5rem,3.5vw,3rem)",fontWeight:700,letterSpacing:"-.02em",lineHeight:1.15,maxWidth:"22ch",margin:"0 auto 36px"}}>“Finally an app that makes life feel like a <span className="orange-grad">boss battle.”</span></blockquote>
+          <div style={{display:"flex",justifyContent:"center",alignItems:"center",gap:12}}>
+            <div style={{width:44,height:44,borderRadius:"50%",background:`linear-gradient(135deg,${T.accent},${T.accentAlt})`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:"1.1rem"}}>&#x26A1;</div>
+            <div style={{textAlign:"left"}}><div style={{fontWeight:600,fontSize:".9rem"}}>xNova_7</div><div style={{color:T.muted,fontSize:".75rem"}}>Rank #1 · San Francisco</div></div>
+          </div>
+        </div>
+      </section>
+
+      {/* CTA */}
+      <section style={{position:"relative",overflow:"hidden",padding:"clamp(7rem,14vw,14rem) clamp(1.5rem,5vw,5rem)",textAlign:"center",background:T.bgSurface,borderTop:`1px solid ${T.border}`}}>
+        <div style={{position:"absolute",top:"50%",left:"50%",transform:"translate(-50%,-50%)",width:700,height:700,borderRadius:"50%",background:"radial-gradient(circle,rgba(255,101,0,.07) 0%,transparent 70%)",filter:"blur(50px)",pointerEvents:"none"}}/>
+        <div className="reveal">
+          <span className="section-tag" style={{display:"inline-block"}}>Join the Game</span>
+          <h2 style={{fontFamily:"Orbitron,sans-serif",fontSize:"clamp(3rem,8vw,8rem)",fontWeight:900,letterSpacing:"-.04em",lineHeight:.88,marginBottom:28}}>READY TO<br/><span className="orange-grad">LEVEL UP?</span></h2>
+          <p style={{color:T.secondary,fontSize:"clamp(.95rem,1.8vw,1.1rem)",maxWidth:"46ch",margin:"0 auto 42px",lineHeight:1.8}}>Join 2.4 million players turning ordinary life into an extraordinary adventure. Pay with crypto. Play forever.</p>
+          <div style={{display:"flex",gap:14,justifyContent:"center",flexWrap:"wrap"}}>
+            <button className="btn-acc" style={{fontSize:".95rem",padding:"17px 40px"}} onClick={()=>openPM()}>Subscribe with Crypto <ArrowRight size={17}/></button>
+            <button className="btn-ghost" style={{fontSize:".95rem",padding:"17px 40px"}}>View Roadmap</button>
+          </div>
+          <div style={{display:"flex",gap:12,justifyContent:"center",marginTop:28,flexWrap:"wrap"}}>
+            {["App Store ★ 4.97","Google Play ★ 4.96"].map((b,i)=>(<div key={i} style={{padding:"8px 20px",borderRadius:8,background:T.bgRaised,border:`1px solid ${T.border}`,fontSize:".78rem",color:T.secondary,fontWeight:500}}>{b}</div>))}
+          </div>
+        </div>
+      </section>
+
+      {/* FOOTER */}
+      <footer style={{borderTop:`1px solid ${T.border}`}}>
+        <div className="footer-grid" style={{maxWidth:1280,margin:"0 auto",padding:"clamp(4rem,8vw,8rem) clamp(1.5rem,5vw,5rem) clamp(2rem,4vw,4rem)",display:"grid",gridTemplateColumns:"2fr repeat(3,1fr)",gap:48}}>
+          <div>
+            <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:18}}>
+              <div style={{width:34,height:34,borderRadius:8,background:`linear-gradient(135deg,${T.accent},${T.accentAlt})`,boxShadow:glowSm,display:"flex",alignItems:"center",justifyContent:"center"}}><span style={{fontFamily:"Orbitron,sans-serif",fontWeight:900,fontSize:".85rem",color:"#07090B"}}>G</span></div>
+              <span style={{fontFamily:"Orbitron,sans-serif",fontWeight:700,fontSize:".95rem",letterSpacing:".04em"}}>game<span style={{color:T.accent}}>fi</span>lyfe</span>
+            </div>
+            <p style={{color:T.muted,fontSize:".875rem",lineHeight:1.75,maxWidth:"28ch"}}>The world's first gamified lifestyle super app. Pay with crypto. Level up your life, every day.</p>
+          </div>
+          {[{title:"Product",links:["Features","Roadmap","Changelog","Pricing"]},{title:"Community",links:["Discord","Twitter","Reddit","Leaderboard"]},{title:"Company",links:["About","Blog","Careers","Press"]}].map(col=>(
+            <div key={col.title}>
+              <div style={{fontSize:".62rem",fontWeight:700,letterSpacing:".2em",textTransform:"uppercase",color:T.muted,marginBottom:22}}>{col.title}</div>
+              {col.links.map(link=>(<a key={link} href="#" style={{display:"block",color:T.secondary,textDecoration:"none",fontSize:".88rem",marginBottom:13,transition:"color .2s"}} onMouseEnter={e=>e.target.style.color=T.primary} onMouseLeave={e=>e.target.style.color=T.secondary}>{link}</a>))}
+            </div>
+          ))}
+        </div>
+        <div style={{borderTop:`1px solid ${T.border}`,padding:"18px clamp(1.5rem,5vw,5rem)",maxWidth:1280,margin:"0 auto",display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap",gap:12}}>
+          <span style={{fontSize:".72rem",color:T.muted}}>&copy; 2026 GamefiLyfe Inc. All rights reserved.</span>
+          <div style={{display:"flex",gap:22}}>{["Privacy","Terms","Cookies"].map(item=>(<a key={item} href="#" style={{fontSize:".72rem",color:T.muted,textDecoration:"none"}}>{item}</a>))}</div>
+        </div>
+      </footer>
+    </div>
+  );
+}
+
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(<App />);
+</script>
+</body>
+</html>
