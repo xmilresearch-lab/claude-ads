@@ -13,10 +13,9 @@ import Expenses    from "./pages/Expenses";
 import Income      from "./pages/Income";
 import Reports     from "./pages/Reports";
 import AIAssistant from "./pages/AIAssistant";
-import Learn       from "./pages/Learn";
 import Settings    from "./pages/Settings";
 
-const APP_ROUTES = ["/dashboard", "/expenses", "/income", "/reports", "/ai", "/learn", "/settings"];
+const APP_ROUTES = ["/dashboard", "/expenses", "/income", "/reports", "/ai", "/settings"];
 
 function AppShell({ children }) {
   const { pathname } = useLocation();
@@ -45,8 +44,6 @@ function AnimatedRoutes() {
         <Route path="/income"     element={<Income />} />
         <Route path="/reports"    element={<Reports />} />
         <Route path="/ai"         element={<AIAssistant />} />
-        <Route path="/learn"      element={<Learn />} />
-        <Route path="/learn/:id"  element={<Learn />} />
         <Route path="/settings"   element={<Settings />} />
       </Routes>
     </AnimatePresence>
