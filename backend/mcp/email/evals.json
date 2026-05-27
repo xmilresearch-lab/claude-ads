@@ -1,0 +1,90 @@
+{
+  "server": "email-support-mcp",
+  "version": "1.0.0",
+  "evaluations": [
+    {
+      "id": "email-01",
+      "question": "What tools are available on this MCP server?",
+      "expected_tools": [
+        "email_send",
+        "email_create_campaign",
+        "email_get_thread",
+        "support_create_ticket",
+        "support_auto_reply",
+        "support_escalate_ticket",
+        "support_get_queue"
+      ],
+      "type": "tool_discovery"
+    },
+    {
+      "id": "email-02",
+      "question": "Send a welcome email to newuser@example.com with subject 'Welcome to AutoFlow' and a brief onboarding message.",
+      "tool": "email_send",
+      "input": { "to": "newuser@example.com", "subject": "Welcome to AutoFlow", "body": "Hi there! Welcome aboard." },
+      "expected_output_keys": ["success", "message_id", "to", "subject"],
+      "type": "single_tool"
+    },
+    {
+      "id": "email-03",
+      "question": "Create an email campaign called 'Summer Sale 2026' targeting the 'enterprise_trial' segment.",
+      "tool": "email_create_campaign",
+      "input": { "name": "Summer Sale 2026", "audience_segment": "enterprise_trial", "template": "sale_v1" },
+      "expected_output_keys": ["success", "campaign_id", "name", "status"],
+      "type": "single_tool"
+    },
+    {
+      "id": "email-04",
+      "question": "Retrieve email thread 'thread_99' to see the conversation history.",
+      "tool": "email_get_thread",
+      "input": { "thread_id": "thread_99" },
+      "expected_output_keys": ["thread_id", "messages"],
+      "type": "single_tool"
+    },
+    {
+      "id": "email-05",
+      "question": "Create an urgent support ticket for customer 'cust_42' about a billing error.",
+      "tool": "support_create_ticket",
+      "input": { "customer_id": "cust_42", "subject": "Billing error on invoice", "body": "I was charged twice.", "priority": "urgent" },
+      "expected_output_keys": ["success", "ticket_id", "customer_id", "priority", "status"],
+      "type": "single_tool"
+    },
+    {
+      "id": "email-06",
+      "question": "Send an auto-reply to ticket 'ticket_55' with context about password reset procedures.",
+      "tool": "support_auto_reply",
+      "input": { "ticket_id": "ticket_55", "context": "Customer cannot log in. Password reset steps: go to /forgot-password." },
+      "expected_output_keys": ["success", "ticket_id", "reply_sent"],
+      "type": "single_tool"
+    },
+    {
+      "id": "email-07",
+      "question": "Escalate ticket 'ticket_77' to a human agent because the AI response was insufficient.",
+      "tool": "support_escalate_ticket",
+      "input": { "ticket_id": "ticket_77", "reason": "Complex billing dispute requires human review" },
+      "expected_output_keys": ["success", "ticket_id", "escalated", "reason"],
+      "type": "single_tool"
+    },
+    {
+      "id": "email-08",
+      "question": "Get all open urgent support tickets from the queue.",
+      "tool": "support_get_queue",
+      "input": { "status_filter": "open", "priority_filter": "urgent" },
+      "expected_output_keys": ["tickets", "filters"],
+      "type": "single_tool"
+    },
+    {
+      "id": "email-09",
+      "question": "Create a support ticket for customer 'cust_7' about a login issue, then immediately send an auto-reply.",
+      "tools": ["support_create_ticket", "support_auto_reply"],
+      "type": "multi_tool",
+      "description": "Multi-tool: create ticket then auto-reply"
+    },
+    {
+      "id": "email-10",
+      "question": "Get the open ticket queue, find the most urgent one, auto-reply, and if it needs human attention escalate it.",
+      "tools": ["support_get_queue", "support_auto_reply", "support_escalate_ticket"],
+      "type": "multi_tool",
+      "description": "Complex 3-tool triage flow"
+    }
+  ]
+}

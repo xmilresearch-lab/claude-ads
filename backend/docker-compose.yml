@@ -1,0 +1,121 @@
+version: '3.9'
+
+services:
+  api:
+    build: .
+    ports:
+      - "8000:8000"
+    env_file: .env
+    environment:
+      DATABASE_URL: postgresql+asyncpg://postgres:postgres@db:5432/automation
+      REDIS_URL: redis://redis:6379/0
+      WEAVIATE_URL: http://weaviate:8080
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    volumes:
+      - .:/app
+    restart: unless-stopped
+
+  worker-high:
+    build: .
+    command: celery -A app.workers.celery_app worker -Q high_priority --loglevel=info --concurrency=4
+    env_file: .env
+    environment:
+      DATABASE_URL: postgresql+asyncpg://postgres:postgres@db:5432/automation
+      REDIS_URL: redis://redis:6379/0
+    depends_on:
+      - db
+      - redis
+    restart: unless-stopped
+
+  worker-medium:
+    build: .
+    command: celery -A app.workers.celery_app worker -Q medium_priority --loglevel=info --concurrency=4
+    env_file: .env
+    environment:
+      DATABASE_URL: postgresql+asyncpg://postgres:postgres@db:5432/automation
+      REDIS_URL: redis://redis:6379/0
+    depends_on:
+      - db
+      - redis
+    restart: unless-stopped
+
+  worker-low:
+    build: .
+    command: celery -A app.workers.celery_app worker -Q low_priority --loglevel=info --concurrency=2
+    env_file: .env
+    environment:
+      DATABASE_URL: postgresql+asyncpg://postgres:postgres@db:5432/automation
+      REDIS_URL: redis://redis:6379/0
+    depends_on:
+      - db
+      - redis
+    restart: unless-stopped
+
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: automation
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+
+  weaviate:
+    image: cr.weaviate.io/semitechnologies/weaviate:1.26.1
+    ports:
+      - "8080:8080"
+    environment:
+      AUTHENTICATION_ANONYMOUS_ACCESS_ENABLED: "true"
+      PERSISTENCE_DATA_PATH: /var/lib/weaviate
+    volumes:
+      - weaviate_data:/var/lib/weaviate
+
+  social-mcp:
+    build: ./mcp/social
+    ports:
+      - "3001:3001"
+    environment:
+      PORT: 3001
+      SOCIAL_MCP_TOKEN: ${SOCIAL_MCP_TOKEN}
+    restart: unless-stopped
+
+  email-mcp:
+    build: ./mcp/email
+    ports:
+      - "3002:3002"
+    environment:
+      PORT: 3002
+      EMAIL_MCP_TOKEN: ${EMAIL_MCP_TOKEN}
+    restart: unless-stopped
+
+  crm-mcp:
+    build: ./mcp/crm
+    ports:
+      - "3003:3003"
+    environment:
+      PORT: 3003
+      CRM_MCP_TOKEN: ${CRM_MCP_TOKEN}
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  redis_data:
+  weaviate_data:

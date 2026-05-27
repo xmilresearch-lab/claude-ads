@@ -1,0 +1,90 @@
+{
+  "server": "crm-mcp",
+  "version": "1.0.0",
+  "evaluations": [
+    {
+      "id": "crm-01",
+      "question": "What tools are available on this MCP server?",
+      "expected_tools": [
+        "crm_create_contact",
+        "crm_update_contact",
+        "crm_log_activity",
+        "crm_get_pipeline",
+        "crm_create_deal",
+        "crm_move_deal_stage",
+        "crm_get_contact_history"
+      ],
+      "type": "tool_discovery"
+    },
+    {
+      "id": "crm-02",
+      "question": "Create a new CRM contact for Jane Smith at jane@acmecorp.com, phone 555-1234, company Acme Corp.",
+      "tool": "crm_create_contact",
+      "input": { "name": "Jane Smith", "email": "jane@acmecorp.com", "phone": "555-1234", "company": "Acme Corp" },
+      "expected_output_keys": ["success", "contact_id", "name", "email"],
+      "type": "single_tool"
+    },
+    {
+      "id": "crm-03",
+      "question": "Update contact 'contact_42' to set their job title to 'VP of Engineering' and company size to '200+'.",
+      "tool": "crm_update_contact",
+      "input": { "contact_id": "contact_42", "fields": { "job_title": "VP of Engineering", "company_size": "200+" } },
+      "expected_output_keys": ["success", "contact_id", "updated_fields"],
+      "type": "single_tool"
+    },
+    {
+      "id": "crm-04",
+      "question": "Log a call activity for contact 'contact_10' with notes about the discovery call.",
+      "tool": "crm_log_activity",
+      "input": { "contact_id": "contact_10", "type": "call", "notes": "Discussed pain points: manual reporting, no automation." },
+      "expected_output_keys": ["success", "activity_id", "contact_id", "type"],
+      "type": "single_tool"
+    },
+    {
+      "id": "crm-05",
+      "question": "Get all deals currently in the 'proposal' stage of the pipeline.",
+      "tool": "crm_get_pipeline",
+      "input": { "stage_filter": "proposal" },
+      "expected_output_keys": ["deals", "stage_filter"],
+      "type": "single_tool"
+    },
+    {
+      "id": "crm-06",
+      "question": "Create a deal worth $25,000 for contact 'contact_99' at the 'qualified' stage.",
+      "tool": "crm_create_deal",
+      "input": { "contact_id": "contact_99", "value": 25000, "stage": "qualified" },
+      "expected_output_keys": ["success", "deal_id", "contact_id", "value", "stage"],
+      "type": "single_tool"
+    },
+    {
+      "id": "crm-07",
+      "question": "Move deal 'deal_88' from 'proposal' to 'closed_won'.",
+      "tool": "crm_move_deal_stage",
+      "input": { "deal_id": "deal_88", "new_stage": "closed_won" },
+      "expected_output_keys": ["success", "deal_id", "new_stage"],
+      "type": "single_tool"
+    },
+    {
+      "id": "crm-08",
+      "question": "Retrieve the full activity history for contact 'contact_55'.",
+      "tool": "crm_get_contact_history",
+      "input": { "contact_id": "contact_55" },
+      "expected_output_keys": ["contact_id", "activities", "deals"],
+      "type": "single_tool"
+    },
+    {
+      "id": "crm-09",
+      "question": "Create a contact for Bob Lee at bob@startup.io, then create a $50,000 deal in the 'discovery' stage for that contact.",
+      "tools": ["crm_create_contact", "crm_create_deal"],
+      "type": "multi_tool",
+      "description": "Multi-tool: create contact then create deal"
+    },
+    {
+      "id": "crm-10",
+      "question": "Get the full pipeline, find all deals in 'proposal', update the contacts' job titles to 'Decision Maker', log a follow-up email activity, and move the deal to 'negotiation'.",
+      "tools": ["crm_get_pipeline", "crm_update_contact", "crm_log_activity", "crm_move_deal_stage"],
+      "type": "multi_tool",
+      "description": "Complex 4-tool sales pipeline flow"
+    }
+  ]
+}

@@ -1,0 +1,88 @@
+{
+  "server": "social-media-mcp",
+  "version": "1.0.0",
+  "evaluations": [
+    {
+      "id": "social-01",
+      "question": "What tools are available on this MCP server?",
+      "expected_tools": [
+        "social_create_post",
+        "social_get_analytics",
+        "social_list_scheduled_posts",
+        "social_delete_post",
+        "social_generate_content",
+        "social_get_trending_topics"
+      ],
+      "type": "tool_discovery"
+    },
+    {
+      "id": "social-02",
+      "question": "Create a LinkedIn post announcing our new product launch with the message 'Introducing AutoFlow — your AI automation co-pilot.' with no scheduled time.",
+      "tool": "social_create_post",
+      "input": { "platform": "linkedin", "content": "Introducing AutoFlow — your AI automation co-pilot." },
+      "expected_output_keys": ["success", "post_id", "platform", "status"],
+      "type": "single_tool"
+    },
+    {
+      "id": "social-03",
+      "question": "Get analytics for Twitter post id 'tw_123456'.",
+      "tool": "social_get_analytics",
+      "input": { "platform": "twitter", "post_id": "tw_123456" },
+      "expected_output_keys": ["post_id", "platform", "impressions", "engagements"],
+      "type": "single_tool"
+    },
+    {
+      "id": "social-04",
+      "question": "List all scheduled Instagram posts for workspace 'ws_abc'.",
+      "tool": "social_list_scheduled_posts",
+      "input": { "platform": "instagram", "workspace_id": "ws_abc" },
+      "expected_output_keys": ["posts", "platform", "workspace_id"],
+      "type": "single_tool"
+    },
+    {
+      "id": "social-05",
+      "question": "Delete the Facebook post with id 'fb_789'.",
+      "tool": "social_delete_post",
+      "input": { "platform": "facebook", "post_id": "fb_789" },
+      "expected_output_keys": ["success", "post_id", "platform"],
+      "type": "single_tool"
+    },
+    {
+      "id": "social-06",
+      "question": "Generate a professional LinkedIn post about AI in healthcare.",
+      "tool": "social_generate_content",
+      "input": { "topic": "AI in healthcare", "tone": "professional", "platform": "linkedin" },
+      "expected_output_keys": ["platform", "suggested_text", "char_limit"],
+      "type": "single_tool"
+    },
+    {
+      "id": "social-07",
+      "question": "Get trending topics on Twitter for the SaaS industry.",
+      "tool": "social_get_trending_topics",
+      "input": { "platform": "twitter", "industry": "SaaS" },
+      "expected_output_keys": ["platform", "industry", "trending"],
+      "type": "single_tool"
+    },
+    {
+      "id": "social-08",
+      "question": "Generate a Twitter post about Q3 results and then schedule it for 2026-06-01T09:00:00Z.",
+      "tools": ["social_generate_content", "social_create_post"],
+      "type": "multi_tool",
+      "description": "Multi-tool: generate content then schedule post"
+    },
+    {
+      "id": "social-09",
+      "question": "List all scheduled LinkedIn posts for workspace 'ws_xyz', then delete the first one.",
+      "tools": ["social_list_scheduled_posts", "social_delete_post"],
+      "type": "multi_tool",
+      "description": "Multi-tool: list then delete"
+    },
+    {
+      "id": "social-10",
+      "question": "Find trending topics in FinTech on LinkedIn, generate a post about the top trend, and create the post.",
+      "tools": ["social_get_trending_topics", "social_generate_content", "social_create_post"],
+      "type": "multi_tool",
+      "description": "Complex 3-tool chain: trend → generate → post"
+    }
+  ]
+}
