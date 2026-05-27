@@ -29,6 +29,9 @@ class Settings(BaseSettings):
     CRM_MCP_URL: str = "http://localhost:3003"
     MCP_AUTH_TOKEN: str = ""
 
+    # OAuth
+    OAUTH_REDIRECT_URI: str = "http://localhost:3000/oauth/callback"
+
     # CORS
     ALLOWED_ORIGINS: list[str] = ["http://localhost:3000"]
 
