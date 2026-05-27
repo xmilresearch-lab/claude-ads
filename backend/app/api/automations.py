@@ -23,6 +23,7 @@ from app.services.orchestration import (
     InactiveAutomationError,
     RateLimitError,
 )
+from app.workers.scheduled_worker import run_scheduled_automation
 
 router = APIRouter(prefix="/api/automations", tags=["automations"])
 
@@ -108,26 +109,30 @@ async def run(
     workspace: Annotated[Workspace, Depends(get_current_workspace)],
     db: Annotated[AsyncSession, Depends(get_db)],
 ) -> AutomationRun:
-    try:
-        return await automation_service.trigger_automation(
-            automation_id=automation_id,
-            workspace_id=workspace.id,
-            trigger_payload=payload.payload,
-            db=db,
-        )
-    except AutomationNotFoundError:
+    """Enqueue an automation run and return a pending AutomationRun immediately.
+
+    Clients should poll GET /{automation_id}/runs to check for the completed run.
+    """
+    # Validate automation exists and is active before queuing
+    automation = await automation_service.get_automation(automation_id, workspace.id, db)
+    if automation is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Automation not found"
         )
-    except InactiveAutomationError:
+    if not automation.active:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail="Automation is not active",
         )
-    except RateLimitError as exc:
-        raise HTTPException(
-            status_code=status.HTTP_429_TOO_MANY_REQUESTS, detail=str(exc)
-        )
+
+    pending_run = await automation_service.create_pending_run(
+        automation_id, payload.payload, db
+    )
+    run_scheduled_automation.delay(
+        automation_id=str(automation_id),
+        trigger_payload=payload.payload,
+    )
+    return pending_run
 
 
 @router.get("/{automation_id}/runs", response_model=RunsListResponse)

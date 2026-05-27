@@ -1,4 +1,5 @@
 import uuid
+from datetime import datetime
 from typing import Any
 
 from sqlalchemy import select
@@ -89,6 +90,26 @@ async def delete_automation(
     await db.delete(automation)
     await db.commit()
     return True
+
+
+async def create_pending_run(
+    automation_id: uuid.UUID,
+    trigger_payload: dict[str, Any],
+    db: AsyncSession,
+) -> AutomationRun:
+    """Insert an AutomationRun with status='pending' and return it immediately.
+
+    The caller is responsible for dispatching the actual work to Celery.
+    """
+    run = AutomationRun(
+        automation_id=automation_id,
+        status="pending",
+        started_at=datetime.utcnow(),
+    )
+    db.add(run)
+    await db.flush()
+    await db.refresh(run)
+    return run
 
 
 async def trigger_automation(

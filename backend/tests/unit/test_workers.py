@@ -10,7 +10,8 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from app.workers.scheduler_tasks import _is_due
+from app.workers.scheduler_tasks import _is_due as _is_due_legacy
+from app.workers.scheduled_worker import _is_due
 
 
 # ── _is_due() helper ─────────────────────────────────────────────────────────
@@ -42,6 +43,22 @@ class TestIsDue:
     def test_handles_naive_datetime(self) -> None:
         now = datetime(2025, 1, 1, 9, 15, 10)  # no tz
         assert _is_due("* * * * *", now) is True
+
+    def test_monday_9am_cron_false_on_tuesday_afternoon(self) -> None:
+        # "0 9 * * MON" should only fire on Mondays at 09:00
+        # 2025-01-07 is a Tuesday; 15:00 UTC
+        tuesday = datetime(2025, 1, 7, 15, 0, 5, tzinfo=timezone.utc)
+        assert _is_due("0 9 * * MON", tuesday) is False
+
+    def test_monday_9am_cron_true_on_monday_morning(self) -> None:
+        # 2025-01-06 is a Monday; 09:00:30 UTC
+        monday = datetime(2025, 1, 6, 9, 0, 30, tzinfo=timezone.utc)
+        assert _is_due("0 9 * * MON", monday) is True
+
+    def test_legacy_is_due_still_works(self) -> None:
+        """scheduler_tasks._is_due is the same implementation."""
+        now = datetime(2025, 1, 1, 9, 15, 5, tzinfo=timezone.utc)
+        assert _is_due_legacy("* * * * *", now) is True
 
 
 # ── run_automation_task ──────────────────────────────────────────────────────
@@ -94,6 +111,68 @@ class TestRunAutomationTask:
 
         with pytest.raises(RateLimitError):
             run_automation_task(str(uuid.uuid4()), {})
+
+
+# ── run_scheduled_automation ─────────────────────────────────────────────────
+
+
+class TestRunScheduledAutomation:
+    @patch("app.workers.scheduled_worker.asyncio.run")
+    def test_happy_path_returns_result_dict(self, mock_asyncio_run: MagicMock) -> None:
+        from app.workers.scheduled_worker import run_scheduled_automation
+
+        run_id = uuid.uuid4()
+        mock_asyncio_run.return_value = {
+            "run_id": str(run_id),
+            "status": "success",
+            "error": None,
+            "ai_tokens_used": 300,
+        }
+
+        result = run_scheduled_automation(str(uuid.uuid4()), {"topic": "test"})
+
+        assert result["status"] == "success"
+        assert result["ai_tokens_used"] == 300
+
+    @patch("app.workers.scheduled_worker.asyncio.run")
+    def test_defaults_to_empty_payload_when_none(
+        self, mock_asyncio_run: MagicMock
+    ) -> None:
+        from app.workers.scheduled_worker import run_scheduled_automation
+
+        mock_asyncio_run.return_value = {
+            "run_id": str(uuid.uuid4()),
+            "status": "success",
+            "error": None,
+            "ai_tokens_used": 0,
+        }
+        # trigger_payload omitted (scheduler use-case)
+        result = run_scheduled_automation(str(uuid.uuid4()))
+        assert result["status"] == "success"
+
+    @patch("app.workers.scheduled_worker.asyncio.run")
+    def test_rate_limit_propagates_without_retry(
+        self, mock_asyncio_run: MagicMock
+    ) -> None:
+        from app.services.orchestration import RateLimitError
+        from app.workers.scheduled_worker import run_scheduled_automation
+
+        mock_asyncio_run.side_effect = RateLimitError("limit reached")
+
+        with pytest.raises(RateLimitError):
+            run_scheduled_automation(str(uuid.uuid4()), {})
+
+    @patch("app.workers.scheduled_worker.asyncio.run")
+    def test_automation_not_found_propagates(
+        self, mock_asyncio_run: MagicMock
+    ) -> None:
+        from app.services.orchestration import AutomationNotFoundError
+        from app.workers.scheduled_worker import run_scheduled_automation
+
+        mock_asyncio_run.side_effect = AutomationNotFoundError("not found")
+
+        with pytest.raises(AutomationNotFoundError):
+            run_scheduled_automation(str(uuid.uuid4()), {})
 
 
 # ── dispatch_scheduled_automations ──────────────────────────────────────────
