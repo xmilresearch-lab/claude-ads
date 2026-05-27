@@ -17,7 +17,9 @@ dependencies = [
     "python-jose[cryptography]",
     "passlib[bcrypt]",
     "httpx",
-    "celery[redis]",
+    "celery[redis]>=5.3",
+    "redis>=5.0",
+    "croniter",
     "cryptography",
     "anthropic>=0.40.0",
 ]
