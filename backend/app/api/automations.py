@@ -1,12 +1,19 @@
 import uuid
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_current_workspace
 from app.core.database import get_db
+from app.middleware.rate_limiter import (
+    LIMIT_READ,
+    LIMIT_TRIGGER,
+    LIMIT_WRITE,
+    get_workspace_id,
+    limiter,
+)
 from app.models.automation import Automation
 from app.models.automation_run import AutomationRun
 from app.models.workspace import Workspace
@@ -29,7 +36,9 @@ router = APIRouter(prefix="/api/automations", tags=["automations"])
 
 
 @router.post("/", response_model=AutomationResponse, status_code=status.HTTP_201_CREATED)
+@limiter.limit(LIMIT_WRITE)
 async def create(
+    request: Request,
     payload: AutomationCreate,
     workspace: Annotated[Workspace, Depends(get_current_workspace)],
     db: Annotated[AsyncSession, Depends(get_db)],
@@ -46,7 +55,9 @@ async def create(
 
 
 @router.get("/", response_model=list[AutomationResponse])
+@limiter.limit(LIMIT_READ)
 async def list_all(
+    request: Request,
     workspace: Annotated[Workspace, Depends(get_current_workspace)],
     db: Annotated[AsyncSession, Depends(get_db)],
     offset: int = Query(default=0, ge=0),
@@ -58,7 +69,9 @@ async def list_all(
 
 
 @router.get("/{automation_id}", response_model=AutomationResponse)
+@limiter.limit(LIMIT_READ)
 async def get(
+    request: Request,
     automation_id: uuid.UUID,
     workspace: Annotated[Workspace, Depends(get_current_workspace)],
     db: Annotated[AsyncSession, Depends(get_db)],
@@ -72,7 +85,9 @@ async def get(
 
 
 @router.patch("/{automation_id}", response_model=AutomationResponse)
+@limiter.limit(LIMIT_WRITE)
 async def update(
+    request: Request,
     automation_id: uuid.UUID,
     payload: AutomationUpdate,
     workspace: Annotated[Workspace, Depends(get_current_workspace)],
@@ -90,7 +105,9 @@ async def update(
 
 
 @router.delete("/{automation_id}", status_code=status.HTTP_204_NO_CONTENT)
+@limiter.limit(LIMIT_WRITE)
 async def delete(
+    request: Request,
     automation_id: uuid.UUID,
     workspace: Annotated[Workspace, Depends(get_current_workspace)],
     db: Annotated[AsyncSession, Depends(get_db)],
@@ -103,7 +120,10 @@ async def delete(
 
 
 @router.post("/{automation_id}/run", response_model=AutomationRunResponse)
+@limiter.limit(LIMIT_TRIGGER)
+@limiter.limit(LIMIT_TRIGGER, key_func=get_workspace_id)
 async def run(
+    request: Request,
     automation_id: uuid.UUID,
     payload: TriggerRequest,
     workspace: Annotated[Workspace, Depends(get_current_workspace)],
@@ -113,7 +133,6 @@ async def run(
 
     Clients should poll GET /{automation_id}/runs to check for the completed run.
     """
-    # Validate automation exists and is active before queuing
     automation = await automation_service.get_automation(automation_id, workspace.id, db)
     if automation is None:
         raise HTTPException(
@@ -131,12 +150,15 @@ async def run(
     run_scheduled_automation.delay(
         automation_id=str(automation_id),
         trigger_payload=payload.payload,
+        request_id=getattr(request.state, "request_id", None),
     )
     return pending_run
 
 
 @router.get("/{automation_id}/runs", response_model=RunsListResponse)
+@limiter.limit(LIMIT_READ)
 async def list_runs(
+    request: Request,
     automation_id: uuid.UUID,
     workspace: Annotated[Workspace, Depends(get_current_workspace)],
     db: Annotated[AsyncSession, Depends(get_db)],

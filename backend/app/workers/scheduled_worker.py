@@ -67,6 +67,7 @@ def run_scheduled_automation(
     self: Any,
     automation_id: str,
     trigger_payload: dict[str, Any] | None = None,
+    request_id: str | None = None,
 ) -> dict[str, Any]:
     """Execute one automation run via the orchestration engine."""
     auto_uuid = uuid.UUID(automation_id)
@@ -74,7 +75,7 @@ def run_scheduled_automation(
 
     async def _run() -> dict[str, Any]:
         async with AsyncSessionLocal() as db:
-            run = await run_automation(auto_uuid, payload, db)
+            run = await run_automation(auto_uuid, payload, db, request_id=request_id)
             return {
                 "run_id": str(run.id),
                 "status": run.status,

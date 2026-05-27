@@ -16,10 +16,33 @@ from datetime import datetime, timezone
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from starlette.requests import Request
 
 from app.models.audit_log import AuditLog
 from app.models.content_queue import ContentQueue
 from app.workers.publish_worker import MCPCallError
+
+
+def _make_request() -> Request:
+    """Create a minimal Starlette Request for rate-limited endpoint tests."""
+    scope = {
+        "type": "http",
+        "method": "GET",
+        "path": "/",
+        "query_string": b"",
+        "headers": [],
+    }
+    return Request(scope)
+
+
+@pytest.fixture(autouse=True)
+def _disable_rate_limiter():
+    """Disable slowapi rate limiter for all tests — no Redis available in CI."""
+    from app.middleware.rate_limiter import limiter
+
+    limiter.enabled = False
+    yield
+    limiter.enabled = True
 
 
 # ── shared helpers ────────────────────────────────────────────────────────────
@@ -278,14 +301,15 @@ async def test_approve_and_publish_sets_approved_and_dispatches_task() -> None:
     db.refresh = AsyncMock()
 
     with patch("app.api.webhooks.publish_content") as mock_publish_task:
-        returned_item = await approve_and_publish(item_id, workspace, db)
+        returned_item = await approve_and_publish(_make_request(), item_id, workspace, db)
 
     # Status updated
     assert item.status == "approved"
 
-    # Task dispatched with correct ID
+    # Task dispatched with correct ID (request_id is None since no middleware ran)
     mock_publish_task.delay.assert_called_once_with(
-        content_queue_id=str(item_id)
+        content_queue_id=str(item_id),
+        request_id=None,
     )
 
     # DB committed
@@ -311,6 +335,6 @@ async def test_approve_and_publish_raises_404_for_wrong_workspace() -> None:
     workspace.id = uuid.uuid4()
 
     with pytest.raises(HTTPException) as exc_info:
-        await approve_and_publish(uuid.uuid4(), workspace, db)
+        await approve_and_publish(_make_request(), uuid.uuid4(), workspace, db)
 
     assert exc_info.value.status_code == 404

@@ -1,12 +1,13 @@
 import uuid
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_current_workspace
 from app.core.database import get_db
+from app.middleware.rate_limiter import LIMIT_READ, LIMIT_WRITE, limiter
 from app.models.automation import Automation
 from app.models.content_queue import ContentQueue
 from app.models.workspace import Workspace
@@ -30,7 +31,9 @@ async def _get_item_for_workspace(
 
 
 @router.get("/queue", response_model=list[ContentQueueItem])
+@limiter.limit(LIMIT_READ)
 async def list_pending(
+    request: Request,
     workspace: Annotated[Workspace, Depends(get_current_workspace)],
     db: Annotated[AsyncSession, Depends(get_db)],
     offset: int = Query(default=0, ge=0),
@@ -51,7 +54,9 @@ async def list_pending(
 
 
 @router.get("/{item_id}", response_model=ContentQueueItem)
+@limiter.limit(LIMIT_READ)
 async def get_item(
+    request: Request,
     item_id: uuid.UUID,
     workspace: Annotated[Workspace, Depends(get_current_workspace)],
     db: Annotated[AsyncSession, Depends(get_db)],
@@ -65,7 +70,9 @@ async def get_item(
 
 
 @router.patch("/{item_id}/approve", response_model=ContentQueueItem)
+@limiter.limit(LIMIT_WRITE)
 async def approve_item(
+    request: Request,
     item_id: uuid.UUID,
     workspace: Annotated[Workspace, Depends(get_current_workspace)],
     db: Annotated[AsyncSession, Depends(get_db)],
@@ -81,12 +88,17 @@ async def approve_item(
 
     from app.workers.publish_worker import publish_content  # noqa: PLC0415
 
-    publish_content.delay(content_queue_id=str(item_id))
+    publish_content.delay(
+        content_queue_id=str(item_id),
+        request_id=getattr(request.state, "request_id", None),
+    )
     return item
 
 
 @router.patch("/{item_id}/reject", response_model=ContentQueueItem)
+@limiter.limit(LIMIT_WRITE)
 async def reject_item(
+    request: Request,
     item_id: uuid.UUID,
     payload: ContentQueueReject,
     workspace: Annotated[Workspace, Depends(get_current_workspace)],
@@ -105,7 +117,9 @@ async def reject_item(
 
 
 @router.delete("/{item_id}", status_code=status.HTTP_204_NO_CONTENT)
+@limiter.limit(LIMIT_WRITE)
 async def delete_item(
+    request: Request,
     item_id: uuid.UUID,
     workspace: Annotated[Workspace, Depends(get_current_workspace)],
     db: Annotated[AsyncSession, Depends(get_db)],

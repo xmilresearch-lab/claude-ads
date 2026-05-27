@@ -1,5 +1,7 @@
 from functools import lru_cache
+from typing import Any
 
+from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -26,6 +28,16 @@ class Settings(BaseSettings):
     EMAIL_MCP_URL: str = "http://localhost:3002"
     CRM_MCP_URL: str = "http://localhost:3003"
     MCP_AUTH_TOKEN: str = ""
+
+    # CORS
+    ALLOWED_ORIGINS: list[str] = ["http://localhost:3000"]
+
+    @field_validator("ALLOWED_ORIGINS", mode="before")
+    @classmethod
+    def parse_origins(cls, v: Any) -> list[str]:
+        if isinstance(v, str):
+            return [o.strip() for o in v.split(",") if o.strip()]
+        return v  # type: ignore[return-value]
 
     # Webhooks
     WEBHOOK_SECRET: str = ""

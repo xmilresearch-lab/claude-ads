@@ -121,7 +121,8 @@ async def test_happy_path_run_succeeds(
 
     # publish_content.delay() dispatched with the approved item's ID
     mock_publish.delay.assert_called_once_with(
-        content_queue_id=str(queue_items[0].id)
+        content_queue_id=str(queue_items[0].id),
+        request_id=None,
     )
 
 

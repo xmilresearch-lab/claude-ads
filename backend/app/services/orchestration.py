@@ -140,6 +140,7 @@ async def run_automation(
     automation_id: uuid.UUID,
     trigger_payload: dict[str, Any],
     db: AsyncSession,
+    request_id: str | None = None,
 ) -> AutomationRun:
     """Execute the 13-step AI automation orchestration flow."""
     # 1. Fetch automation + workspace
@@ -235,18 +236,21 @@ async def run_automation(
         run.finished_at = datetime.utcnow()
 
         # 12. Write audit log
+        audit_meta: dict[str, Any] = {
+            "automation_id": str(automation_id),
+            "tokens_used": claude_result["total_tokens"],
+            "mcp_tools_called": claude_result["mcp_tool_calls"],
+            "dlp_violations": [v.value for v in dlp_result.violations],
+            "run_id": str(run.id),
+        }
+        if request_id:
+            audit_meta["request_id"] = request_id
         db.add(
             AuditLog(
                 workspace_id=workspace.id,
                 action="automation_run",
                 actor=str(automation_id),
-                log_metadata={
-                    "automation_id": str(automation_id),
-                    "tokens_used": claude_result["total_tokens"],
-                    "mcp_tools_called": claude_result["mcp_tool_calls"],
-                    "dlp_violations": [v.value for v in dlp_result.violations],
-                    "run_id": str(run.id),
-                },
+                log_metadata=audit_meta,
             )
         )
 
@@ -263,7 +267,10 @@ async def run_automation(
     if content_entry is not None and content_entry.status == "approved":
         from app.workers.publish_worker import publish_content  # noqa: PLC0415
 
-        publish_content.delay(content_queue_id=str(content_entry.id))
+        publish_content.delay(
+            content_queue_id=str(content_entry.id),
+            request_id=request_id,
+        )
 
     # 14. Return AutomationRun
     return run
