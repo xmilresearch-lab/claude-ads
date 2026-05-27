@@ -9,8 +9,29 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from fastapi.testclient import TestClient
+from starlette.requests import Request
 
 from app.workers.publish_worker import MCPCallError
+
+
+def _make_request() -> Request:
+    scope = {
+        "type": "http",
+        "method": "GET",
+        "path": "/",
+        "query_string": b"",
+        "headers": [],
+    }
+    return Request(scope)
+
+
+@pytest.fixture(autouse=True)
+def _disable_rate_limiter():
+    from app.middleware.rate_limiter import limiter
+
+    limiter.enabled = False
+    yield
+    limiter.enabled = True
 
 
 # ── signature helper (mirrors the implementation) ────────────────────────────
@@ -159,11 +180,14 @@ class TestApproveAndPublish:
         db.refresh = AsyncMock()
 
         with patch("app.api.webhooks.publish_content") as mock_task:
-            result = await approve_and_publish(item_id, workspace, db)
+            result = await approve_and_publish(_make_request(), item_id, workspace, db)
 
         assert item.status == "approved"
         db.commit.assert_awaited_once()
-        mock_task.delay.assert_called_once_with(content_queue_id=str(item_id))
+        mock_task.delay.assert_called_once_with(
+            content_queue_id=str(item_id),
+            request_id=None,
+        )
 
     @pytest.mark.asyncio
     async def test_raises_404_when_item_not_found(self) -> None:
@@ -181,6 +205,6 @@ class TestApproveAndPublish:
         workspace.id = uuid.uuid4()
 
         with pytest.raises(HTTPException) as exc_info:
-            await approve_and_publish(uuid.uuid4(), workspace, db)
+            await approve_and_publish(_make_request(), uuid.uuid4(), workspace, db)
 
         assert exc_info.value.status_code == 404

@@ -1,7 +1,7 @@
 import uuid
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -14,6 +14,7 @@ from app.core.security import (
     hash_password,
     verify_password,
 )
+from app.middleware.rate_limiter import LIMIT_AUTH, limiter
 from app.models.user import User
 from app.models.workspace import Workspace
 from app.schemas.auth import LoginRequest, RefreshRequest, RegisterRequest, TokenResponse
@@ -31,7 +32,9 @@ def _tokens_for_user(user: User) -> TokenResponse:
 
 
 @router.post("/register", response_model=TokenResponse, status_code=status.HTTP_201_CREATED)
+@limiter.limit(LIMIT_AUTH)
 async def register(
+    request: Request,
     payload: RegisterRequest,
     db: Annotated[AsyncSession, Depends(get_db)],
 ) -> TokenResponse:
@@ -57,7 +60,9 @@ async def register(
 
 
 @router.post("/login", response_model=TokenResponse)
+@limiter.limit(LIMIT_AUTH)
 async def login(
+    request: Request,
     payload: LoginRequest,
     db: Annotated[AsyncSession, Depends(get_db)],
 ) -> TokenResponse:
@@ -71,7 +76,9 @@ async def login(
 
 
 @router.post("/refresh", response_model=TokenResponse)
+@limiter.limit("20/minute")
 async def refresh(
+    request: Request,
     payload: RefreshRequest,
     db: Annotated[AsyncSession, Depends(get_db)],
 ) -> TokenResponse:
@@ -88,7 +95,9 @@ async def refresh(
 
 
 @router.get("/me", response_model=UserResponse)
+@limiter.limit(LIMIT_READ)
 async def me(
+    request: Request,
     current_user: Annotated[User, Depends(get_current_user)],
 ) -> User:
     return current_user

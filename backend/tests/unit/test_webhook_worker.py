@@ -234,7 +234,7 @@ class TestRunAutomationForWorkspace:
             )
 
         mock_run.assert_awaited_once_with(
-            automation.id, {"ticket_id": "T1"}, db_mock
+            automation.id, {"ticket_id": "T1"}, db_mock, request_id=None
         )
         assert result["status"] == "success"
         assert result["run_id"] == str(run.id)

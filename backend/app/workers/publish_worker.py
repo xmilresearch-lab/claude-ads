@@ -95,7 +95,10 @@ async def _call_mcp_for_platform(
             )
 
 
-async def _publish(content_queue_id: uuid.UUID) -> dict[str, Any]:
+async def _publish(
+    content_queue_id: uuid.UUID,
+    request_id: str | None = None,
+) -> dict[str, Any]:
     async with AsyncSessionLocal() as db:
         # 1. Fetch the content queue item
         result = await db.execute(
@@ -149,16 +152,19 @@ async def _publish(content_queue_id: uuid.UUID) -> dict[str, Any]:
             )
 
         # 6. Write audit log
+        pub_meta: dict[str, Any] = {
+            "content_queue_id": str(content_queue_id),
+            "platform": platform,
+            "status": item.status,
+        }
+        if request_id:
+            pub_meta["request_id"] = request_id
         db.add(
             AuditLog(
                 workspace_id=workspace_id,
                 action="content_published",
                 actor="publish_worker",
-                log_metadata={
-                    "content_queue_id": str(content_queue_id),
-                    "platform": platform,
-                    "status": item.status,
-                },
+                log_metadata=pub_meta,
             )
         )
 
@@ -177,11 +183,15 @@ async def _publish(content_queue_id: uuid.UUID) -> dict[str, Any]:
     default_retry_delay=30,
     queue="medium_priority",
 )
-def publish_content(self: Any, content_queue_id: str) -> dict[str, Any]:
+def publish_content(
+    self: Any,
+    content_queue_id: str,
+    request_id: str | None = None,
+) -> dict[str, Any]:
     """Pick up an approved ContentQueue item and publish it via the appropriate MCP tool."""
     cid = uuid.UUID(content_queue_id)
     try:
-        return asyncio.run(_publish(cid))
+        return asyncio.run(_publish(cid, request_id=request_id))
     except (httpx.ConnectError, httpx.TimeoutException) as exc:
         logger.warning(
             "MCP connection error for content %s — will retry: %s",

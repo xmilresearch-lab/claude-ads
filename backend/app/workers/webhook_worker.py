@@ -23,6 +23,7 @@ async def _run_automation_for_workspace(
     workspace_id: uuid.UUID,
     automation_type: str,
     trigger_payload: dict[str, Any],
+    request_id: str | None = None,
 ) -> dict[str, Any]:
     """Find the active automation of the given type and run it."""
     async with AsyncSessionLocal() as db:
@@ -38,7 +39,9 @@ async def _run_automation_for_workspace(
         automation = result.scalar_one_or_none()
         if automation is None:
             return {"skipped": True, "reason": "no_active_automation"}
-        run = await run_automation(automation.id, trigger_payload, db)
+        run = await run_automation(
+            automation.id, trigger_payload, db, request_id=request_id
+        )
         return {"run_id": str(run.id), "status": run.status}
 
 
@@ -53,6 +56,7 @@ def handle_support_ticket(
     self: Any,
     payload: dict[str, Any],
     workspace_id: str,
+    request_id: str | None = None,
 ) -> dict[str, Any]:
     """Process an inbound support-ticket webhook (SLA-sensitive, high_priority queue)."""
     wid = uuid.UUID(workspace_id)
@@ -65,7 +69,9 @@ def handle_support_ticket(
     }
     try:
         result = asyncio.run(
-            _run_automation_for_workspace(wid, "support_reply", trigger_payload)
+            _run_automation_for_workspace(
+                wid, "support_reply", trigger_payload, request_id=request_id
+            )
         )
         if result.get("skipped"):
             logger.info(
@@ -105,6 +111,7 @@ def handle_crm_event(
     payload: dict[str, Any],
     workspace_id: str,
     event_type: str,
+    request_id: str | None = None,
 ) -> dict[str, Any]:
     """Process an inbound CRM event webhook (medium_priority queue)."""
     wid = uuid.UUID(workspace_id)
@@ -135,7 +142,9 @@ def handle_crm_event(
 
     try:
         result = asyncio.run(
-            _run_automation_for_workspace(wid, "crm_update", trigger_payload)
+            _run_automation_for_workspace(
+                wid, "crm_update", trigger_payload, request_id=request_id
+            )
         )
         if result.get("skipped"):
             logger.info(

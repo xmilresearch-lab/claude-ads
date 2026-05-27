@@ -10,6 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.api.deps import get_current_workspace
 from app.core.config import settings
 from app.core.database import get_db
+from app.middleware.rate_limiter import LIMIT_WEBHOOKS, limiter
 from app.models.automation import Automation
 from app.models.content_queue import ContentQueue
 from app.models.workspace import Workspace
@@ -38,6 +39,7 @@ def _verify_hmac_sha256(secret: str, body: bytes, signature: str) -> bool:
 
 
 @router.post("/zendesk")
+@limiter.limit(LIMIT_WEBHOOKS)
 async def zendesk_webhook(
     request: Request,
     workspace_id: uuid.UUID = Query(...),
@@ -62,11 +64,13 @@ async def zendesk_webhook(
     handle_support_ticket.delay(
         payload=payload,
         workspace_id=str(workspace_id),
+        request_id=getattr(request.state, "request_id", None),
     )
     return {"status": "accepted"}
 
 
 @router.post("/hubspot")
+@limiter.limit(LIMIT_WEBHOOKS)
 async def hubspot_webhook(
     request: Request,
     workspace_id: uuid.UUID = Query(...),
@@ -101,6 +105,7 @@ async def hubspot_webhook(
     if not isinstance(events, list):
         events = [events]
 
+    req_id = getattr(request.state, "request_id", None)
     for event in events:
         subscription_type: str = event.get("subscriptionType", "")
         event_type = _HUBSPOT_EVENT_MAP.get(subscription_type)
@@ -110,6 +115,7 @@ async def hubspot_webhook(
             payload=event,
             workspace_id=str(workspace_id),
             event_type=event_type,
+            request_id=req_id,
         )
 
     return {"status": "accepted"}
@@ -119,7 +125,9 @@ async def hubspot_webhook(
     "/content/approve/{content_queue_id}",
     response_model=ContentQueueItem,
 )
+@limiter.limit(LIMIT_WEBHOOKS)
 async def approve_and_publish(
+    request: Request,
     content_queue_id: uuid.UUID,
     workspace: Annotated[Workspace, Depends(get_current_workspace)],
     db: Annotated[AsyncSession, Depends(get_db)],
@@ -147,5 +155,8 @@ async def approve_and_publish(
     await db.commit()
     await db.refresh(item)
 
-    publish_content.delay(content_queue_id=str(content_queue_id))
+    publish_content.delay(
+        content_queue_id=str(content_queue_id),
+        request_id=getattr(request.state, "request_id", None),
+    )
     return item
