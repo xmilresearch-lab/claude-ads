@@ -36,8 +36,10 @@ httpApp.post("/mcp", bearerAuth, async (req, res) => {
   await transport.handleRequest(req, res, req.body as unknown);
 });
 
+const TOOL_COUNT = 7;
+
 httpApp.get("/health", (_req, res) => {
-  res.json({ status: "ok", service: "email-mcp-server", port: PORT });
+  res.json({ status: "ok", tools: TOOL_COUNT, port: PORT });
 });
 
 httpApp.listen(PORT, () => {
