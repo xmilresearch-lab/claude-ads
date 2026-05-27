@@ -20,6 +20,12 @@ from app.services.orchestration import (
 )
 
 
+@pytest.fixture(autouse=True)
+def _mock_publish_content():
+    with patch("app.workers.publish_worker.publish_content"):
+        yield
+
+
 # ── helpers ────────────────────────────────────────────────────────────────
 
 

@@ -78,6 +78,10 @@ async def approve_item(
     item.status = "approved"
     await db.commit()
     await db.refresh(item)
+
+    from app.workers.publish_worker import publish_content  # noqa: PLC0415
+
+    publish_content.delay(content_queue_id=str(item_id))
     return item
 
 
