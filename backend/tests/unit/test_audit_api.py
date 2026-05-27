@@ -19,7 +19,9 @@ def _make_request() -> Request:
         "query_string": b"",
         "headers": [],
     }
-    return Request(scope)
+    req = Request(scope)
+    req.state.request_id = "test-req-id"
+    return req
 
 
 @pytest.fixture(autouse=True)
@@ -53,23 +55,29 @@ def _make_log(workspace_id: uuid.UUID, action: str = "automation_run") -> MagicM
 
 @pytest.mark.asyncio
 async def test_list_logs_returns_workspace_logs() -> None:
-    """list_logs returns logs matching the caller's workspace_id."""
+    """list_logs returns a PaginatedResponse containing logs for the caller's workspace."""
     from app.api.audit_logs import list_logs
 
     workspace = _make_workspace()
     log = _make_log(workspace.id)
 
+    # First execute: count query → scalar_one()
+    count_result = MagicMock()
+    count_result.scalar_one.return_value = 1
+
+    # Second execute: data query → scalars().all()
     scalars_mock = MagicMock()
     scalars_mock.all.return_value = [log]
-    execute_result = MagicMock()
-    execute_result.scalars.return_value = scalars_mock
+    data_result = MagicMock()
+    data_result.scalars.return_value = scalars_mock
 
     db = MagicMock()
-    db.execute = AsyncMock(return_value=execute_result)
+    db.execute = AsyncMock(side_effect=[count_result, data_result])
 
     result = await list_logs(_make_request(), workspace, db, limit=50, offset=0)
-    assert result == [log]
-    db.execute.assert_awaited_once()
+    assert len(result.data) == 1
+    assert result.meta.total_count == 1
+    assert db.execute.await_count == 2
 
 
 @pytest.mark.asyncio
@@ -78,16 +86,19 @@ async def test_list_logs_empty_workspace_returns_empty() -> None:
 
     workspace = _make_workspace()
 
+    count_result = MagicMock()
+    count_result.scalar_one.return_value = 0
     scalars_mock = MagicMock()
     scalars_mock.all.return_value = []
-    execute_result = MagicMock()
-    execute_result.scalars.return_value = scalars_mock
+    data_result = MagicMock()
+    data_result.scalars.return_value = scalars_mock
 
     db = MagicMock()
-    db.execute = AsyncMock(return_value=execute_result)
+    db.execute = AsyncMock(side_effect=[count_result, data_result])
 
     result = await list_logs(_make_request(), workspace, db, limit=50, offset=0)
-    assert result == []
+    assert result.data == []
+    assert result.meta.total_count == 0
 
 
 # ── get_log ───────────────────────────────────────────────────────────────────
@@ -107,7 +118,8 @@ async def test_get_log_returns_own_workspace_log() -> None:
     db.execute = AsyncMock(return_value=execute_result)
 
     result = await get_log(_make_request(), log.id, workspace, db)
-    assert result is log
+    assert result.data.id == log.id
+    assert result.data.workspace_id == log.workspace_id
 
 
 @pytest.mark.asyncio
@@ -157,11 +169,9 @@ async def test_summary_stats_calculated_correctly() -> None:
 
     workspace = _make_workspace()
 
-    # Mock 1: run counts by status → [("success", 3), ("failed", 1), ("blocked", 2)]
     run_counts_result = MagicMock()
     run_counts_result.all.return_value = [("success", 3), ("failed", 1), ("blocked", 2)]
 
-    # Mock 2: automation_run audit logs — one with DLP, one without
     log_with_dlp = MagicMock()
     log_with_dlp.log_metadata = {"tokens_used": 100, "dlp_violations": ["email"]}
     log_without_dlp = MagicMock()
@@ -172,7 +182,6 @@ async def test_summary_stats_calculated_correctly() -> None:
     scalars_mock.all.return_value = [log_with_dlp, log_without_dlp]
     run_logs_result.scalars.return_value = scalars_mock
 
-    # Mock 3: content published count
     published_result = MagicMock()
     published_result.scalar_one.return_value = 5
 
@@ -183,13 +192,13 @@ async def test_summary_stats_calculated_correctly() -> None:
 
     result = await get_summary(_make_request(), workspace, db)
 
-    assert result.total_runs == 6
-    assert result.successful_runs == 3
-    assert result.failed_runs == 1
-    assert result.blocked_injections == 2
-    assert result.dlp_violations == 1  # only log_with_dlp has non-empty list
-    assert result.tokens_used == 150   # 100 + 50
-    assert result.content_published == 5
+    assert result.data.total_runs == 6
+    assert result.data.successful_runs == 3
+    assert result.data.failed_runs == 1
+    assert result.data.blocked_injections == 2
+    assert result.data.dlp_violations == 1
+    assert result.data.tokens_used == 150
+    assert result.data.content_published == 5
 
 
 @pytest.mark.asyncio
@@ -216,10 +225,10 @@ async def test_summary_with_no_runs_returns_zeros() -> None:
 
     result = await get_summary(_make_request(), workspace, db)
 
-    assert result.total_runs == 0
-    assert result.successful_runs == 0
-    assert result.tokens_used == 0
-    assert result.content_published == 0
+    assert result.data.total_runs == 0
+    assert result.data.successful_runs == 0
+    assert result.data.tokens_used == 0
+    assert result.data.content_published == 0
 
 
 # ── AuditLogResponse sanitization ─────────────────────────────────────────────

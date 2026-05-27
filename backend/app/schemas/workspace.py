@@ -1,8 +1,9 @@
+import re
 import uuid
 from datetime import datetime
 from typing import Annotated
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, EmailStr, Field, field_validator
 
 from app.core.validators import reject_script_tags, reject_sql_injection
 
@@ -91,8 +92,38 @@ class WorkspaceCreate(BaseModel):
 
 class WorkspaceUpdate(BaseModel):
     name: str | None = None
-    brand_voice: BrandVoiceSchema | None = None
     settings: dict | None = None
+
+
+class WorkspaceSettingsUpdate(BaseModel):
+    """Typed patch for workspace settings — rejects unknown keys."""
+    model_config = {"extra": "forbid"}
+
+    require_approval_default: bool | None = None
+    default_timezone: str | None = None      # IANA e.g. "America/New_York"
+    notification_email: EmailStr | None = None
+    content_language: str | None = None      # ISO 639-1 e.g. "en"
+
+    @field_validator("default_timezone")
+    @classmethod
+    def validate_timezone(cls, v: str | None) -> str | None:
+        if v is None:
+            return v
+        try:
+            from zoneinfo import ZoneInfo  # noqa: PLC0415
+            ZoneInfo(v)
+        except Exception:
+            raise ValueError(f"Invalid IANA timezone: {v!r}")
+        return v
+
+    @field_validator("content_language")
+    @classmethod
+    def validate_language(cls, v: str | None) -> str | None:
+        if v is None:
+            return v
+        if not re.match(r"^[a-z]{2}$", v):
+            raise ValueError("content_language must be a 2-letter ISO 639-1 code (e.g. 'en')")
+        return v
 
 
 class WorkspaceResponse(BaseModel):
@@ -104,3 +135,10 @@ class WorkspaceResponse(BaseModel):
     brand_voice: dict | None
     settings: dict | None
     created_at: datetime
+
+
+class WorkspaceDetailResponse(WorkspaceResponse):
+    """WorkspaceResponse extended with computed counts."""
+    integrations_count: int = 0
+    automations_count: int = 0
+    active_automations_count: int = 0

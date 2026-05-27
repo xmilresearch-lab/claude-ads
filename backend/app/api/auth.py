@@ -18,9 +18,10 @@ from app.middleware.rate_limiter import LIMIT_AUTH, LIMIT_READ, limiter
 from app.models.user import User
 from app.models.workspace import Workspace
 from app.schemas.auth import LoginRequest, RefreshRequest, RegisterRequest, TokenResponse
+from app.schemas.base import DataResponse, ok
 from app.schemas.user import UserResponse
 
-router = APIRouter(prefix="/auth", tags=["auth"])
+router = APIRouter()
 
 
 def _tokens_for_user(user: User) -> TokenResponse:
@@ -31,13 +32,13 @@ def _tokens_for_user(user: User) -> TokenResponse:
     )
 
 
-@router.post("/register", response_model=TokenResponse, status_code=status.HTTP_201_CREATED)
+@router.post("/register", response_model=DataResponse[TokenResponse], status_code=status.HTTP_201_CREATED)
 @limiter.limit(LIMIT_AUTH)
 async def register(
     request: Request,
     payload: RegisterRequest,
     db: Annotated[AsyncSession, Depends(get_db)],
-) -> TokenResponse:
+) -> DataResponse[TokenResponse]:
     existing = await db.execute(select(User).where(User.email == payload.email))
     if existing.scalar_one_or_none():
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Email already registered")
@@ -56,32 +57,32 @@ async def register(
         name=payload.workspace_name,
     )
     db.add(workspace)
-    return _tokens_for_user(user)
+    return ok(_tokens_for_user(user), request)
 
 
-@router.post("/login", response_model=TokenResponse)
+@router.post("/login", response_model=DataResponse[TokenResponse])
 @limiter.limit(LIMIT_AUTH)
 async def login(
     request: Request,
     payload: LoginRequest,
     db: Annotated[AsyncSession, Depends(get_db)],
-) -> TokenResponse:
+) -> DataResponse[TokenResponse]:
     result = await db.execute(select(User).where(User.email == payload.email))
     user = result.scalar_one_or_none()
     if not user or not verify_password(payload.password, user.hashed_password):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials")
     if not user.is_active:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Account disabled")
-    return _tokens_for_user(user)
+    return ok(_tokens_for_user(user), request)
 
 
-@router.post("/refresh", response_model=TokenResponse)
+@router.post("/refresh", response_model=DataResponse[TokenResponse])
 @limiter.limit("20/minute")
 async def refresh(
     request: Request,
     payload: RefreshRequest,
     db: Annotated[AsyncSession, Depends(get_db)],
-) -> TokenResponse:
+) -> DataResponse[TokenResponse]:
     claims = decode_token(payload.refresh_token)
     user_id: str | None = claims.get("sub")
     if not user_id:
@@ -91,13 +92,13 @@ async def refresh(
     user = result.scalar_one_or_none()
     if not user or not user.is_active:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User not found")
-    return _tokens_for_user(user)
+    return ok(_tokens_for_user(user), request)
 
 
-@router.get("/me", response_model=UserResponse)
+@router.get("/me", response_model=DataResponse[UserResponse])
 @limiter.limit(LIMIT_READ)
 async def me(
     request: Request,
     current_user: Annotated[User, Depends(get_current_user)],
-) -> User:
-    return current_user
+) -> DataResponse[UserResponse]:
+    return ok(UserResponse.model_validate(current_user), request)
