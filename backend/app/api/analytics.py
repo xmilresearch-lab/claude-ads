@@ -23,7 +23,7 @@ from app.schemas.analytics import (
     PlatformStats,
     TokenUsageSeries,
 )
-from app.schemas.base import DataResponse, PaginatedResponse, ok, paginated
+from app.schemas.base import COMMON_ERROR_RESPONSES, DataResponse, PaginatedResponse, ok, paginated
 
 router = APIRouter()
 
@@ -63,7 +63,19 @@ def _fill_date_gaps(
 # ── Endpoints ─────────────────────────────────────────────────────────────────
 
 
-@router.get("/overview", response_model=DataResponse[AnalyticsOverview])
+@router.get(
+    "/overview",
+    summary="Analytics Overview",
+    description=(
+        "Return aggregated KPIs for the workspace over the last `days` days: "
+        "run counts by status, token usage, estimated cost, content pipeline counts, "
+        "injection blocks, and DLP violations. "
+        "Use `days` (1–90) to control the reporting window."
+    ),
+    response_description="Aggregated analytics overview",
+    responses=COMMON_ERROR_RESPONSES,
+    response_model=DataResponse[AnalyticsOverview],
+)
 @limiter.limit(LIMIT_READ)
 async def get_overview(
     request: Request,
@@ -149,7 +161,18 @@ async def get_overview(
     )
 
 
-@router.get("/automations", response_model=PaginatedResponse[AutomationBreakdown])
+@router.get(
+    "/automations",
+    summary="Automations Breakdown",
+    description=(
+        "Return per-automation run counts, success/failure rates, average token usage, "
+        "and last run timestamp, sorted by run volume descending. "
+        "Useful for identifying high-traffic or failing automations."
+    ),
+    response_description="Paginated automation performance breakdown",
+    responses=COMMON_ERROR_RESPONSES,
+    response_model=PaginatedResponse[AutomationBreakdown],
+)
 @limiter.limit(LIMIT_READ)
 async def get_automations_breakdown(
     request: Request,
@@ -213,7 +236,18 @@ async def get_automations_breakdown(
     return paginated(data=breakdowns, total_count=total, limit=limit, offset=offset, request=request)
 
 
-@router.get("/platforms", response_model=DataResponse[list[PlatformStats]])
+@router.get(
+    "/platforms",
+    summary="Platform Stats",
+    description=(
+        "Return published, pending, and rejected content counts grouped by platform "
+        "(e.g., twitter, linkedin, gmail) for the given time window. "
+        "Platforms are derived from the content queue records."
+    ),
+    response_description="Per-platform content counts",
+    responses=COMMON_ERROR_RESPONSES,
+    response_model=DataResponse[list[PlatformStats]],
+)
 @limiter.limit(LIMIT_READ)
 async def get_platform_stats(
     request: Request,
@@ -258,7 +292,18 @@ async def get_platform_stats(
     return ok(stats, request)
 
 
-@router.get("/tokens", response_model=DataResponse[list[TokenUsageSeries]])
+@router.get(
+    "/tokens",
+    summary="Token Usage Series",
+    description=(
+        "Return a daily time series of AI token usage for the last `days` days. "
+        "Gaps (days with no runs) are filled with zeros so clients always receive "
+        "a complete, contiguous series. Each point includes the estimated cost in USD."
+    ),
+    response_description="Daily token usage series with gap filling",
+    responses=COMMON_ERROR_RESPONSES,
+    response_model=DataResponse[list[TokenUsageSeries]],
+)
 @limiter.limit(LIMIT_READ)
 async def get_token_series(
     request: Request,
@@ -290,7 +335,18 @@ async def get_token_series(
     return ok(series, request)
 
 
-@router.get("/export")
+@router.get(
+    "/export",
+    summary="Export Analytics",
+    description=(
+        "Export analytics data as JSON (default) or CSV (`format=csv`). "
+        "The export includes the overview KPIs plus the full daily token usage series. "
+        "CSV responses are streamed as a file attachment. "
+        "Rate-limited to 10 requests per hour to prevent data scraping."
+    ),
+    response_description="Analytics export in JSON or CSV format",
+    responses=COMMON_ERROR_RESPONSES,
+)
 @limiter.limit("10/hour")
 async def export_analytics(
     request: Request,

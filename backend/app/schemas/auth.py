@@ -6,6 +6,16 @@ _SPECIAL_CHARS = re.compile(r"[!@#$%^&*()\-_=+\[\]{}|;:',.<>?/`~\\\"@]")
 
 
 class RegisterRequest(BaseModel):
+    model_config = {
+        "json_schema_extra": {
+            "example": {
+                "email": "alice@acme.com",
+                "password": "Str0ng!Pass",
+                "workspace_name": "Acme Corp",
+            }
+        }
+    }
+
     email: EmailStr
     password: str
     workspace_name: str = "My Workspace"
@@ -27,15 +37,37 @@ class RegisterRequest(BaseModel):
 
 
 class LoginRequest(BaseModel):
+    model_config = {
+        "json_schema_extra": {
+            "example": {"email": "alice@acme.com", "password": "Str0ng!Pass"}
+        }
+    }
+
     email: EmailStr
     password: str
 
 
 class TokenResponse(BaseModel):
+    model_config = {
+        "json_schema_extra": {
+            "example": {
+                "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+                "refresh_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+                "token_type": "bearer",
+            }
+        }
+    }
+
     access_token: str
     refresh_token: str
     token_type: str = "bearer"
 
 
 class RefreshRequest(BaseModel):
+    model_config = {
+        "json_schema_extra": {
+            "example": {"refresh_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."}
+        }
+    }
+
     refresh_token: str

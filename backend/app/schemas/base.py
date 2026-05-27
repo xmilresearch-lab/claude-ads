@@ -8,6 +8,20 @@ from pydantic import BaseModel
 
 T = TypeVar("T")
 
+# ── Shared OpenAPI error response definitions ─────────────────────────────────
+
+COMMON_ERROR_RESPONSES: dict[int, dict[str, str]] = {
+    401: {"description": "Not authenticated — Bearer token missing or expired"},
+    403: {"description": "Forbidden — you do not own this resource"},
+    404: {"description": "Not found"},
+    422: {"description": "Validation error — request body or query parameter invalid"},
+    429: {"description": "Rate limit exceeded — slow down and retry"},
+    500: {"description": "Internal server error"},
+}
+
+
+# ── Envelope schemas ──────────────────────────────────────────────────────────
+
 
 class Meta(BaseModel):
     request_id: str
@@ -33,14 +47,36 @@ class PaginatedResponse(BaseModel, Generic[T]):
 
 
 class ErrorDetail(BaseModel):
+    model_config = {
+        "json_schema_extra": {
+            "example": {"code": "validation_error", "message": "field is required", "field": "email"}
+        }
+    }
+
     code: str          # machine-readable e.g. "validation_error"
     message: str       # human-readable
     field: str | None = None  # which field caused the error (if applicable)
 
 
 class ErrorResponse(BaseModel):
+    model_config = {
+        "json_schema_extra": {
+            "example": {
+                "errors": [{"code": "validation_error", "message": "field is required", "field": "email"}],
+                "meta": {
+                    "request_id": "a1b2c3d4",
+                    "timestamp": "2025-01-15T09:00:00+00:00",
+                    "version": "v1",
+                },
+            }
+        }
+    }
+
     errors: list[ErrorDetail]
     meta: Meta
+
+
+# ── Response helpers ──────────────────────────────────────────────────────────
 
 
 def _meta(request: Request) -> Meta:

@@ -18,10 +18,12 @@ from app.middleware.rate_limiter import LIMIT_AUTH, LIMIT_READ, limiter
 from app.models.user import User
 from app.models.workspace import Workspace
 from app.schemas.auth import LoginRequest, RefreshRequest, RegisterRequest, TokenResponse
-from app.schemas.base import DataResponse, ok
+from app.schemas.base import COMMON_ERROR_RESPONSES, DataResponse, ok
 from app.schemas.user import UserResponse
 
 router = APIRouter()
+
+_AUTH_ERRORS = {**COMMON_ERROR_RESPONSES, 409: {"description": "Email already registered"}}
 
 
 def _tokens_for_user(user: User) -> TokenResponse:
@@ -32,7 +34,19 @@ def _tokens_for_user(user: User) -> TokenResponse:
     )
 
 
-@router.post("/register", response_model=DataResponse[TokenResponse], status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/register",
+    summary="Register New User",
+    description=(
+        "Create a new user account and workspace. "
+        "Returns access and refresh tokens immediately upon success. "
+        "Passwords must be at least 8 characters and include uppercase, lowercase, digit, and special character."
+    ),
+    response_description="JWT access token, refresh token, and token type",
+    responses={**_AUTH_ERRORS, 201: {"description": "User registered successfully"}},
+    response_model=DataResponse[TokenResponse],
+    status_code=status.HTTP_201_CREATED,
+)
 @limiter.limit(LIMIT_AUTH)
 async def register(
     request: Request,
@@ -60,7 +74,18 @@ async def register(
     return ok(_tokens_for_user(user), request)
 
 
-@router.post("/login", response_model=DataResponse[TokenResponse])
+@router.post(
+    "/login",
+    summary="Login",
+    description=(
+        "Authenticate with email and password. "
+        "Returns short-lived access token (30 min) and long-lived refresh token (30 days). "
+        "Rate-limited to 10 requests/minute per IP."
+    ),
+    response_description="JWT access token and refresh token",
+    responses={**_AUTH_ERRORS, 401: {"description": "Invalid credentials or inactive account"}},
+    response_model=DataResponse[TokenResponse],
+)
 @limiter.limit(LIMIT_AUTH)
 async def login(
     request: Request,
@@ -76,7 +101,18 @@ async def login(
     return ok(_tokens_for_user(user), request)
 
 
-@router.post("/refresh", response_model=DataResponse[TokenResponse])
+@router.post(
+    "/refresh",
+    summary="Refresh Access Token",
+    description=(
+        "Exchange a valid refresh token for a new access + refresh token pair. "
+        "Use this when the access token has expired. "
+        "Both the old and new token pairs are returned."
+    ),
+    response_description="New JWT access token and refresh token",
+    responses=_AUTH_ERRORS,
+    response_model=DataResponse[TokenResponse],
+)
 @limiter.limit("20/minute")
 async def refresh(
     request: Request,
@@ -95,7 +131,17 @@ async def refresh(
     return ok(_tokens_for_user(user), request)
 
 
-@router.get("/me", response_model=DataResponse[UserResponse])
+@router.get(
+    "/me",
+    summary="Get Current User",
+    description=(
+        "Return the authenticated user's profile. "
+        "Requires a valid Bearer token in the Authorization header."
+    ),
+    response_description="Authenticated user profile",
+    responses=COMMON_ERROR_RESPONSES,
+    response_model=DataResponse[UserResponse],
+)
 @limiter.limit(LIMIT_READ)
 async def me(
     request: Request,
