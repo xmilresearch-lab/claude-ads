@@ -200,6 +200,7 @@ async def run_automation(
     db.add(run)
     await db.flush()
 
+    content_entry: ContentQueue | None = None
     try:
         # 8. Call Claude API with MCP servers
         claude_result = await call_claude_with_mcp(
@@ -216,7 +217,7 @@ async def run_automation(
             content_dict: dict[str, Any] = json.loads(dlp_result.redacted_content)
         except json.JSONDecodeError:
             content_dict = {"raw": dlp_result.redacted_content}
-        await queue_or_publish(automation, content_dict, dlp_result, db)
+        content_entry = await queue_or_publish(automation, content_dict, dlp_result, db)
 
         # 11. Update AutomationRun to success
         run.status = "success"
@@ -256,5 +257,13 @@ async def run_automation(
 
     await db.commit()
 
-    # 13. Return AutomationRun
+    # 13. Auto-dispatch publish task for approved content (lazy import avoids
+    #     circular dependency at module load time; dispatch happens after commit
+    #     so the DB row is visible to the worker)
+    if content_entry is not None and content_entry.status == "approved":
+        from app.workers.publish_worker import publish_content  # noqa: PLC0415
+
+        publish_content.delay(content_queue_id=str(content_entry.id))
+
+    # 14. Return AutomationRun
     return run

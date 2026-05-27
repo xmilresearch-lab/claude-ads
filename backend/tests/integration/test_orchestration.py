@@ -71,14 +71,18 @@ def _added_objects(db: MagicMock) -> list[object]:
 
 
 @pytest.mark.asyncio
+@patch("app.workers.publish_worker.publish_content")
 @patch("app.services.orchestration.call_claude_with_mcp", new_callable=AsyncMock)
-async def test_happy_path_run_succeeds(mock_claude: AsyncMock) -> None:
+async def test_happy_path_run_succeeds(
+    mock_claude: AsyncMock, mock_publish: MagicMock
+) -> None:
     """
     With a clean payload and clean Claude output, run_automation() must:
     - Return an AutomationRun with status='success'
     - Write exactly one AuditLog to the DB
     - Write exactly one ContentQueue entry with status='approved'
     - Record token usage on the run
+    - Dispatch publish_content.delay() for the approved ContentQueue entry
     """
     auto = _make_automation()
     workspace = _make_workspace(auto.workspace_id)
@@ -114,6 +118,11 @@ async def test_happy_path_run_succeeds(mock_claude: AsyncMock) -> None:
 
     # One commit at the end
     db.commit.assert_awaited_once()
+
+    # publish_content.delay() dispatched with the approved item's ID
+    mock_publish.delay.assert_called_once_with(
+        content_queue_id=str(queue_items[0].id)
+    )
 
 
 # ── Test 2: Injection blocked ──────────────────────────────────────────────
@@ -182,12 +191,16 @@ async def test_rate_limit_raises_before_claude(mock_claude: AsyncMock) -> None:
 
 
 @pytest.mark.asyncio
+@patch("app.workers.publish_worker.publish_content")
 @patch("app.services.orchestration.call_claude_with_mcp", new_callable=AsyncMock)
-async def test_dlp_violation_forces_pending_approval(mock_claude: AsyncMock) -> None:
+async def test_dlp_violation_forces_pending_approval(
+    mock_claude: AsyncMock, mock_publish: MagicMock
+) -> None:
     """
     When Claude output contains PII (here: an email address), the DLP scanner
     must detect it and route the ContentQueue entry to 'pending_approval' even
     if the automation has require_approval=False.
+    publish_content must NOT be dispatched for pending_approval items.
     """
     # Automation does NOT require manual approval
     auto = _make_automation(config={"require_approval": False})
@@ -220,3 +233,6 @@ async def test_dlp_violation_forces_pending_approval(mock_claude: AsyncMock) -> 
     assert queue_items[0].status == "pending_approval", (
         "DLP violation must override require_approval=False and force pending_approval"
     )
+
+    # publish_content must NOT be dispatched for pending_approval items
+    mock_publish.delay.assert_not_called()
