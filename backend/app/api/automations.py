@@ -24,7 +24,7 @@ from app.schemas.automation import (
     TriggerRequest,
 )
 from app.schemas.automation_run import AutomationRunResponse
-from app.schemas.base import DataResponse, PaginatedResponse, ok, paginated
+from app.schemas.base import COMMON_ERROR_RESPONSES, DataResponse, PaginatedResponse, ok, paginated
 from app.services import automation_service
 from app.services.orchestration import (
     AutomationNotFoundError,
@@ -35,8 +35,22 @@ from app.workers.scheduled_worker import run_scheduled_automation
 
 router = APIRouter()
 
+_WITH_404 = {**COMMON_ERROR_RESPONSES, 404: {"description": "Automation not found"}}
 
-@router.post("/", response_model=DataResponse[AutomationResponse], status_code=status.HTTP_201_CREATED)
+
+@router.post(
+    "/",
+    summary="Create Automation",
+    description=(
+        "Create a new automation for the current workspace. "
+        "Supports schedule-based (cron) and webhook-triggered automations. "
+        "The `name` field is scanned for injection patterns before saving."
+    ),
+    response_description="The newly created automation",
+    responses={**COMMON_ERROR_RESPONSES, 201: {"description": "Automation created"}},
+    response_model=DataResponse[AutomationResponse],
+    status_code=status.HTTP_201_CREATED,
+)
 @limiter.limit(LIMIT_WRITE)
 async def create(
     request: Request,
@@ -56,7 +70,17 @@ async def create(
     return ok(AutomationResponse.model_validate(automation), request)
 
 
-@router.get("/", response_model=PaginatedResponse[AutomationResponse])
+@router.get(
+    "/",
+    summary="List Automations",
+    description=(
+        "Return a paginated list of all automations for the current workspace. "
+        "Use `offset` and `limit` query parameters to page through results."
+    ),
+    response_description="Paginated list of automations",
+    responses=COMMON_ERROR_RESPONSES,
+    response_model=PaginatedResponse[AutomationResponse],
+)
 @limiter.limit(LIMIT_READ)
 async def list_all(
     request: Request,
@@ -79,7 +103,14 @@ async def list_all(
     )
 
 
-@router.get("/{automation_id}", response_model=DataResponse[AutomationResponse])
+@router.get(
+    "/{automation_id}",
+    summary="Get Automation",
+    description="Fetch a single automation by ID. Returns 404 if not found or not owned by the workspace.",
+    response_description="The requested automation",
+    responses=_WITH_404,
+    response_model=DataResponse[AutomationResponse],
+)
 @limiter.limit(LIMIT_READ)
 async def get(
     request: Request,
@@ -95,7 +126,18 @@ async def get(
     return ok(AutomationResponse.model_validate(automation), request)
 
 
-@router.patch("/{automation_id}", response_model=DataResponse[AutomationResponse])
+@router.patch(
+    "/{automation_id}",
+    summary="Update Automation",
+    description=(
+        "Partially update an automation. "
+        "Only the fields provided in the request body are changed. "
+        "Use `active: false` to pause an automation without deleting it."
+    ),
+    response_description="The updated automation",
+    responses=_WITH_404,
+    response_model=DataResponse[AutomationResponse],
+)
 @limiter.limit(LIMIT_WRITE)
 async def update(
     request: Request,
@@ -115,7 +157,14 @@ async def update(
     return ok(AutomationResponse.model_validate(automation), request)
 
 
-@router.delete("/{automation_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete(
+    "/{automation_id}",
+    summary="Delete Automation",
+    description="Permanently delete an automation and all its associated runs. This action cannot be undone.",
+    response_description="No content — automation deleted",
+    responses=_WITH_404,
+    status_code=status.HTTP_204_NO_CONTENT,
+)
 @limiter.limit(LIMIT_WRITE)
 async def delete(
     request: Request,
@@ -130,7 +179,18 @@ async def delete(
         )
 
 
-@router.post("/{automation_id}/run", response_model=DataResponse[AutomationRunResponse])
+@router.post(
+    "/{automation_id}/run",
+    summary="Trigger Automation Run",
+    description=(
+        "Manually trigger an automation run with an optional payload. "
+        "The run is queued asynchronously via Celery — this endpoint returns immediately with a pending run. "
+        "Poll `GET /{id}/runs` to check completion status."
+    ),
+    response_description="Pending AutomationRun record",
+    responses={**_WITH_404, 422: {"description": "Automation is inactive or payload invalid"}},
+    response_model=DataResponse[AutomationRunResponse],
+)
 @limiter.limit(LIMIT_TRIGGER)
 @limiter.limit(LIMIT_TRIGGER, key_func=get_workspace_id)
 async def run(
@@ -140,7 +200,6 @@ async def run(
     workspace: Annotated[Workspace, Depends(get_current_workspace)],
     db: Annotated[AsyncSession, Depends(get_db)],
 ) -> DataResponse[AutomationRunResponse]:
-    """Enqueue an automation run and return a pending AutomationRun immediately."""
     automation = await automation_service.get_automation(automation_id, workspace.id, db)
     if automation is None:
         raise HTTPException(
@@ -163,7 +222,17 @@ async def run(
     return ok(AutomationRunResponse.model_validate(pending_run), request)
 
 
-@router.get("/{automation_id}/runs", response_model=PaginatedResponse[AutomationRunResponse])
+@router.get(
+    "/{automation_id}/runs",
+    summary="List Automation Runs",
+    description=(
+        "Return a paginated history of all runs for an automation, newest first. "
+        "Useful for monitoring run status, token usage, and error messages."
+    ),
+    response_description="Paginated list of automation runs",
+    responses=_WITH_404,
+    response_model=PaginatedResponse[AutomationRunResponse],
+)
 @limiter.limit(LIMIT_READ)
 async def list_runs(
     request: Request,

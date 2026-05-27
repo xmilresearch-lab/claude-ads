@@ -10,7 +10,7 @@ from app.middleware.rate_limiter import LIMIT_READ, LIMIT_WRITE, limiter
 from app.models.automation import Automation
 from app.models.integration import Integration
 from app.models.workspace import Workspace
-from app.schemas.base import DataResponse, ok
+from app.schemas.base import COMMON_ERROR_RESPONSES, DataResponse, ok
 from app.schemas.workspace import (
     BrandVoiceSchema,
     WorkspaceDetailResponse,
@@ -50,7 +50,17 @@ async def _compute_detail(
     )
 
 
-@router.get("/me", response_model=DataResponse[WorkspaceDetailResponse])
+@router.get(
+    "/me",
+    summary="Get My Workspace",
+    description=(
+        "Return the current workspace with live counts: total integrations, "
+        "total automations, and active automations."
+    ),
+    response_description="Workspace detail with counts",
+    responses=COMMON_ERROR_RESPONSES,
+    response_model=DataResponse[WorkspaceDetailResponse],
+)
 @limiter.limit(LIMIT_READ)
 async def get_my_workspace(
     request: Request,
@@ -60,7 +70,14 @@ async def get_my_workspace(
     return ok(await _compute_detail(workspace, db), request)
 
 
-@router.patch("/me", response_model=DataResponse[WorkspaceDetailResponse])
+@router.patch(
+    "/me",
+    summary="Update My Workspace",
+    description="Partially update workspace name or settings. Only provided fields are changed.",
+    response_description="Updated workspace detail",
+    responses=COMMON_ERROR_RESPONSES,
+    response_model=DataResponse[WorkspaceDetailResponse],
+)
 @limiter.limit(LIMIT_WRITE)
 async def update_my_workspace(
     request: Request,
@@ -77,7 +94,18 @@ async def update_my_workspace(
     return ok(await _compute_detail(workspace, db), request)
 
 
-@router.get("/me/brand-voice", response_model=DataResponse[BrandVoiceSchema | None])
+@router.get(
+    "/me/brand-voice",
+    summary="Get Brand Voice",
+    description=(
+        "Return the workspace brand voice configuration. "
+        "Brand voice is injected into every Claude API call to ensure consistent tone and style. "
+        "Returns `null` data if no brand voice has been configured yet."
+    ),
+    response_description="Brand voice schema or null",
+    responses=COMMON_ERROR_RESPONSES,
+    response_model=DataResponse[BrandVoiceSchema | None],
+)
 @limiter.limit(LIMIT_READ)
 async def get_brand_voice(
     request: Request,
@@ -88,7 +116,19 @@ async def get_brand_voice(
     return ok(bv, request)
 
 
-@router.put("/me/brand-voice", response_model=DataResponse[BrandVoiceSchema])
+@router.put(
+    "/me/brand-voice",
+    summary="Set Brand Voice",
+    description=(
+        "Replace the workspace brand voice. "
+        "The brand voice is sanitized via `sanitize_example()` before being persisted "
+        "to prevent prompt injection through user-controlled brand voice examples (LLM04). "
+        "All existing brand voice configuration is replaced."
+    ),
+    response_description="Updated brand voice schema",
+    responses=COMMON_ERROR_RESPONSES,
+    response_model=DataResponse[BrandVoiceSchema],
+)
 @limiter.limit(LIMIT_WRITE)
 async def set_brand_voice(
     request: Request,
@@ -102,7 +142,17 @@ async def set_brand_voice(
     return ok(BrandVoiceSchema.model_validate(workspace.brand_voice), request)
 
 
-@router.delete("/me/brand-voice", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete(
+    "/me/brand-voice",
+    summary="Delete Brand Voice",
+    description=(
+        "Remove the workspace brand voice. "
+        "After deletion, Claude API calls will use the default system prompt without brand voice injection."
+    ),
+    response_description="No content — brand voice removed",
+    responses=COMMON_ERROR_RESPONSES,
+    status_code=status.HTTP_204_NO_CONTENT,
+)
 @limiter.limit(LIMIT_WRITE)
 async def delete_brand_voice(
     request: Request,
@@ -113,7 +163,14 @@ async def delete_brand_voice(
     await db.commit()
 
 
-@router.get("/me/settings", response_model=DataResponse[dict])
+@router.get(
+    "/me/settings",
+    summary="Get Workspace Settings",
+    description="Return the workspace JSONB settings blob. Returns an empty object if no settings have been set.",
+    response_description="Workspace settings as a key-value object",
+    responses=COMMON_ERROR_RESPONSES,
+    response_model=DataResponse[dict],
+)
 @limiter.limit(LIMIT_READ)
 async def get_settings(
     request: Request,
@@ -123,7 +180,17 @@ async def get_settings(
     return ok(workspace.settings or {}, request)
 
 
-@router.patch("/me/settings", response_model=DataResponse[dict])
+@router.patch(
+    "/me/settings",
+    summary="Update Workspace Settings",
+    description=(
+        "Deep-merge the provided settings into the existing workspace settings. "
+        "Only keys present in the request body are updated; other keys are preserved."
+    ),
+    response_description="Updated workspace settings",
+    responses=COMMON_ERROR_RESPONSES,
+    response_model=DataResponse[dict],
+)
 @limiter.limit(LIMIT_WRITE)
 async def patch_settings(
     request: Request,

@@ -2,6 +2,24 @@ from pydantic import BaseModel
 
 
 class AnalyticsOverview(BaseModel):
+    model_config = {
+        "json_schema_extra": {
+            "example": {
+                "period_days": 30,
+                "total_runs": 145,
+                "successful_runs": 130,
+                "failed_runs": 10,
+                "success_rate": 0.8966,
+                "total_tokens_used": 123500,
+                "estimated_cost_usd": 0.3705,
+                "content_published": 87,
+                "content_pending_approval": 12,
+                "blocked_injection_attempts": 5,
+                "dlp_violations_caught": 2,
+            }
+        }
+    }
+
     period_days: int
     total_runs: int
     successful_runs: int
@@ -34,6 +52,18 @@ class PlatformStats(BaseModel):
 
 
 class TokenUsageSeries(BaseModel):
+    model_config = {
+        "json_schema_extra": {
+            "example": {
+                "date": "2025-01-15",
+                "input_tokens": 0,
+                "output_tokens": 0,
+                "total_tokens": 4200,
+                "estimated_cost_usd": 0.0126,
+            }
+        }
+    }
+
     date: str  # YYYY-MM-DD
     input_tokens: int
     output_tokens: int

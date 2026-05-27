@@ -53,6 +53,10 @@ automations that run on schedules or webhooks.
   docker-compose.yml
   .env.example
   alembic.ini
+/docs
+  API.md            → Authentication guide, endpoint reference, rate limits, error codes
+  DEPLOYMENT.md     → Environment checklist, Docker Compose config, health check setup
+  DEVELOPMENT.md    → Prerequisites, 5-command setup, running tests, extending the platform
 ```
 
 -----
@@ -253,8 +257,8 @@ All MCP servers require `Authorization: Bearer $MCP_AUTH_TOKEN` header.
 |5     |AI Orchestration Engine + brand voice system                  |✅ Done   |
 |6     |Celery task queue + workers                                   |✅ Done   |
 |7     |Security layer: injection guard, DLP, OWASP LLM Top 10, audit |✅ Done   |
-|8     |REST API endpoints + OpenAPI docs (Sections 1-4 done)        |🔄 Active |
-|9     |Tests + MCP evaluations                                       |⏳ Queue  |
+|8     |REST API completion + OpenAPI docs + health endpoints + docs  |✅ Done   |
+|9     |Tests + MCP evaluations                                       |🔄 Active |
 |10    |Docker packaging + deployment config                          |⏳ Queue  |
 
 -----

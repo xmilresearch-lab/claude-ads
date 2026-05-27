@@ -20,7 +20,7 @@ from app.middleware.rate_limiter import LIMIT_READ, LIMIT_WRITE, limiter
 from app.models.audit_log import AuditLog
 from app.models.integration import Integration
 from app.models.workspace import Workspace
-from app.schemas.base import DataResponse, PaginatedResponse, ok, paginated
+from app.schemas.base import COMMON_ERROR_RESPONSES, DataResponse, PaginatedResponse, ok, paginated
 from app.schemas.integration import (
     APIKeyConnectRequest,
     IntegrationConnectRequest,
@@ -243,7 +243,20 @@ async def _upsert_integration(
 # ── Endpoints ─────────────────────────────────────────────────────────────────
 
 
-@router.get("", response_model=PaginatedResponse[IntegrationResponse])
+_WITH_404 = {**COMMON_ERROR_RESPONSES, 404: {"description": "Integration not found"}}
+
+
+@router.get(
+    "",
+    summary="List Integrations",
+    description=(
+        "Return all integrations connected to the current workspace, newest first. "
+        "Credentials are never included in list responses — only metadata and status."
+    ),
+    response_description="Paginated list of integrations",
+    responses=COMMON_ERROR_RESPONSES,
+    response_model=PaginatedResponse[IntegrationResponse],
+)
 @limiter.limit(LIMIT_READ)
 async def list_integrations(
     request: Request,
@@ -276,7 +289,14 @@ async def list_integrations(
     )
 
 
-@router.get("/{integration_id}", response_model=DataResponse[IntegrationResponse])
+@router.get(
+    "/{integration_id}",
+    summary="Get Integration",
+    description="Fetch a single integration by ID. Returns 403 if it belongs to a different workspace (IDOR protection).",
+    response_description="The requested integration",
+    responses=_WITH_404,
+    response_model=DataResponse[IntegrationResponse],
+)
 @limiter.limit(LIMIT_READ)
 async def get_integration(
     request: Request,
@@ -288,7 +308,18 @@ async def get_integration(
     return ok(IntegrationResponse.model_validate(integration), request)
 
 
-@router.get("/{integration_id}/status", response_model=DataResponse[IntegrationStatusResponse])
+@router.get(
+    "/{integration_id}/status",
+    summary="Get Integration Health",
+    description=(
+        "Perform a live health check against the external provider API using the stored credentials. "
+        "Returns latency in milliseconds and `healthy` or `unhealthy` status. "
+        "Returns `error` if credentials cannot be decrypted."
+    ),
+    response_description="Live health status and latency",
+    responses=_WITH_404,
+    response_model=DataResponse[IntegrationStatusResponse],
+)
 @limiter.limit(LIMIT_READ)
 async def get_integration_status(
     request: Request,
@@ -323,7 +354,18 @@ async def get_integration_status(
     )
 
 
-@router.post("/oauth/initiate", response_model=DataResponse[dict])
+@router.post(
+    "/oauth/initiate",
+    summary="Initiate OAuth Flow",
+    description=(
+        "Generate an OAuth 2.0 authorization URL for a supported provider (Twitter, LinkedIn, Gmail, HubSpot). "
+        "A one-time `state` token is stored in Redis for 10 minutes to prevent CSRF. "
+        "Redirect the user to `authorization_url` to begin the OAuth flow."
+    ),
+    response_description="Authorization URL and state token",
+    responses=COMMON_ERROR_RESPONSES,
+    response_model=DataResponse[dict],
+)
 @limiter.limit(LIMIT_WRITE)
 async def oauth_initiate(
     request: Request,
@@ -357,7 +399,19 @@ async def oauth_initiate(
     return ok({"authorization_url": auth_url, "state": state}, request)
 
 
-@router.post("/oauth/callback", response_model=DataResponse[IntegrationResponse])
+@router.post(
+    "/oauth/callback",
+    summary="Complete OAuth Callback",
+    description=(
+        "Exchange the OAuth authorization code for tokens. "
+        "Verifies the one-time `state` token (CSRF protection), exchanges the code with the provider, "
+        "fetches user info, encrypts tokens with AES-256-GCM, and upserts the integration record. "
+        "Writes an `integration_connected` audit log entry."
+    ),
+    response_description="The connected integration record",
+    responses=COMMON_ERROR_RESPONSES,
+    response_model=DataResponse[IntegrationResponse],
+)
 @limiter.limit(LIMIT_WRITE)
 async def oauth_callback(
     request: Request,
@@ -416,7 +470,19 @@ async def oauth_callback(
     return ok(IntegrationResponse.model_validate(integration), request)
 
 
-@router.post("/apikey", response_model=DataResponse[IntegrationResponse])
+@router.post(
+    "/apikey",
+    summary="Connect via API Key",
+    description=(
+        "Connect an integration using an API key (supported: SendGrid, Zendesk). "
+        "The key is validated against the provider before being stored. "
+        "Keys are encrypted with AES-256-GCM — never stored in plain text. "
+        "Returns 400 if the provider does not support API key auth or if the key is invalid."
+    ),
+    response_description="The connected integration record",
+    responses=COMMON_ERROR_RESPONSES,
+    response_model=DataResponse[IntegrationResponse],
+)
 @limiter.limit(LIMIT_WRITE)
 async def connect_apikey(
     request: Request,
@@ -456,7 +522,19 @@ async def connect_apikey(
     return ok(IntegrationResponse.model_validate(integration), request)
 
 
-@router.delete("/{integration_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete(
+    "/{integration_id}",
+    summary="Disconnect Integration",
+    description=(
+        "Disconnect an integration by overwriting its credentials with an empty encrypted blob "
+        "and setting status to `disconnected`. "
+        "The record is retained for audit trail purposes — use this instead of deleting. "
+        "Writes an `integration_disconnected` audit log entry."
+    ),
+    response_description="No content — integration disconnected",
+    responses=_WITH_404,
+    status_code=status.HTTP_204_NO_CONTENT,
+)
 @limiter.limit(LIMIT_WRITE)
 async def disconnect_integration(
     request: Request,

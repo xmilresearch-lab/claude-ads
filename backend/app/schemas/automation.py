@@ -8,10 +8,34 @@ _CONFIG_BLOCKED_SUBSTRINGS = frozenset({"prompt", "system", "instruction"})
 
 
 class TriggerRequest(BaseModel):
+    model_config = {
+        "json_schema_extra": {
+            "example": {"payload": {"topic": "AI trends in 2025", "tone": "professional"}}
+        }
+    }
+
     payload: dict = {}
 
 
 class AutomationCreate(BaseModel):
+    model_config = {
+        "json_schema_extra": {
+            "example": {
+                "name": "Daily LinkedIn Post",
+                "type": "social_post",
+                "config": {
+                    "platforms": ["linkedin"],
+                    "topic": "AI industry trends",
+                    "tone": "professional",
+                    "require_approval": True,
+                },
+                "trigger": "schedule",
+                "schedule": "0 9 * * MON-FRI",
+                "active": True,
+            }
+        }
+    }
+
     name: str
     type: str
     config: dict[str, Any] = {}
@@ -117,7 +141,22 @@ class AutomationUpdate(BaseModel):
 
 
 class AutomationResponse(BaseModel):
-    model_config = {"from_attributes": True}
+    model_config = {
+        "from_attributes": True,
+        "json_schema_extra": {
+            "example": {
+                "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+                "workspace_id": "3fa85f64-5717-4562-b3fc-2c963f66afa7",
+                "name": "Daily LinkedIn Post",
+                "type": "social_post",
+                "config": {"platforms": ["linkedin"], "topic": "AI trends"},
+                "schedule": "0 9 * * MON-FRI",
+                "trigger": "schedule",
+                "active": True,
+                "created_at": "2025-01-15T09:00:00+00:00",
+            }
+        },
+    }
 
     id: uuid.UUID
     workspace_id: uuid.UUID

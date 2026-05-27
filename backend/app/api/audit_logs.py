@@ -14,12 +14,25 @@ from app.models.automation import Automation
 from app.models.automation_run import AutomationRun
 from app.models.workspace import Workspace
 from app.schemas.audit_log import AuditLogResponse, AuditLogSummary
-from app.schemas.base import DataResponse, PaginatedResponse, ok, paginated
+from app.schemas.base import COMMON_ERROR_RESPONSES, DataResponse, PaginatedResponse, ok, paginated
 
 router = APIRouter()
 
+_WITH_404 = {**COMMON_ERROR_RESPONSES, 404: {"description": "Audit log not found"}}
 
-@router.get("/logs", response_model=PaginatedResponse[AuditLogResponse])
+
+@router.get(
+    "/logs",
+    summary="List Audit Logs",
+    description=(
+        "Return a paginated, newest-first list of audit log entries for the current workspace. "
+        "Filter by `action` type or a date range using `from_date` and `to_date`. "
+        "Sensitive metadata keys (tokens, passwords) are automatically redacted."
+    ),
+    response_description="Paginated list of audit log entries",
+    responses=COMMON_ERROR_RESPONSES,
+    response_model=PaginatedResponse[AuditLogResponse],
+)
 @limiter.limit(LIMIT_READ)
 async def list_logs(
     request: Request,
@@ -60,7 +73,18 @@ async def list_logs(
     )
 
 
-@router.get("/logs/{log_id}", response_model=DataResponse[AuditLogResponse])
+@router.get(
+    "/logs/{log_id}",
+    summary="Get Audit Log Entry",
+    description=(
+        "Fetch a single audit log entry by ID. "
+        "Returns 403 if the log belongs to a different workspace (IDOR protection). "
+        "Sensitive metadata keys are redacted from the response."
+    ),
+    response_description="The requested audit log entry",
+    responses=_WITH_404,
+    response_model=DataResponse[AuditLogResponse],
+)
 @limiter.limit(LIMIT_READ)
 async def get_log(
     request: Request,
@@ -82,7 +106,18 @@ async def get_log(
     return ok(AuditLogResponse.model_validate(log), request)
 
 
-@router.get("/summary", response_model=DataResponse[AuditLogSummary])
+@router.get(
+    "/summary",
+    summary="Audit Log Summary",
+    description=(
+        "Return aggregated statistics from the last 30 days: run counts by status, "
+        "DLP violations, tokens used, and content published. "
+        "Use this for a quick security and usage overview."
+    ),
+    response_description="30-day summary of automation runs, DLP events, and token usage",
+    responses=COMMON_ERROR_RESPONSES,
+    response_model=DataResponse[AuditLogSummary],
+)
 @limiter.limit(LIMIT_READ)
 async def get_summary(
     request: Request,
