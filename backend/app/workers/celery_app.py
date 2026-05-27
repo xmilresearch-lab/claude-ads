@@ -10,6 +10,7 @@ celery_app = Celery(
     include=[
         "app.workers.automation_tasks",
         "app.workers.scheduler_tasks",
+        "app.workers.scheduled_worker",
         "app.workers.webhook_worker",
         "app.workers.publish_worker",
     ],
@@ -27,6 +28,8 @@ celery_app.conf.update(
     task_routes={
         "app.workers.automation_tasks.run_automation_task": {"queue": "automations"},
         "app.workers.scheduler_tasks.dispatch_scheduled_automations": {"queue": "scheduler"},
+        "app.workers.scheduled_worker.run_scheduled_automation": {"queue": "automations"},
+        "app.workers.scheduled_worker.poll_due_automations": {"queue": "scheduler"},
         "app.workers.webhook_worker.handle_support_ticket": {"queue": "high_priority"},
         "app.workers.webhook_worker.handle_crm_event": {"queue": "medium_priority"},
         "app.workers.publish_worker.publish_content": {"queue": "medium_priority"},
@@ -36,11 +39,12 @@ celery_app.conf.update(
         "scheduler": {"exchange": "scheduler"},
         "high_priority": {"exchange": "high_priority"},
         "medium_priority": {"exchange": "medium_priority"},
+        "low_priority": {"exchange": "low_priority"},
         "celery": {"exchange": "celery"},
     },
     beat_schedule={
-        "dispatch-scheduled-automations": {
-            "task": "app.workers.scheduler_tasks.dispatch_scheduled_automations",
+        "poll-due-automations": {
+            "task": "app.workers.scheduled_worker.poll_due_automations",
             "schedule": crontab(minute="*"),  # every minute
         },
     },
