@@ -25,6 +25,14 @@ class AutomationCreate(BaseModel):
         v = v.strip()
         if len(v) > 255:
             raise ValueError("name must be at most 255 characters")
+        try:
+            from app.middleware.injection_scanner import SecurityError, require_clean  # noqa: PLC0415
+            try:
+                require_clean(v)
+            except SecurityError as exc:
+                raise ValueError(f"name contains disallowed content: {exc}") from exc
+        except ImportError:
+            pass
         return v
 
     @field_validator("schedule")

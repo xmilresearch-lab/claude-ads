@@ -130,10 +130,14 @@ mypy app/
 1. **Security first** — ALL user-supplied content passes through `injection_scanner` before reaching Claude
 1. **DLP on output** — ALL Claude-generated content passes through `dlp_scanner` before being sent to external APIs
 1. **Encrypted credentials** — OAuth tokens and API keys are ALWAYS stored AES-256-GCM encrypted; never logged
-1. **Brand voice injection** — EVERY Claude API call includes the workspace brand voice in the system prompt
+1. **Brand voice injection** — EVERY Claude API call includes the workspace brand voice in the system prompt; brand voice examples are sanitized via `sanitize_example()` before prompt injection (LLM04)
 1. **Audit trail** — EVERY automation run writes a record to `automation_runs` with status, result, and duration
-1. **Rate limits enforced** — check workspace rate limits BEFORE queuing any automation run
+1. **Rate limits enforced** — check workspace rate limits BEFORE queuing any automation run; API endpoints enforce per-IP/per-workspace HTTP rate limits via SlowAPI
 1. **MCP servers are stateless** — no session state stored in MCP servers; all state lives in PostgreSQL
+1. **Security headers** — ALL HTTP responses include HSTS, CSP, X-Frame-Options, and X-Content-Type-Options via the `add_security_headers` middleware
+1. **OWASP LLM Top 10 compliance** — prompt injection (LLM01), data leakage (LLM02), supply chain (LLM03), data poisoning (LLM04), excessive agency (LLM05), tool misuse (LLM06), prompt leakage (LLM07), vector/embedding risks (LLM08 — Weaviate queries are always scoped to `workspace_id`; never query across tenants), misinformation (LLM09 — Claude is instructed to say "uncertain" rather than fabricate), overreliance (LLM10 — runs using >2 000 tokens write a `high_token_usage` audit log)
+1. **No credentials in prompt** — automation `config` JSONB values are never rendered into the system prompt; only brand voice (workspace-controlled) is injected (LLM01)
+1. **CVE scanning** — run `pip-audit` before every release; HIGH/CRITICAL findings block deployment
 
 -----
 
@@ -220,18 +224,18 @@ All MCP servers require `Authorization: Bearer $MCP_AUTH_TOKEN` header.
 
 ## Sprint Map
 
-|Sprint|Focus                                       |Status    |
-|------|--------------------------------------------|----------|
-|1     |Project scaffold, DB models, auth system    |✅ Done   |
-|2     |Social MCP server (Twitter + LinkedIn)      |✅ Done   |
-|3     |Email & Support MCP server (Gmail + Zendesk)|✅ Done   |
-|4     |CRM MCP server (HubSpot)                    |✅ Done   |
-|5     |AI Orchestration Engine + brand voice system|✅ Done   |
-|6     |Celery task queue + workers                 |✅ Done   |
-|7     |Security layer (injection guard, DLP)       |🔄 Active |
-|8     |REST API endpoints + OpenAPI docs           |⏳ Queue  |
-|9     |Tests + MCP evaluations                     |⏳ Queue  |
-|10    |Docker packaging + deployment config        |⏳ Queue  |
+|Sprint|Focus                                                         |Status    |
+|------|--------------------------------------------------------------|----------|
+|1     |Project scaffold, DB models, auth system                      |✅ Done   |
+|2     |Social MCP server (Twitter + LinkedIn)                        |✅ Done   |
+|3     |Email & Support MCP server (Gmail + Zendesk)                  |✅ Done   |
+|4     |CRM MCP server (HubSpot)                                      |✅ Done   |
+|5     |AI Orchestration Engine + brand voice system                  |✅ Done   |
+|6     |Celery task queue + workers                                   |✅ Done   |
+|7     |Security layer: injection guard, DLP, OWASP LLM Top 10, audit |✅ Done   |
+|8     |REST API endpoints + OpenAPI docs                             |🔄 Active |
+|9     |Tests + MCP evaluations                                       |⏳ Queue  |
+|10    |Docker packaging + deployment config                          |⏳ Queue  |
 
 -----
 

@@ -20,7 +20,7 @@ dependencies = [
     "celery[redis]>=5.3",
     "redis>=5.0",
     "croniter",
-    "cryptography",
+    "cryptography>=46.0.5",  # CVE-2023-50782, CVE-2024-0727, CVE-2026-26007 fixed in 46.0.5
     "anthropic>=0.40.0",
     "slowapi>=0.1.9",
     "limits[redis]>=3.6",
@@ -35,6 +35,7 @@ dev = [
     "pytest-asyncio",
     "pytest-cov",
     "faker",
+    "pip-audit",
 ]
 
 [tool.ruff]
@@ -56,3 +57,7 @@ testpaths = ["tests"]
 [tool.coverage.run]
 source = ["app"]
 omit = ["tests/*"]
+
+[tool.pip-audit]
+require-hashes = false
+ignore-vuln = []
