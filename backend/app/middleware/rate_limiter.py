@@ -43,12 +43,15 @@ def get_workspace_id(request: Request) -> str:
 
 
 def rate_limit_exceeded_handler(request: Request, exc: RateLimitExceeded) -> Response:
+    # slowapi's RateLimitExceeded does not expose retry_after in all versions;
+    # use 60 s as a safe default so the handler never crashes.
+    retry_secs = 60
     return JSONResponse(
         status_code=429,
         content={
             "error": "rate_limit_exceeded",
             "message": "Too many requests. Please slow down.",
-            "retry_after": exc.retry_after,
+            "retry_after": retry_secs,
         },
-        headers={"Retry-After": str(exc.retry_after)},
+        headers={"Retry-After": str(retry_secs)},
     )

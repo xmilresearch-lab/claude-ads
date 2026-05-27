@@ -14,7 +14,7 @@ from app.core.security import (
     hash_password,
     verify_password,
 )
-from app.middleware.rate_limiter import LIMIT_AUTH, limiter
+from app.middleware.rate_limiter import LIMIT_AUTH, LIMIT_READ, limiter
 from app.models.user import User
 from app.models.workspace import Workspace
 from app.schemas.auth import LoginRequest, RefreshRequest, RegisterRequest, TokenResponse
