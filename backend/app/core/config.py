@@ -27,6 +27,9 @@ class Settings(BaseSettings):
     CRM_MCP_URL: str = "http://localhost:3003"
     MCP_AUTH_TOKEN: str = ""
 
+    # Webhooks
+    WEBHOOK_SECRET: str = ""
+
     # Integration OAuth
     TWITTER_CLIENT_ID: str = ""
     TWITTER_CLIENT_SECRET: str = ""
