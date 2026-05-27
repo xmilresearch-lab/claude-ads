@@ -20,3 +20,7 @@ class ContentQueueItem(BaseModel):
 class ContentQueueApprove(BaseModel):
     approved: bool
     scheduled_at: datetime | None = None
+
+
+class ContentQueueReject(BaseModel):
+    reason: str = ""

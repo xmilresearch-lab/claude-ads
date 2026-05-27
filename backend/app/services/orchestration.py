@@ -1,6 +1,6 @@
 import json
 import uuid
-from datetime import datetime, timezone
+from datetime import datetime
 from typing import Any
 
 from anthropic import AsyncAnthropic
@@ -50,9 +50,8 @@ async def check_rate_limit(
 ) -> None:
     """Raise RateLimitError if the workspace has reached its daily run cap."""
     limit = DAILY_LIMITS.get(automation_type, 100)
-    today_start = datetime.now(timezone.utc).replace(
-        hour=0, minute=0, second=0, microsecond=0
-    )
+    now = datetime.utcnow()
+    today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
     count_result = await db.execute(
         select(func.count(AutomationRun.id))
         .join(Automation, AutomationRun.automation_id == Automation.id)
@@ -172,8 +171,8 @@ async def run_automation(
             automation_id=automation_id,
             status="blocked",
             error=str(exc),
-            started_at=datetime.now(timezone.utc),
-            finished_at=datetime.now(timezone.utc),
+            started_at=datetime.utcnow(),
+            finished_at=datetime.utcnow(),
         )
         db.add(blocked_run)
         await db.commit()
@@ -196,7 +195,7 @@ async def run_automation(
     run = AutomationRun(
         automation_id=automation_id,
         status="running",
-        started_at=datetime.now(timezone.utc),
+        started_at=datetime.utcnow(),
     )
     db.add(run)
     await db.flush()
@@ -232,7 +231,7 @@ async def run_automation(
             "dlp_violations": [v.value for v in dlp_result.violations],
         }
         run.ai_tokens_used = claude_result["total_tokens"]
-        run.finished_at = datetime.now(timezone.utc)
+        run.finished_at = datetime.utcnow()
 
         # 12. Write audit log
         db.add(
@@ -253,7 +252,7 @@ async def run_automation(
     except Exception as exc:
         run.status = "failed"
         run.error = str(exc)
-        run.finished_at = datetime.now(timezone.utc)
+        run.finished_at = datetime.utcnow()
 
     await db.commit()
 

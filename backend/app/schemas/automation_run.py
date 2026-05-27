@@ -4,6 +4,13 @@ from datetime import datetime
 from pydantic import BaseModel
 
 
+class RunsListResponse(BaseModel):
+    items: list["AutomationRunResponse"]
+    has_more: bool
+    next_offset: int | None
+    total_count: int
+
+
 class AutomationRunResponse(BaseModel):
     model_config = {"from_attributes": True}
 
