@@ -19,6 +19,7 @@ dependencies = [
     "httpx",
     "celery[redis]",
     "cryptography",
+    "anthropic>=0.40.0",
 ]
 
 [project.optional-dependencies]
