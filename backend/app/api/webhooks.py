@@ -11,6 +11,7 @@ from app.api.deps import get_current_workspace
 from app.core.config import settings
 from app.core.database import get_db
 from app.middleware.rate_limiter import LIMIT_WEBHOOKS, limiter
+from app.models.audit_log import AuditLog
 from app.models.automation import Automation
 from app.models.content_queue import ContentQueue
 from app.models.workspace import Workspace
@@ -29,7 +30,7 @@ _HUBSPOT_EVENT_MAP: dict[str, str] = {
 
 
 def _verify_hmac_sha256(secret: str, body: bytes, signature: str) -> bool:
-    """Constant-time comparison of Base64-encoded HMAC-SHA256."""
+    """Legacy helper: constant-time comparison of Base64-encoded HMAC-SHA256."""
     import base64
 
     expected = base64.b64encode(
@@ -38,25 +39,89 @@ def _verify_hmac_sha256(secret: str, body: bytes, signature: str) -> bool:
     return hmac.compare_digest(expected, signature)
 
 
+def verify_zendesk_signature(
+    payload_body: bytes,
+    signature_header: str,
+    webhook_secret: str,
+) -> bool:
+    """
+    Zendesk HMAC-SHA256 verification.
+    Computes hmac(secret, body, sha256).hexdigest() and compares using
+    constant-time comparison. Returns False on any mismatch or error.
+    """
+    try:
+        expected = hmac.new(
+            webhook_secret.encode(), payload_body, hashlib.sha256
+        ).hexdigest()
+        return hmac.compare_digest(expected, signature_header)
+    except Exception:
+        return False
+
+
+def verify_hubspot_signature(
+    payload_body: bytes,
+    signature_header: str,
+    client_secret: str,
+    request_uri: str,
+    http_method: str,
+) -> bool:
+    """
+    HubSpot v3 signature: HMAC-SHA256 of (http_method + uri + body),
+    keyed with client_secret. Constant-time comparison.
+    Returns False on any mismatch or error.
+    """
+    try:
+        message = (http_method + request_uri + payload_body.decode()).encode()
+        expected = hmac.new(
+            client_secret.encode(), message, hashlib.sha256
+        ).hexdigest()
+        return hmac.compare_digest(expected, signature_header)
+    except Exception:
+        return False
+
+
+async def _log_signature_failure(
+    action: str,
+    actor: str,
+    workspace_id: uuid.UUID,
+    db: AsyncSession,
+) -> None:
+    """Write a webhook_signature_failed audit log entry. Swallows DB errors."""
+    try:
+        db.add(
+            AuditLog(
+                workspace_id=workspace_id,
+                action="webhook_signature_failed",
+                actor=actor,
+                log_metadata={"workspace_id": str(workspace_id)},
+            )
+        )
+        await db.commit()
+    except Exception:
+        pass
+
+
 @router.post("/zendesk")
 @limiter.limit(LIMIT_WEBHOOKS)
 async def zendesk_webhook(
     request: Request,
+    db: Annotated[AsyncSession, Depends(get_db)],
     workspace_id: uuid.UUID = Query(...),
     x_zendesk_webhook_signature: str = Header(default=""),
 ) -> dict[str, str]:
     """
     Receive Zendesk ticket events.
-    Verified via HMAC-SHA256 of the raw body signed with WEBHOOK_SECRET.
+    Verified via HMAC-SHA256 (hexdigest) of the raw body signed with WEBHOOK_SECRET.
     Returns 200 immediately; processing is async via Celery.
     """
     body = await request.body()
 
-    if settings.WEBHOOK_SECRET and not _verify_hmac_sha256(
-        settings.WEBHOOK_SECRET, body, x_zendesk_webhook_signature
+    if settings.WEBHOOK_SECRET and not verify_zendesk_signature(
+        body, x_zendesk_webhook_signature, settings.WEBHOOK_SECRET
     ):
+        await _log_signature_failure("webhook_signature_failed", "zendesk", workspace_id, db)
         raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
+            status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid webhook signature",
         )
 
@@ -73,33 +138,30 @@ async def zendesk_webhook(
 @limiter.limit(LIMIT_WEBHOOKS)
 async def hubspot_webhook(
     request: Request,
+    db: Annotated[AsyncSession, Depends(get_db)],
     workspace_id: uuid.UUID = Query(...),
     x_hubspot_signature_v3: str = Header(default=""),
     x_hubspot_request_timestamp: str = Header(default=""),
 ) -> dict[str, str]:
     """
     Receive HubSpot CRM events.
-    Verified via HMAC-SHA256 of (method+uri+body+timestamp) signed with WEBHOOK_SECRET.
+    Verified via HMAC-SHA256 of (method + uri + body) keyed with HUBSPOT_CLIENT_SECRET.
     Returns 200 immediately; processing is async via Celery.
     """
     body = await request.body()
 
-    if settings.WEBHOOK_SECRET:
-        signing_input = (
-            request.method
-            + str(request.url)
-            + body.decode()
-            + x_hubspot_request_timestamp
+    if settings.HUBSPOT_CLIENT_SECRET and not verify_hubspot_signature(
+        body,
+        x_hubspot_signature_v3,
+        settings.HUBSPOT_CLIENT_SECRET,
+        str(request.url),
+        request.method,
+    ):
+        await _log_signature_failure("webhook_signature_failed", "hubspot", workspace_id, db)
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid webhook signature",
         )
-        if not _verify_hmac_sha256(
-            settings.WEBHOOK_SECRET,
-            signing_input.encode(),
-            x_hubspot_signature_v3,
-        ):
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Invalid webhook signature",
-            )
 
     events: list[dict[str, Any]] = await request.json()
     if not isinstance(events, list):

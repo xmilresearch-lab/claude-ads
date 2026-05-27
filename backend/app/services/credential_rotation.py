@@ -1,0 +1,123 @@
+import json
+import uuid
+from datetime import datetime, timedelta, timezone
+from typing import Any
+
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.core.security import decrypt_credential, encrypt_credential
+from app.models.audit_log import AuditLog
+from app.models.integration import Integration
+
+
+async def rotate_integration_credential(
+    integration_id: str,
+    new_token_data: dict[str, Any],
+    db: AsyncSession,
+) -> None:
+    """
+    Called after a successful OAuth token refresh.
+
+    Merges new_token_data into the existing credential dict, preserving the
+    refresh_token unless the new data provides one. Re-encrypts and commits.
+    Never logs token values — only integration_id and type.
+    """
+    result = await db.execute(
+        select(Integration).where(Integration.id == uuid.UUID(integration_id))
+    )
+    integration = result.scalar_one_or_none()
+    if integration is None:
+        raise ValueError(f"Integration {integration_id} not found")
+
+    existing: dict[str, Any] = json.loads(
+        decrypt_credential(integration.credentials_encrypted)
+    )
+    # Preserve existing refresh_token if the rotation didn't provide a new one
+    if "refresh_token" not in new_token_data and "refresh_token" in existing:
+        new_token_data = {**new_token_data, "refresh_token": existing["refresh_token"]}
+    merged = {**existing, **new_token_data}
+
+    integration.credentials_encrypted = encrypt_credential(json.dumps(merged))
+    integration.updated_at = datetime.now(tz=timezone.utc)
+
+    db.add(
+        AuditLog(
+            workspace_id=integration.workspace_id,
+            action="credential_rotated",
+            actor="system",
+            log_metadata={
+                "integration_id": integration_id,
+                "integration_type": integration.type,
+            },
+        )
+    )
+    await db.commit()
+
+
+async def check_expiring_credentials(db: AsyncSession) -> list[str]:
+    """
+    Returns list of integration_ids whose OAuth tokens expire within 24 hours.
+
+    Decrypts each active integration's credentials and checks the expires_at field.
+    Skips integrations whose credentials cannot be decrypted or have no expires_at.
+    """
+    result = await db.execute(
+        select(Integration).where(
+            Integration.status == "active",
+            Integration.credentials_encrypted.isnot(None),
+        )
+    )
+    integrations = result.scalars().all()
+
+    threshold = datetime.now(tz=timezone.utc) + timedelta(hours=24)
+    expiring: list[str] = []
+
+    for integration in integrations:
+        try:
+            creds: dict[str, Any] = json.loads(
+                decrypt_credential(integration.credentials_encrypted)
+            )
+            expires_at = creds.get("expires_at")
+            if expires_at is None:
+                continue
+            if isinstance(expires_at, (int, float)):
+                exp_dt = datetime.fromtimestamp(float(expires_at), tz=timezone.utc)
+            else:
+                exp_dt = datetime.fromisoformat(str(expires_at))
+                if exp_dt.tzinfo is None:
+                    exp_dt = exp_dt.replace(tzinfo=timezone.utc)
+            if exp_dt <= threshold:
+                expiring.append(str(integration.id))
+        except Exception:
+            continue
+
+    return expiring
+
+
+async def mark_integration_error(
+    integration_id: str,
+    error: str,
+    db: AsyncSession,
+) -> None:
+    """Sets integration.status = 'error' and writes an audit log entry."""
+    result = await db.execute(
+        select(Integration).where(Integration.id == uuid.UUID(integration_id))
+    )
+    integration = result.scalar_one_or_none()
+    if integration is None:
+        return
+    integration.status = "error"
+    db.add(
+        AuditLog(
+            workspace_id=integration.workspace_id,
+            action="integration_error",
+            actor="system",
+            log_metadata={
+                "integration_id": integration_id,
+                "integration_type": integration.type,
+                "error": error,
+            },
+        )
+    )
+    await db.commit()

@@ -2,6 +2,7 @@ from celery import Celery
 from celery.schedules import crontab
 
 from app.core.config import settings
+from app.workers.beat_schedule import BEAT_SCHEDULE
 
 celery_app = Celery(
     "ai_automation",
@@ -13,6 +14,7 @@ celery_app = Celery(
         "app.workers.scheduled_worker",
         "app.workers.webhook_worker",
         "app.workers.publish_worker",
+        "app.workers.credential_worker",
     ],
 )
 
@@ -33,6 +35,7 @@ celery_app.conf.update(
         "app.workers.webhook_worker.handle_support_ticket": {"queue": "high_priority"},
         "app.workers.webhook_worker.handle_crm_event": {"queue": "medium_priority"},
         "app.workers.publish_worker.publish_content": {"queue": "medium_priority"},
+        "app.workers.credential_worker.check_and_refresh_credentials": {"queue": "low_priority"},
     },
     task_queues={
         "automations": {"exchange": "automations"},
@@ -47,5 +50,6 @@ celery_app.conf.update(
             "task": "app.workers.scheduled_worker.poll_due_automations",
             "schedule": crontab(minute="*"),  # every minute
         },
+        **BEAT_SCHEDULE,
     },
 )

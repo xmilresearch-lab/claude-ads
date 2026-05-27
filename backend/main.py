@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from slowapi.errors import RateLimitExceeded
 
+from app.api.audit_logs import router as audit_logs_router
 from app.api.auth import router as auth_router
 from app.api.automations import router as automations_router
 from app.api.content_queue import router as content_queue_router
@@ -43,6 +44,7 @@ app.include_router(auth_router)
 app.include_router(automations_router)
 app.include_router(content_queue_router)
 app.include_router(webhooks_router)
+app.include_router(audit_logs_router)
 
 
 @app.get("/health")
