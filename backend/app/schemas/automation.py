@@ -4,6 +4,10 @@ from datetime import datetime
 from pydantic import BaseModel
 
 
+class TriggerRequest(BaseModel):
+    payload: dict = {}
+
+
 class AutomationCreate(BaseModel):
     name: str
     type: str

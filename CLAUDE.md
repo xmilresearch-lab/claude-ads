@@ -220,13 +220,13 @@ All MCP servers require `Authorization: Bearer $MCP_AUTH_TOKEN` header.
 
 ## Sprint Map
 
-|Sprint|Focus                                       |Status  |
-|------|--------------------------------------------|--------|
-|1     |Project scaffold, DB models, auth system    |🔄 Active|
-|2     |Social MCP server (Twitter + LinkedIn)      |⏳ Queue |
-|3     |Email & Support MCP server (Gmail + Zendesk)|⏳ Queue |
-|4     |CRM MCP server (HubSpot)                    |⏳ Queue |
-|5     |AI Orchestration Engine + brand voice system|⏳ Queue |
+|Sprint|Focus                                       |Status   |
+|------|--------------------------------------------|---------|
+|1     |Project scaffold, DB models, auth system    |✅ Done  |
+|2     |Social MCP server (Twitter + LinkedIn)      |✅ Done  |
+|3     |Email & Support MCP server (Gmail + Zendesk)|✅ Done  |
+|4     |CRM MCP server (HubSpot)                    |✅ Done  |
+|5     |AI Orchestration Engine + brand voice system|✅ Done  |
 |6     |Celery task queue + workers                 |⏳ Queue |
 |7     |Security layer (injection guard, DLP)       |⏳ Queue |
 |8     |REST API endpoints + OpenAPI docs           |⏳ Queue |
