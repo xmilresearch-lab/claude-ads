@@ -155,6 +155,26 @@ mypy app/
 
 -----
 
+## API Versioning
+
+All API routes are under `/api/v1/`. The root `/api` endpoint returns version info.
+
+| Router         | Base Path                  |
+|----------------|----------------------------|
+| Auth           | `/api/v1/auth/`            |
+| Automations    | `/api/v1/automations/`     |
+| Content Queue  | `/api/v1/content/`         |
+| Audit Logs     | `/api/v1/audit/`           |
+| Workspaces     | `/api/v1/workspaces/`      |
+| Integrations   | `/api/v1/integrations/`    |
+| Analytics      | `/api/v1/analytics/`       |
+| Webhooks       | `/webhooks/` (root — no version prefix) |
+
+All responses are wrapped in `DataResponse[T]` or `PaginatedResponse[T]` envelopes
+(defined in `app/schemas/base.py`). Error responses use the `ErrorResponse` schema.
+
+-----
+
 ## Environment Variables
 
 ```bash
@@ -233,7 +253,7 @@ All MCP servers require `Authorization: Bearer $MCP_AUTH_TOKEN` header.
 |5     |AI Orchestration Engine + brand voice system                  |✅ Done   |
 |6     |Celery task queue + workers                                   |✅ Done   |
 |7     |Security layer: injection guard, DLP, OWASP LLM Top 10, audit |✅ Done   |
-|8     |REST API endpoints + OpenAPI docs                             |🔄 Active |
+|8     |REST API endpoints + OpenAPI docs (Sections 1-4 done)        |🔄 Active |
 |9     |Tests + MCP evaluations                                       |⏳ Queue  |
 |10    |Docker packaging + deployment config                          |⏳ Queue  |
 

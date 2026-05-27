@@ -14,11 +14,12 @@ from app.models.automation import Automation
 from app.models.automation_run import AutomationRun
 from app.models.workspace import Workspace
 from app.schemas.audit_log import AuditLogResponse, AuditLogSummary
+from app.schemas.base import DataResponse, PaginatedResponse, ok, paginated
 
-router = APIRouter(prefix="/api/audit", tags=["audit-logs"])
+router = APIRouter()
 
 
-@router.get("/logs", response_model=list[AuditLogResponse])
+@router.get("/logs", response_model=PaginatedResponse[AuditLogResponse])
 @limiter.limit(LIMIT_READ)
 async def list_logs(
     request: Request,
@@ -29,27 +30,44 @@ async def list_logs(
     to_date: datetime | None = Query(default=None),
     limit: int = Query(default=50, le=200, ge=1),
     offset: int = Query(default=0, ge=0),
-) -> list[AuditLog]:
-    query = select(AuditLog).where(AuditLog.workspace_id == workspace.id)
+) -> PaginatedResponse[AuditLogResponse]:
+    base_filter = [AuditLog.workspace_id == workspace.id]
     if action is not None:
-        query = query.where(AuditLog.action == action)
+        base_filter.append(AuditLog.action == action)
     if from_date is not None:
-        query = query.where(AuditLog.created_at >= from_date)
+        base_filter.append(AuditLog.created_at >= from_date)
     if to_date is not None:
-        query = query.where(AuditLog.created_at <= to_date)
-    query = query.order_by(AuditLog.created_at.desc()).offset(offset).limit(limit)
+        base_filter.append(AuditLog.created_at <= to_date)
+
+    total_res = await db.execute(select(func.count(AuditLog.id)).where(*base_filter))
+    total: int = total_res.scalar_one()
+
+    query = (
+        select(AuditLog)
+        .where(*base_filter)
+        .order_by(AuditLog.created_at.desc())
+        .offset(offset)
+        .limit(limit)
+    )
     result = await db.execute(query)
-    return list(result.scalars().all())
+    logs = list(result.scalars().all())
+    return paginated(
+        data=[AuditLogResponse.model_validate(l) for l in logs],
+        total_count=total,
+        limit=limit,
+        offset=offset,
+        request=request,
+    )
 
 
-@router.get("/logs/{log_id}", response_model=AuditLogResponse)
+@router.get("/logs/{log_id}", response_model=DataResponse[AuditLogResponse])
 @limiter.limit(LIMIT_READ)
 async def get_log(
     request: Request,
     log_id: uuid.UUID,
     workspace: Annotated[Workspace, Depends(get_current_workspace)],
     db: Annotated[AsyncSession, Depends(get_db)],
-) -> AuditLog:
+) -> DataResponse[AuditLogResponse]:
     result = await db.execute(select(AuditLog).where(AuditLog.id == log_id))
     log = result.scalar_one_or_none()
     if log is None:
@@ -61,19 +79,18 @@ async def get_log(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Access to this audit log is forbidden",
         )
-    return log
+    return ok(AuditLogResponse.model_validate(log), request)
 
 
-@router.get("/summary", response_model=AuditLogSummary)
+@router.get("/summary", response_model=DataResponse[AuditLogSummary])
 @limiter.limit(LIMIT_READ)
 async def get_summary(
     request: Request,
     workspace: Annotated[Workspace, Depends(get_current_workspace)],
     db: Annotated[AsyncSession, Depends(get_db)],
-) -> AuditLogSummary:
+) -> DataResponse[AuditLogSummary]:
     thirty_days_ago = datetime.now(tz=timezone.utc) - timedelta(days=30)
 
-    # Run counts by status (joins through Automation for workspace scoping)
     runs_result = await db.execute(
         select(AutomationRun.status, func.count())
         .join(Automation, AutomationRun.automation_id == Automation.id)
@@ -85,7 +102,6 @@ async def get_summary(
     )
     run_counts: dict[str, int] = dict(runs_result.all())
 
-    # Automation run audit logs — used for DLP violations and token usage
     logs_result = await db.execute(
         select(AuditLog).where(
             AuditLog.workspace_id == workspace.id,
@@ -106,7 +122,6 @@ async def get_summary(
         if log.log_metadata
     )
 
-    # Content published count
     published_result = await db.execute(
         select(func.count()).where(
             AuditLog.workspace_id == workspace.id,
@@ -116,7 +131,7 @@ async def get_summary(
     )
     content_published: int = published_result.scalar_one()
 
-    return AuditLogSummary(
+    summary = AuditLogSummary(
         total_runs=sum(run_counts.values()),
         successful_runs=run_counts.get("success", 0),
         failed_runs=run_counts.get("failed", 0),
@@ -125,3 +140,4 @@ async def get_summary(
         content_published=content_published,
         tokens_used=tokens_used,
     )
+    return ok(summary, request)

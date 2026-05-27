@@ -2,7 +2,7 @@ import uuid
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_current_workspace
@@ -11,9 +11,10 @@ from app.middleware.rate_limiter import LIMIT_READ, LIMIT_WRITE, limiter
 from app.models.automation import Automation
 from app.models.content_queue import ContentQueue
 from app.models.workspace import Workspace
+from app.schemas.base import DataResponse, PaginatedResponse, ok, paginated
 from app.schemas.content_queue import ContentQueueItem, ContentQueueReject
 
-router = APIRouter(prefix="/api/content", tags=["content-queue"])
+router = APIRouter()
 
 
 async def _get_item_for_workspace(
@@ -30,7 +31,7 @@ async def _get_item_for_workspace(
     return result.scalar_one_or_none()
 
 
-@router.get("/queue", response_model=list[ContentQueueItem])
+@router.get("/queue", response_model=PaginatedResponse[ContentQueueItem])
 @limiter.limit(LIMIT_READ)
 async def list_pending(
     request: Request,
@@ -38,7 +39,17 @@ async def list_pending(
     db: Annotated[AsyncSession, Depends(get_db)],
     offset: int = Query(default=0, ge=0),
     limit: int = Query(default=50, le=100),
-) -> list[ContentQueue]:
+) -> PaginatedResponse[ContentQueueItem]:
+    total_res = await db.execute(
+        select(func.count(ContentQueue.id))
+        .join(Automation, ContentQueue.automation_id == Automation.id)
+        .where(
+            Automation.workspace_id == workspace.id,
+            ContentQueue.status == "pending_approval",
+        )
+    )
+    total: int = total_res.scalar_one()
+
     result = await db.execute(
         select(ContentQueue)
         .join(Automation, ContentQueue.automation_id == Automation.id)
@@ -50,33 +61,40 @@ async def list_pending(
         .offset(offset)
         .limit(limit)
     )
-    return list(result.scalars().all())
+    items = list(result.scalars().all())
+    return paginated(
+        data=[ContentQueueItem.model_validate(i) for i in items],
+        total_count=total,
+        limit=limit,
+        offset=offset,
+        request=request,
+    )
 
 
-@router.get("/{item_id}", response_model=ContentQueueItem)
+@router.get("/{item_id}", response_model=DataResponse[ContentQueueItem])
 @limiter.limit(LIMIT_READ)
 async def get_item(
     request: Request,
     item_id: uuid.UUID,
     workspace: Annotated[Workspace, Depends(get_current_workspace)],
     db: Annotated[AsyncSession, Depends(get_db)],
-) -> ContentQueue:
+) -> DataResponse[ContentQueueItem]:
     item = await _get_item_for_workspace(item_id, workspace.id, db)
     if item is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Content item not found"
         )
-    return item
+    return ok(ContentQueueItem.model_validate(item), request)
 
 
-@router.patch("/{item_id}/approve", response_model=ContentQueueItem)
+@router.patch("/{item_id}/approve", response_model=DataResponse[ContentQueueItem])
 @limiter.limit(LIMIT_WRITE)
 async def approve_item(
     request: Request,
     item_id: uuid.UUID,
     workspace: Annotated[Workspace, Depends(get_current_workspace)],
     db: Annotated[AsyncSession, Depends(get_db)],
-) -> ContentQueue:
+) -> DataResponse[ContentQueueItem]:
     item = await _get_item_for_workspace(item_id, workspace.id, db)
     if item is None:
         raise HTTPException(
@@ -92,10 +110,10 @@ async def approve_item(
         content_queue_id=str(item_id),
         request_id=getattr(request.state, "request_id", None),
     )
-    return item
+    return ok(ContentQueueItem.model_validate(item), request)
 
 
-@router.patch("/{item_id}/reject", response_model=ContentQueueItem)
+@router.patch("/{item_id}/reject", response_model=DataResponse[ContentQueueItem])
 @limiter.limit(LIMIT_WRITE)
 async def reject_item(
     request: Request,
@@ -103,7 +121,7 @@ async def reject_item(
     payload: ContentQueueReject,
     workspace: Annotated[Workspace, Depends(get_current_workspace)],
     db: Annotated[AsyncSession, Depends(get_db)],
-) -> ContentQueue:
+) -> DataResponse[ContentQueueItem]:
     item = await _get_item_for_workspace(item_id, workspace.id, db)
     if item is None:
         raise HTTPException(
@@ -113,7 +131,7 @@ async def reject_item(
     item.content = {**item.content, "_rejection_reason": payload.reason}
     await db.commit()
     await db.refresh(item)
-    return item
+    return ok(ContentQueueItem.model_validate(item), request)
 
 
 @router.delete("/{item_id}", status_code=status.HTTP_204_NO_CONTENT)
