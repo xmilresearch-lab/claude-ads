@@ -29,6 +29,7 @@ function BrandVoiceBanner({
 
   const registeredOver5Min =
     !!userCreatedAt &&
+    // eslint-disable-next-line react-hooks/purity
     Date.now() - new Date(userCreatedAt).getTime() > 5 * 60 * 1000;
 
   const show =

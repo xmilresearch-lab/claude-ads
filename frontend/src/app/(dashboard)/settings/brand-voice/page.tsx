@@ -74,7 +74,7 @@ function LivePreview({ control }: { control: ReturnType<typeof useForm<FormData>
 
           {avoidList.length > 0 && (
             <div className="space-y-1.5">
-              <p className="text-2xs text-text-muted uppercase tracking-wide">Won't use</p>
+              <p className="text-2xs text-text-muted uppercase tracking-wide">Won&apos;t use</p>
               <div className="flex flex-wrap gap-1">
                 {avoidList.map((word, i) => (
                   <span
@@ -94,7 +94,7 @@ function LivePreview({ control }: { control: ReturnType<typeof useForm<FormData>
                 Example{exampleList.length > 1 ? ` (1 of ${exampleList.length})` : ""}
               </p>
               <blockquote className="border-l-2 border-amber/40 pl-3 text-xs italic text-text-secondary">
-                "{exampleList[0]}"
+                &ldquo;{exampleList[0]}&rdquo;
               </blockquote>
             </div>
           )}
