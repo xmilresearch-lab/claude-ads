@@ -76,3 +76,21 @@ def test_run_automation_task_re_raises_rate_limit_error() -> None:
 
         with pytest.raises(RateLimitError):
             run_automation_task(str(uuid.uuid4()), {})
+
+
+def test_run_automation_task_re_raises_generic_exception() -> None:
+    """Task re-raises unexpected exceptions so Celery can retry them."""
+    with patch("app.workers.automation_tasks.AsyncSessionLocal") as mock_session, \
+         patch("app.workers.automation_tasks.run_automation",
+               new_callable=AsyncMock,
+               side_effect=RuntimeError("db connection lost")):
+
+        mock_db = MagicMock()
+        mock_db.__aenter__ = AsyncMock(return_value=mock_db)
+        mock_db.__aexit__ = AsyncMock(return_value=False)
+        mock_session.return_value = mock_db
+
+        from app.workers.automation_tasks import run_automation_task
+
+        with pytest.raises(RuntimeError, match="db connection lost"):
+            run_automation_task(str(uuid.uuid4()), {})
