@@ -1,5 +1,8 @@
 import asyncio
+import logging
+from contextlib import asynccontextmanager
 from datetime import datetime, timezone
+from typing import AsyncIterator
 
 import httpx
 import redis.asyncio as aioredis
@@ -26,7 +29,27 @@ from app.middleware.rate_limiter import limiter, rate_limit_exceeded_handler
 from app.middleware.request_id import add_request_id
 from app.middleware.security_headers import add_security_headers
 from app.schemas.base import ErrorDetail, ErrorResponse, Meta
+from app.core.startup import (
+    run_pending_migrations,
+    validate_connectivity,
+    validate_startup_config,
+)
 from app.services.orchestration import OrchestrationError, RateLimitError
+
+logger = logging.getLogger(__name__)
+
+
+@asynccontextmanager
+async def lifespan(application: FastAPI) -> AsyncIterator[None]:
+    # ── Startup ────────────────────────────────────────────────────────────────
+    await validate_startup_config()
+    await validate_connectivity()
+    await run_pending_migrations()
+    logger.info("AI Automation Platform started")
+    yield
+    # ── Shutdown ───────────────────────────────────────────────────────────────
+    logger.info("Shutting down gracefully")
+
 
 app = FastAPI(
     title="AI Automation Platform API",
@@ -126,6 +149,7 @@ Paginated responses include `total_count`, `limit`, `offset`, and `has_more` ins
     docs_url="/docs",
     redoc_url="/redoc",
     openapi_url="/openapi.json",
+    lifespan=lifespan,
 )
 
 # ── Middleware stack (order matters) ──────────────────────────────────────────
