@@ -10,3 +10,6 @@ CREATE EXTENSION IF NOT EXISTS "pg_trgm";
 
 -- Enable pgcrypto for additional hashing utilities (optional but useful)
 CREATE EXTENSION IF NOT EXISTS "pgcrypto";
+
+-- Set timezone
+SET timezone = 'UTC';

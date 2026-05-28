@@ -190,6 +190,45 @@ Set `CELERY_BROKER_URL` and `CELERY_RESULT_BACKEND` both to `REDIS_URL` in produ
 
 ---
 
+## Database Backup and Restore
+
+### Automated Daily Backup
+
+Add the following cron entry on the production host to run a compressed pg_dump every day at 2 AM.
+Backups are written to `/backups/postgres/` and automatically pruned after 30 days.
+
+```bash
+# Run backup daily at 2am
+0 2 * * * /opt/automation-platform/scripts/db/backup.sh >> /var/log/db-backup.log 2>&1
+```
+
+Install with:
+
+```bash
+crontab -e
+# paste the line above, save and exit
+```
+
+The backup script (`scripts/db/backup.sh`) requires two environment variables to be set in the
+cron environment or in `/etc/environment`:
+
+```bash
+POSTGRES_USER=<db_user>
+POSTGRES_DB=<db_name>
+```
+
+### Manual Restore
+
+```bash
+# Restore from a specific backup file — stops services, restores, reruns migrations, restarts
+./scripts/db/restore.sh /backups/postgres/automation_platform_20250101_020000.sql.gz
+```
+
+The restore script prompts for confirmation before dropping any data and runs
+`alembic upgrade head` automatically after the restore to bring the schema current.
+
+---
+
 ## Security Checklist
 
 - [ ] `SECRET_KEY` and `ENCRYPTION_KEY` are unique random values (never reuse across environments)
@@ -200,3 +239,5 @@ Set `CELERY_BROKER_URL` and `CELERY_RESULT_BACKEND` both to `REDIS_URL` in produ
 - [ ] `pip-audit` passes with no HIGH/CRITICAL findings before each release
 - [ ] Postgres TLS enabled (`?ssl=require` in `DATABASE_URL`)
 - [ ] Redis AUTH enabled (`redis://:password@host:6379/0`)
+- [ ] Daily database backup cron job installed and verified
+- [ ] Backup restore tested in staging before first production deploy
