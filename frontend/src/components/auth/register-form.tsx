@@ -38,7 +38,7 @@ export function RegisterForm() {
       await registerUser(data);
     } catch (err) {
       const message =
-        err instanceof ApiError ? err.errors[0]?.message : "Registration failed";
+        err instanceof ApiError ? err.message : "Registration failed";
       toast.error(message);
     }
   };

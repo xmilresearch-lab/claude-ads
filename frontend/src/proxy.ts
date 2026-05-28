@@ -1,33 +1,32 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import { TOKEN_COOKIE } from "@/lib/utils/constants";
 
 const PUBLIC_PATHS = ["/login", "/register"];
+const ADMIN_PREFIX = "/admin";
 
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
-  const refreshToken = request.cookies.get(TOKEN_COOKIE)?.value;
+  const hasRefreshToken = request.cookies.has("refresh_token");
 
-  const isPublic = PUBLIC_PATHS.some((p) => pathname.startsWith(p));
-
-  if (!isPublic && !refreshToken) {
-    const url = request.nextUrl.clone();
-    url.pathname = "/login";
-    url.searchParams.set("from", pathname);
-    return NextResponse.redirect(url);
+  if (PUBLIC_PATHS.includes(pathname)) {
+    if (hasRefreshToken) {
+      return NextResponse.redirect(new URL("/automations", request.url));
+    }
+    return NextResponse.next();
   }
 
-  if (isPublic && refreshToken) {
-    const url = request.nextUrl.clone();
-    url.pathname = "/automations";
-    return NextResponse.redirect(url);
+  if (!hasRefreshToken) {
+    const loginUrl = new URL("/login", request.url);
+    loginUrl.searchParams.set("from", pathname);
+    return NextResponse.redirect(loginUrl);
   }
+
+  // Admin routes could add role-check here in a future sprint
+  void ADMIN_PREFIX;
 
   return NextResponse.next();
 }
 
 export const config = {
-  matcher: [
-    "/((?!api|_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
-  ],
+  matcher: ["/((?!api|_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)"],
 };
