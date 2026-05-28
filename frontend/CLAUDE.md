@@ -269,10 +269,50 @@ Never put secrets in `NEXT_PUBLIC_` variables.
 |---|---|---|
 | F1 | Next.js scaffold, design system, auth, layout, dashboard shell | ✅ Done |
 | F2 | Workspace setup, brand voice, onboarding, settings nav, timezone utils, vitest | ✅ Done |
-| F3 | Automations CRUD — list, create, edit, delete, toggle | 🔄 Active |
-| F4 | Content queue — calendar view, approval workflow | ⬜ |
-| F5 | Integrations — OAuth connect/disconnect flows | ⬜ |
+| F3 | Integrations — provider configs, API key modal, OAuth connect/disconnect, HealthStatusBar, 12 unit tests | ✅ Done |
+| F4 | Automations CRUD — list, create, edit, delete, toggle | ⬜ |
+| F5 | Content queue — calendar view, approval workflow | ⬜ |
 | F6 | Analytics dashboard — charts, usage stats | ⬜ |
 | F7 | Settings — workspace, billing, team | ⬜ |
 | F8 | Admin panel — workspaces, usage, system health | ⬜ |
 | F9 | E2E tests (Playwright) + accessibility audit | ⬜ |
+
+---
+
+## Architecture Notes
+
+### Integrations (Sprint F3)
+
+**File layout**
+
+```
+src/lib/api/integrations.ts          → 6 typed API functions + Integration type
+src/lib/integrations/providers.ts    → PROVIDER_CONFIGS, category helpers
+src/hooks/useIntegrations.ts         → 5 TanStack Query hooks
+src/components/integrations/
+  ProviderIcon.tsx                   → CSS lettermark, sizes sm/md/lg
+  IntegrationCard.tsx                → 4-state card (not_connected/active/expiring/error)
+  APIKeyModal.tsx                    → RHF + Zod modal, dynamic schema per provider
+  HealthStatusBar.tsx                → Topbar pill + click-to-open popover
+src/app/(dashboard)/integrations/
+  page.tsx                           → 4-category grid page
+  callback/page.tsx                  → OAuth callback (Suspense-wrapped)
+```
+
+**Hook stability rule** — the `useConnectApiKey` mock (and any hook returning `reset`) must
+return **stable function references** (created once in the factory, not per-call). Unstable
+refs land in `useEffect` dep arrays and cause infinite render loops.
+
+**Testing pattern** — `vi.mock("@/hooks/useIntegrations", () => { const reset = vi.fn(); return { useConnectApiKey: () => ({ ..., reset }) }; })` — note the stable `reset` declared once in factory scope.
+
+**HealthStatusBar pill states**
+
+| Condition | Dot | Label |
+|---|---|---|
+| Any `status === "error"` | `bg-red-500` | `N error(s)` |
+| Any `status === "expiring"` | `bg-amber-400` (static) | `N expiring` |
+| Any `status === "active"` | `bg-emerald-400` (pulse) | `N connected` |
+| No integrations | `bg-[#374151]` | `No integrations` |
+
+**Sidebar error badge** — `useIntegrations()` is called in `Sidebar`; when any integration has
+`status === "error"`, a 2×2 `bg-red-500` dot is rendered absolutely over the Integrations nav item.
