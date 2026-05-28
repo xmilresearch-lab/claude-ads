@@ -33,17 +33,29 @@ export interface UserResponse {
 // ── Workspace ─────────────────────────────────────────────────────────────────
 
 export interface BrandVoice {
-  tone?: string;
-  examples?: string[];
-  avoid?: string[];
+  tone: string;
+  avoid: string[];
+  examples: string[];
+  industry: string;
+  target_audience: string;
+}
+
+export interface WorkspaceSettings {
+  require_approval_default: boolean;
+  default_timezone: string;
+  notification_email: string | null;
+  content_language: string;
 }
 
 export interface WorkspaceResponse {
   id: string;
   name: string;
   brand_voice: BrandVoice | null;
-  settings: Record<string, unknown>;
+  settings: WorkspaceSettings | null;
   created_at: string;
+  integrations_count: number;
+  automations_count: number;
+  active_automations_count: number;
 }
 
 // ── Automations ───────────────────────────────────────────────────────────────
