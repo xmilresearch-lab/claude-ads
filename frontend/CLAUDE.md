@@ -266,7 +266,7 @@ Never put secrets in `NEXT_PUBLIC_` variables.
 | Sprint | Focus | Status |
 |---|---|---|
 | F1 | Next.js scaffold, design system, auth, layout, dashboard shell | ✅ Done |
-| F2 | Automations CRUD — list, create, edit, delete, toggle | ⬜ Next |
+| F2 | Automations CRUD — list, create, edit, delete, toggle | 🔄 Active |
 | F3 | Content queue — calendar view, approval workflow | ⬜ |
 | F4 | Integrations — OAuth connect/disconnect flows | ⬜ |
 | F5 | Analytics dashboard — charts, usage stats | ⬜ |

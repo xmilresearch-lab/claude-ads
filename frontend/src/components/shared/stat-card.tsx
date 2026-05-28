@@ -1,53 +1,59 @@
 import { cn } from "@/lib/utils/cn";
-import { Card, CardContent } from "@/components/ui/card";
 import type { LucideIcon } from "lucide-react";
 
 interface StatCardProps {
-  label: string;
+  title: string;
   value: string | number;
-  sub?: string;
+  delta?: number;
+  deltaLabel?: string;
   icon?: LucideIcon;
-  trend?: { value: number; label: string };
-  accent?: "amber" | "cyan" | "success" | "danger";
+  accentColor?: "amber" | "cyan" | "success" | "danger";
   className?: string;
 }
 
-const ACCENT_COLORS = {
+const ACCENT: Record<string, string> = {
   amber:   "text-amber",
   cyan:    "text-cyan",
   success: "text-success",
   danger:  "text-danger",
 };
 
-export function StatCard({ label, value, sub, icon: Icon, trend, accent = "cyan", className }: StatCardProps) {
-  const valueColor = ACCENT_COLORS[accent];
+export function StatCard({
+  title, value, delta, deltaLabel, icon: Icon, accentColor = "cyan", className,
+}: StatCardProps) {
+  const isNumeric = typeof value === "number";
 
   return (
-    <Card className={cn("hover:border-border-strong transition-colors", className)}>
-      <CardContent className="p-4">
-        <div className="flex items-start justify-between">
-          <div className="space-y-1">
-            <p className="text-2xs font-mono text-text-muted uppercase tracking-widest">{label}</p>
-            <p className={cn("text-2xl font-display font-bold tabular-nums animate-count-up", valueColor)}>
-              {value}
-            </p>
-            {sub && <p className="text-xs text-text-muted">{sub}</p>}
-          </div>
-          {Icon && (
-            <div className="rounded bg-bg-elevated p-2">
-              <Icon className={cn("h-4 w-4", valueColor)} />
-            </div>
+    <div className={cn("card-command p-4", className)}>
+      {/* Top: icon + title */}
+      <div className="mb-2 flex items-center gap-2">
+        {Icon && <Icon className="h-3.5 w-3.5 text-text-muted" />}
+        <p className="text-2xs font-mono uppercase tracking-wide text-text-muted">{title}</p>
+      </div>
+
+      {/* Center: value */}
+      <p className={cn(
+        "font-display text-2xl font-bold text-text-primary tabular-nums",
+        isNumeric && "font-mono",
+        ACCENT[accentColor],
+      )}>
+        {value}
+      </p>
+
+      {/* Bottom: delta */}
+      {delta !== undefined && (
+        <div className="mt-2 flex items-center gap-1.5">
+          <span className={cn(
+            "text-2xs font-mono font-medium",
+            delta >= 0 ? "text-success" : "text-danger",
+          )}>
+            {delta >= 0 ? "+" : ""}{delta}%
+          </span>
+          {deltaLabel && (
+            <span className="text-2xs text-text-muted">{deltaLabel}</span>
           )}
         </div>
-        {trend && (
-          <div className="mt-2 flex items-center gap-1">
-            <span className={cn("text-2xs font-mono", trend.value >= 0 ? "text-success" : "text-danger")}>
-              {trend.value >= 0 ? "+" : ""}{trend.value}%
-            </span>
-            <span className="text-2xs text-text-muted">{trend.label}</span>
-          </div>
-        )}
-      </CardContent>
-    </Card>
+      )}
+    </div>
   );
 }

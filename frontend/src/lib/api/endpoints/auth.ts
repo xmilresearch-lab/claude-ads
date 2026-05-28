@@ -13,9 +13,8 @@ export interface RegisterRequest {
   workspace_name?: string;
 }
 
-// Backward-compat aliases used by auth forms
 export type LoginPayload = LoginRequest;
-export type RegisterPayload = RegisterRequest & { workspace_name: string };
+export type RegisterPayload = RegisterRequest;
 
 export const authApi = {
   login: (data: LoginRequest) =>
