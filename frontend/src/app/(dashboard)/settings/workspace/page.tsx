@@ -1,10 +1,10 @@
 "use client";
 
-import type { Metadata } from "next";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import { Check } from "lucide-react";
 import { PageHeader } from "@/components/layout/page-header";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -29,6 +29,7 @@ type SettingsForm = z.infer<typeof settingsSchema>;
 function WorkspaceNameCard() {
   const { data: workspace } = useWorkspace();
   const { mutateAsync, isPending } = useUpdateWorkspace();
+  const [saved, setSaved] = useState(false);
 
   const {
     register,
@@ -47,49 +48,60 @@ function WorkspaceNameCard() {
   const onSubmit = async (data: WorkspaceForm) => {
     await mutateAsync({ name: data.name });
     reset({ name: data.name });
+    setSaved(true);
+    setTimeout(() => setSaved(false), 2000);
   };
 
+  const nameProps = register("name");
+
+  const handleBlur = (e: React.FocusEvent<HTMLInputElement>) => {
+    nameProps.onBlur(e);
+    if (isDirty) handleSubmit(onSubmit)();
+  };
+
+  const isBusy = isSubmitting || isPending;
+
   return (
-    <form onSubmit={handleSubmit(onSubmit)}>
-      <div className={cn(
-        "card-command p-6 transition-colors duration-150",
-        isDirty && "border-amber/30",
-      )}>
-        <h2 className="font-display text-sm font-semibold text-text-primary mb-4">
-          Workspace
-        </h2>
-        <div className="space-y-4 max-w-md">
-          <div className="space-y-1.5">
-            <Label className="text-xs text-text-muted">Workspace ID</Label>
-            <p className="font-mono text-xs text-amber">{workspace?.id ?? "—"}</p>
-          </div>
-          <div className="space-y-1.5">
-            <Label htmlFor="ws-name" className="text-xs text-text-muted">Display Name</Label>
+    <div className={cn(
+      "card-command p-6 transition-colors duration-150",
+      isDirty && !isBusy && "border-amber/30",
+    )}>
+      <h2 className="font-display text-sm font-semibold text-text-primary mb-4">
+        Workspace
+      </h2>
+      <div className="space-y-4 max-w-md">
+        <div className="space-y-1.5">
+          <Label className="text-xs text-text-muted">Workspace ID</Label>
+          <p className="font-mono text-xs text-amber">{workspace?.id ?? "—"}</p>
+        </div>
+        <div className="space-y-1.5">
+          <Label htmlFor="ws-name" className="text-xs text-text-muted">Display Name</Label>
+          <div className="relative">
             <Input
               id="ws-name"
               placeholder="My Workspace"
-              {...register("name")}
+              {...nameProps}
+              onBlur={handleBlur}
+              className={cn(isBusy && "pr-8")}
             />
-            {errors.name && (
-              <p className="text-2xs font-mono text-danger">{errors.name.message}</p>
+            {isBusy && (
+              <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-2xs font-mono text-text-muted">
+                Saving…
+              </span>
+            )}
+            {saved && !isBusy && (
+              <span className="absolute right-2.5 top-1/2 -translate-y-1/2">
+                <Check className="h-3.5 w-3.5 text-success" />
+              </span>
             )}
           </div>
-          <div className="flex items-center justify-between pt-2">
-            {isDirty && (
-              <p className="text-2xs font-mono text-amber">Unsaved changes</p>
-            )}
-            <Button
-              type="submit"
-              size="sm"
-              disabled={!isDirty || isSubmitting || isPending}
-              className="ml-auto"
-            >
-              {isSubmitting || isPending ? "Saving…" : "Save"}
-            </Button>
-          </div>
+          {errors.name && (
+            <p className="text-2xs font-mono text-danger">{errors.name.message}</p>
+          )}
+          <p className="text-2xs text-text-muted">Saves automatically when you leave this field.</p>
         </div>
       </div>
-    </form>
+    </div>
   );
 }
 

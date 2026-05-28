@@ -1,6 +1,8 @@
 "use client";
 
+import { useEffect } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { CheckCircle2, Circle } from "lucide-react";
 import { PageHeader } from "@/components/layout/page-header";
 import { useOnboardingStatus } from "@/lib/hooks/use-onboarding";
@@ -31,7 +33,14 @@ const STEPS = [
 ];
 
 export default function OnboardingPage() {
+  const router = useRouter();
   const { steps, isComplete, completedCount, progressPercent } = useOnboardingStatus();
+
+  useEffect(() => {
+    if (!isComplete) return;
+    const timer = setTimeout(() => router.push("/automations"), 1500);
+    return () => clearTimeout(timer);
+  }, [isComplete, router]);
 
   return (
     <>
@@ -57,7 +66,7 @@ export default function OnboardingPage() {
           </div>
           {isComplete && (
             <p className="mt-3 text-sm text-success">
-              All steps complete — your workspace is fully configured.
+              All steps complete — redirecting to your dashboard…
             </p>
           )}
         </div>
