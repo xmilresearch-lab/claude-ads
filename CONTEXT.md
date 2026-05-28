@@ -1,6 +1,6 @@
 # AI Automation Platform — Handoff Context
 
-> Last updated: end of Sprint F2. All checks passing. Next task: Sprint F3 (Automations CRUD).
+> Last updated: end of Sprint F3. All checks passing. Next task: Sprint F4 (Content Queue).
 
 ---
 
@@ -13,7 +13,7 @@ abstract the integrations.
 **Backend is 100% complete** (10 sprints). The codebase at `/backend` is production-ready with
 Docker, CI/CD, tests, and deployment docs. Do not modify the backend unless explicitly asked.
 
-**Frontend is in active development.** Sprints F1 and F2 are done. Sprint F3 is next.
+**Frontend is in active development.** Sprints F1, F2, and F3 are done. Sprint F4 is next.
 
 **Aesthetic:** "Industrial Command Center" — dark, precise, amber-accented. Think a control room
 dashboard, not a consumer app. Never use white backgrounds, rounded-xl cards, purple gradients,
@@ -70,8 +70,8 @@ or Inter font.
         │   │   └── register/page.tsx
         │   ├── (dashboard)/
         │   │   ├── layout.tsx      ← Sidebar + Topbar + OnboardingBanner
-        │   │   ├── automations/page.tsx  ← PLACEHOLDER — Sprint F3 target
-        │   │   ├── content/page.tsx      ← placeholder
+        │   │   ├── automations/page.tsx  ← ✅ F3 — stats strip, skeleton, grid, CreateAutomationDialog
+        │   │   ├── content/page.tsx      ← PLACEHOLDER — Sprint F4 target
         │   │   ├── integrations/page.tsx ← placeholder
         │   │   ├── analytics/page.tsx    ← placeholder
         │   │   ├── audit/page.tsx        ← placeholder
@@ -114,6 +114,10 @@ or Inter font.
         │   ├── auth/
         │   │   ├── login-form.tsx      ← ?from= redirect via useSearchParams
         │   │   └── register-form.tsx   ← PasswordStrength (4 amber segments)
+        │   ├── automations/            ← ✅ F3 — all three files complete
+        │   │   ├── automation-card.tsx         ← toggle, inline delete, lazy run history
+        │   │   └── create-automation-dialog.tsx ← reusable create/edit via `initial?` prop
+        │   ├── content/                ← 🔄 F4 — needs: content-card.tsx, calendar-view.tsx, approve-dialog.tsx
         │   └── shared/
         │       ├── data-table.tsx
         │       ├── empty-state.tsx
@@ -128,7 +132,7 @@ or Inter font.
         │   │       ├── auth.ts         ← authApi + login/register/logout/getMe functions
         │   │       ├── workspaces.ts   ← workspacesApi (getMe/updateMe/brand-voice/settings)
         │   │       ├── automations.ts  ← listAutomations/getAutomation/createAutomation/updateAutomation/deleteAutomation/triggerAutomation/listRuns
-        │   │       ├── content.ts      ← listContent, approveContent, rejectContent
+        │   │       ├── content.ts      ← listContent, approveContent, rejectContent  ← EXISTS, ready for F4
         │   │       ├── integrations.ts
         │   │       ├── analytics.ts
         │   │       ├── audit.ts
@@ -139,6 +143,7 @@ or Inter font.
         │   │   ├── use-auth.ts         ← re-exports from auth-provider
         │   │   ├── use-workspace.ts    ← useWorkspace, useBrandVoice, useUpdateWorkspace, useSetBrandVoice, useDeleteBrandVoice, useUpdateSettings
         │   │   ├── use-onboarding.ts   ← useOnboardingStatus, useOnboardingRedirect
+        │   │   ├── use-automations.ts  ← ✅ F3 — 7 hooks, 3 query key exports
         │   │   └── use-debounce.ts
         │   ├── providers/
         │   │   ├── auth-provider.tsx   ← AuthContext: user, isLoading, isAuthenticated, isAdmin, login, register, logout
@@ -180,17 +185,17 @@ or Inter font.
 ### Sprint F2 ✅ — Settings + Workspace + Onboarding
 
 **Sections 1–3 (API layer):**
-- `lib/api/types.ts`: added `BrandVoice`, `WorkspaceSettings`, updated `WorkspaceResponse` (added `integrations_count`, `automations_count`, `active_automations_count`)
+- `lib/api/types.ts`: added `BrandVoice`, `WorkspaceSettings`, updated `WorkspaceResponse`
 - `lib/api/endpoints/workspaces.ts`: `workspacesApi` with getMe/updateMe/getBrandVoice/setBrandVoice/deleteBrandVoice/getSettings/updateSettings
-- `lib/hooks/use-workspace.ts`: 6 hooks (useWorkspace, useBrandVoice, useUpdateWorkspace, useSetBrandVoice, useDeleteBrandVoice, useUpdateSettings); `WORKSPACE_KEY = ["workspace", "me"]`
+- `lib/hooks/use-workspace.ts`: 6 hooks; `WORKSPACE_KEY = ["workspace", "me"]`
 - `lib/hooks/use-onboarding.ts`: `useOnboardingStatus` (3 steps: workspaceNamed/brandVoiceSet/integrationAdded), `useOnboardingRedirect` (one-shot sessionStorage redirect)
 
 **Sections 4–10 (Settings pages):**
 - `settings/layout.tsx`: pass-through
 - `settings/page.tsx`: `redirect("/settings/workspace")`
-- `settings/workspace/page.tsx`: WorkspaceNameCard (auto-save on blur, "Saving…" inline, Check icon 2s on success, amber dirty border) + PreferencesCard (timezone grouped select, approval CSS toggle, language, notification email, Save button)
-- `settings/brand-voice/page.tsx`: create/edit/delete form + **LivePreview** panel (useWatch, real-time 2-col grid; amber tone, red avoid-tags, blockquote example); Zap nudge when no brand voice
-- `settings/onboarding/page.tsx`: 3-step checklist with progress bar; **redirects to `/automations` after 1.5s when `isComplete === true`**
+- `settings/workspace/page.tsx`: WorkspaceNameCard (auto-save on blur, inline "Saving…", Check icon 2s on success, amber dirty border) + PreferencesCard (timezone grouped select, approval CSS toggle, Save button)
+- `settings/brand-voice/page.tsx`: form + **LivePreview** panel (useWatch, real-time 2-col grid; amber tone, red avoid-tags, blockquote example)
+- `settings/onboarding/page.tsx`: 3-step checklist; **redirects to `/automations` after 1.5s when `isComplete === true`**
 - `settings/account/page.tsx`: read-only profile (email in amber mono, plan badge — admin = amber pill), PasswordStrength (4-segment), change-password stub toast
 - `settings/danger/page.tsx`: `border-danger/30 bg-danger/5` card, delete dialog with **exact case-sensitive name match** required, stub toast
 
@@ -198,11 +203,44 @@ or Inter font.
 - `PageHeader` component: `subtitle`/`description` aliases, `actions`/`action` aliases, `breadcrumb?: { label, href? }[]`
 - `BrandVoiceBanner` in Topbar: amber strip, shows when `workspace.brand_voice === null` AND registered >5 min AND not sessionStorage-dismissed (`"bv_banner_dismissed"`)
 - `OnboardingBanner`: fixed `bottom-4 left-[256px] right-4 z-50`, amber progress bar, `{n}/3 steps complete`, sessionStorage `"onboarding_dismissed"`, hidden on `/settings/*` and `isComplete`
-- Dashboard layout updated to include `<OnboardingBanner />`
 - Sidebar settings sub-nav: Workspace/Brand Voice/Account/Danger Zone, 150ms CSS `maxHeight` transition, chevron rotates 90° when expanded
-- `lib/utils/timezones.ts`: 31 IANA timezones, 4 groups (UTC/Americas/Europe/Asia/Pacific), `TIMEZONE_GROUPS` const
+- `lib/utils/timezones.ts`: 31 IANA timezones, 4 groups, `TIMEZONE_GROUPS` const
 - Vitest setup: `vitest.config.ts` (jsdom + React plugin + `@/*` alias), 21 passing tests
-- `frontend/CLAUDE.md` updated: F2 ✅ Done, F3 🔄 Active, common mistakes updated
+
+### Sprint F3 ✅ — Automations CRUD
+
+- **`lib/hooks/use-automations.ts`** — 7 hooks with optimistic cache updates and toast feedback:
+  - `useAutomations()` — `queryKey: AUTOMATIONS_KEY = ["automations"]`, staleTime 30s, limit 100
+  - `useCreateAutomation()` — prepends to cache list on success
+  - `useUpdateAutomation({ id, payload })` — updates list + single key on success
+  - `useDeleteAutomation(id)` — filters from cache list on success
+  - `useToggleAutomation({ id, active })` — calls `updateAutomation(id, { active })`, updates cache
+  - `useTriggerAutomation(id)` — toast "Run triggered" on success
+  - `useRunHistory(id, enabled=false)` — lazy (only fetches when `enabled=true`), staleTime 15s, `queryKey: ["automations", id, "runs"]`
+
+- **`components/automations/automation-card.tsx`** — full card component:
+  - `ActiveToggle`: CSS toggle button (h-5 w-9 rounded-full, amber when active), calls `useToggleAutomation`
+  - `RunRow`: status badge, `format.datetime()`, token count via `format.tokens()`, duration in seconds, error text (truncated, danger color)
+  - `AutomationCard` states: `editOpen`, `confirmDelete`, `showRuns`
+  - Inline two-step delete: first click shows "Delete? [Cancel] [Delete]" — no modal
+  - Lazy run history: `useRunHistory(id, showRuns)` — skeleton pulse while loading, "No runs yet" when empty
+  - `TYPE_LABELS`, `TYPE_VARIANT` (info/default/secondary/warning per type)
+  - `RUN_STATUS_VARIANT`: success→success, failed/blocked→danger, running→info, pending→warning
+
+- **`components/automations/create-automation-dialog.tsx`** — reusable create/edit dialog:
+  - Props: `open`, `onOpenChange`, `initial?: AutomationResponse`
+  - `isEdit = !!initial` — controls title, description, submit label, which mutation to call
+  - Radio card type selector (amber border/bg when selected), hint text per type
+  - Cron examples shown as `text-2xs font-mono text-text-muted`
+  - `reset()` called on every open with initial or empty defaults
+  - Zod schema: name min(1) max(120), type enum 5 values, schedule optional string
+
+- **`app/(dashboard)/automations/page.tsx`** — replaced placeholder, full client page:
+  - `"use client"` — TanStack Query hooks require client context
+  - `SkeletonCard` pulse animation sub-component
+  - Stats strip: total / active (amber) / paused in `font-mono text-lg`
+  - Three render states: loading (3 skeleton cards), empty (EmptyState + Zap icon + CTA), data (responsive grid)
+  - Responsive grid: `grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3`
 
 ---
 
@@ -217,13 +255,16 @@ or Inter font.
 | Raw `fetch` in `refreshAccessToken()` | Avoids circular dep: `client.ts` imports `tokens.ts`, which would import `client.ts` |
 | `_refreshPromise` dedup | Single in-flight refresh; parallel 401s reuse the same promise |
 | `isAdmin: user?.plan === "admin"` | Client-side guard only; sufficient for dashboard routing |
-| `(admin)/admin/` subfolder | Avoids route conflict between `(admin)/page.tsx` and `(dashboard)/page.tsx` both resolving to `/` |
+| `(admin)/admin/` subfolder | Avoids route conflict between `(admin)/page.tsx` and `(dashboard)/page.tsx` |
 | sessionStorage for one-shot banners | Survives navigation within session, resets on next session — correct UX for nudge banners |
 | Workspace name auto-save on blur | Reduces friction; single-field form doesn't need an explicit Save button |
 | Brand voice preview via `useWatch` | Real-time feedback without needing to submit — shows AI personality as user types |
-| comma-separated string for avoid/examples | Simpler UX than tag input; `toArray()`/`fromArray()` converts at save/load boundary |
 | `/settings/onboarding` redirect after 1.5s | Shows "Setup complete!" text for 1.5s, then pushes to `/automations` — feels intentional not jarring |
 | `SETTINGS_SUB_NAV` separate from `NAV_ITEMS` | Sub-nav expands via CSS `maxHeight` transition without re-rendering the whole nav |
+| Inline delete confirm (no modal) | Reduces component complexity in the card; two-step state toggle is sufficient for a destructive action |
+| Lazy `useRunHistory(id, enabled)` | Avoids N parallel requests on page load — only fetches when user expands the history section |
+| `CreateAutomationDialog` with `initial?` prop | Single component handles both create and edit; `isEdit = !!initial` drives all conditional behavior |
+| `"use client"` on automations page | TanStack Query hooks require client context; no SSR metadata needed on this page |
 
 ---
 
@@ -234,71 +275,114 @@ or Inter font.
 - Route protection via `proxy.ts`
 - All settings pages: workspace, brand-voice (with live preview), onboarding (redirects on completion), account, danger zone
 - Dashboard layout: sidebar with collapsible settings nav, topbar with system status and brand voice banner, floating onboarding banner
+- **Automations CRUD**: list with stats strip, create/edit dialog, active toggle, inline delete confirm, expandable run history
 - Admin panel shell (all pages are placeholders pending Sprint F7)
-- 22 routes build cleanly, 0 TypeScript errors, 21 unit tests passing
 
 ### What's incomplete / placeholder
-- `/automations` — placeholder card, **Sprint F3 target**
-- `/content` — placeholder
+- `/content` — placeholder, **Sprint F4 target**
 - `/integrations` — placeholder
 - `/analytics` — placeholder
 - `/audit` — placeholder
 - All 5 admin pages — "Coming in Sprint F7" placeholders
-- `settings/account` change-password — stub toast (backend endpoint `/auth/change-password` not yet built)
-- `settings/danger` delete workspace — stub toast (backend endpoint `/auth/delete-account` not yet built)
+- `settings/account` change-password — stub toast (backend endpoint not yet built)
+- `settings/danger` delete workspace — stub toast (backend endpoint not yet built)
 
 ### Build status
 ```
 npm run typecheck  → 0 errors
 npm run test       → 21/21 passing
 npm run build      → 22 routes, 0 warnings
+Last commit        → 9e8ac93 feat(frontend): Sprint F3 — Automations CRUD
 ```
 
 ---
 
-## 7. Active Files
+## 7. Active Files for Sprint F4
 
-All Sprint F2 files are complete and committed. No files are in a partial/broken state.
+The backend content API is fully built. These frontend files are needed:
 
-The next files to create are for Sprint F3 (Automations CRUD):
-- `src/app/(dashboard)/automations/page.tsx` — replace placeholder
-- Likely: `src/components/automations/automation-card.tsx`
-- Likely: `src/components/automations/create-automation-dialog.tsx`
-- Likely: `src/lib/hooks/use-automations.ts`
+| File | Status | Notes |
+|---|---|---|
+| `src/lib/api/endpoints/content.ts` | ✅ EXISTS | `listContent`, `approveContent`, `rejectContent` already implemented |
+| `src/lib/api/types.ts` | ✅ EXISTS | `ContentQueueItem` and `ContentStatus` types already defined |
+| `src/lib/hooks/use-content.ts` | ❌ Missing | **Create this first** |
+| `src/components/content/content-card.tsx` | ❌ Missing | Approval card component |
+| `src/components/content/calendar-view.tsx` | ❌ Missing | Month grid calendar |
+| `src/components/content/approve-dialog.tsx` | ❌ Missing | Full preview + approve dialog |
+| `src/app/(dashboard)/content/page.tsx` | 🔄 Stub | Replace placeholder |
 
 ---
 
-## 8. Exact Next Step
+## 8. Exact Next Step — Sprint F4: Content Queue
 
-**Sprint F3: Automations CRUD**
+The content API endpoints already exist at `src/lib/api/endpoints/content.ts`. This sprint is
+pure frontend work: build the approval queue UI.
 
-The API endpoint file is already written at `src/lib/api/endpoints/automations.ts` and exports:
-- `listAutomations(params: { limit?, offset? })`
-- `getAutomation(id: string)`
-- `createAutomation(payload: { name, type, config?, schedule? })`
-- `updateAutomation(id, payload: { name?, type?, config?, schedule?, active? })`
-- `deleteAutomation(id)`
-- `triggerAutomation(id, payload?)`
-- `listRuns(id, params)`
+### Section 1 — Hook (`src/lib/hooks/use-content.ts`)
 
-Types in `src/lib/api/types.ts`:
 ```typescript
-type AutomationType = "social_post" | "email_campaign" | "support_reply" | "crm_update" | "scheduled"
-type AutomationStatus = "active" | "paused" | "error"
-interface AutomationResponse {
-  id: string; workspace_id: string; name: string;
-  type: AutomationType; config: Record<string, unknown>;
-  schedule: string | null; active: boolean;
-  created_at: string; updated_at: string;
-}
+export const CONTENT_KEY = ["content"] as const;
+export const contentKey = (id: string) => ["content", id] as const;
+
+// useContentQueue({ status?, limit? }) — staleTime 20s
+// useApproveContent() — optimistic: set status to "approved" in list cache
+// useRejectContent() — optimistic: set status to "rejected" in list cache
+// useContentStats() — derived from list query: { pending, approved, rejected, total }
 ```
 
-Sprint F3 should deliver:
-1. `use-automations.ts` hook (useAutomations, useCreateAutomation, useUpdateAutomation, useDeleteAutomation, useToggleAutomation)
-2. Automations list page with: table/card view of all automations, active/paused toggle, create button, delete with confirm dialog
-3. Create automation dialog/form: name, type select, optional schedule (cron string), config fields per type
-4. Edit automation inline or via dialog
-5. Run history expandable row or drawer
+### Section 2 — Content Card (`src/components/content/content-card.tsx`)
+
+- Show: automation name (from embedded field or `automation_id`), status badge, AI-generated content preview (3-line clamp), `created_at`, token count via `format.tokens()`
+- Status badge variants: `pending` → warning, `approved` → success, `rejected` → danger, `publishing` → info
+- "Approve" (green ghost) and "Reject" (danger ghost) action buttons — only shown when `status === "pending"`
+- Amber left border (`border-l-2 border-amber`) when `status === "pending"`
+- Click anywhere on preview text → open `ApproveDialog` for full preview
+
+### Section 3 — Approve Dialog (`src/components/content/approve-dialog.tsx`)
+
+- Full content preview (no truncation, `font-mono text-xs`)
+- Optional edit textarea for minor tweaks before approval
+- "Approve" button (amber, primary) and "Reject" button (danger ghost) in footer
+- Shows automation name + scheduled_at in header
+
+### Section 4 — Calendar View (`src/components/content/calendar-view.tsx`)
+
+- Month grid layout (7-col, Mon–Sun header)
+- Content items grouped by `scheduled_at` date — show up to 3 per cell, then "+N more"
+- Click a date cell to filter the queue to that date
+- Mini dot indicators per date: amber = has pending, green = all approved
+- Prev/next month navigation with `<` `>` buttons
+
+### Section 5 — Content Queue Page (`src/app/(dashboard)/content/page.tsx`)
+
+```
+"use client"
+
+PageHeader: "Content Queue" | description | action: toggle Queue/Calendar view
+
+Stats strip (when !loading && total > 0):
+  Total | Pending (amber) | Approved (green) | Rejected (danger)
+
+View toggle: "Queue" | "Calendar" — state or ?view= searchParam, amber underline on active
+
+Filter tabs: All | Pending | Approved | Rejected — amber underline on active tab
+
+Loading: 3 skeleton cards (same pulse pattern as automations page)
+
+Empty: EmptyState with FileText icon, "No content yet"
+
+Queue view: grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3
+Calendar view: <CalendarView items={content} />
+```
+
+### Section 6 — Sidebar update (`src/components/layout/sidebar.tsx`)
+
+Add "Content" to `NAV_ITEMS` array **between Automations and Settings**:
+```typescript
+{ href: "/content", label: "Content", icon: FileText }
+```
+
+The pending content count badge already exists on the sidebar — wire it to the `useContentQueue` result filtered to `status === "pending"`.
 
 ---
 
@@ -306,21 +390,30 @@ Sprint F3 should deliver:
 
 ### Critical gotchas
 
-**Next.js 16 `proxy.ts`** — The route protection file is `src/proxy.ts`, NOT `src/middleware.ts`. It exports `function proxy(...)`, not `function middleware(...)`. This is the Next.js 16 breaking change. If you create a `middleware.ts` file, it will conflict.
+**Next.js 16 `proxy.ts`** — The route protection file is `src/proxy.ts`, NOT `src/middleware.ts`. It exports `function proxy(...)`, not `function middleware(...)`. If you create a `middleware.ts` file, it will conflict.
 
-**Tailwind v4 incompatibility** — The project is pinned to Tailwind v3 (`^3.4.19`). Do NOT run `npm install tailwindcss@latest` — v4 uses a completely different CSS-based config approach that breaks `tailwind.config.ts`. If you accidentally upgrade, downgrade back to 3.x.
+**Tailwind v4 incompatibility** — Pinned to v3 (`^3.4.19`). Do NOT run `npm install tailwindcss@latest`.
 
-**No shadcn CLI** — All UI components are hand-written Radix wrappers in `src/components/ui/`. Do not try to run `npx shadcn-ui add` or `npx shadcn add` — the CLI is not available and the components already exist.
+**No shadcn CLI** — All UI components are hand-written in `src/components/ui/`. Do not try to run `npx shadcn-ui add`.
 
-**`useSearchParams()` requires Suspense** — Any client component using `useSearchParams()` must be wrapped in `<Suspense>` by its parent page. Already done for `login/page.tsx`. If you add `useSearchParams()` to another component, wrap it.
+**`useSearchParams()` requires Suspense** — Any client component using `useSearchParams()` must be wrapped in `<Suspense>` by its parent page.
 
-**`ApiError` is flat** — `{ code, message, status, field? }`. NOT a nested `errors[]` array. If you see backend error handling that expects `errors[0]`, fix it to use the flat shape.
+**`ApiError` is flat** — `{ code, message, status, field? }`. NOT a nested `errors[]` array.
 
-**Admin route group subfolder** — Admin pages live at `(admin)/admin/PAGE/page.tsx` (not `(admin)/PAGE/page.tsx`) to avoid URL collision with dashboard routes. The URL is `/admin/users` etc.
+**Admin route group subfolder** — Admin pages live at `(admin)/admin/PAGE/page.tsx` to avoid URL collision. The URL is `/admin/users` etc.
+
+**`automations/page.tsx` is `"use client"`** — If you ever need page-level metadata (OG tags), extract a thin server wrapper and keep the client logic in a child. Same pattern applies to `content/page.tsx`.
+
+**Bash parentheses in git** — Always quote paths with `(dashboard)` etc:
+```bash
+git add "frontend/src/app/(dashboard)/content/page.tsx"
+```
+
+**Settings sub-nav** — Content nav item goes in `NAV_ITEMS` (renders in main nav). Do NOT add it to `SETTINGS_SUB_NAV` (that array is only for the collapsible settings section).
 
 ### Settings page stubs
 
-`settings/account/page.tsx` — change-password form submits with stub toast "Password change coming soon". The backend `/auth/change-password` endpoint doesn't exist yet. When the backend adds it, wire it up in `src/lib/api/endpoints/auth.ts` and update the page to call the real API.
+`settings/account/page.tsx` — change-password form submits with stub toast. When the backend adds `/auth/change-password`, wire it up in `src/lib/api/endpoints/auth.ts` and update the page.
 
 `settings/danger/page.tsx` — delete workspace shows stub toast. Same situation for `/auth/delete-account`.
 
@@ -334,7 +427,7 @@ Sprint F3 should deliver:
 
 ### Design rules (never break)
 
-- **Amber `#F59E0B`** ONLY for: active nav, primary CTA, live status dot, focus rings. Not for decorative color.
+- **Amber `#F59E0B`** ONLY for: active nav, primary CTA, live status dot, focus rings.
 - **Cyan `#06B6D4`** ONLY for: data values, chart lines, system metrics.
 - **Never** use `rounded-xl` — max is `rounded-lg` (8px).
 - **Never** white or light backgrounds. Minimum dark is `bg-bg-surface (#0D0E14)`.
@@ -342,6 +435,19 @@ Sprint F3 should deliver:
 - All IDs, tokens, numeric metrics **must** use `font-mono`.
 - All API calls **must** go through `src/lib/api/client.ts`. Never `fetch()` in components.
 - Access token **never** in localStorage or sessionStorage — only in memory (`_accessToken`).
+
+### Security constraints (permanent, carry forward every sprint)
+
+- ALL user-supplied content → `injection_scanner` before reaching Claude
+- ALL Claude-generated content → `dlp_scanner` before external APIs
+- OAuth tokens + API keys → AES-256-GCM encrypted, never logged
+- Every Claude API call includes workspace brand voice in system prompt; examples sanitized via `sanitize_example()` before injection (LLM04)
+- Every automation run writes a record to `automation_runs` (status, result, duration)
+- No credentials in code — always env vars
+- Never log sensitive fields (tokens, passwords, PII)
+- Never store credentials in plain text — encrypt before DB write
+- MCP servers are stateless — all state lives in PostgreSQL
+- Run `pip-audit` before every release; HIGH/CRITICAL findings block deployment
 
 ---
 
@@ -368,9 +474,6 @@ npm run test:watch
 
 # Lint
 npm run lint
-
-# Generate TypeScript types from backend OpenAPI (requires running backend)
-npm run gen-types
 ```
 
 ### Git
@@ -379,10 +482,11 @@ npm run gen-types
 # Current branch
 git status   # should be on claude/claude-md-documentation-TJtEy
 
-# Push
+# Push (always quote paths with parens)
+git add "frontend/src/app/(dashboard)/content/page.tsx"
 git push -u origin claude/claude-md-documentation-TJtEy
 
-# Recent commits (to see what was done)
+# Recent commits
 git log --oneline -10
 ```
 
@@ -393,8 +497,6 @@ Create `frontend/.env.local` with:
 NEXT_PUBLIC_API_URL=http://localhost:8000/api/v1
 NEXT_PUBLIC_APP_NAME=Automate
 ```
-
-The backend runs on port 8000 by default (`docker compose up` from `/home/user/claude-ads`).
 
 ---
 
@@ -445,16 +547,30 @@ interface AutomationRunResponse {
   ai_tokens_used: number | null;
   started_at: string; finished_at: string | null;
 }
+
+// Content Queue (already defined — use these for F4)
+type ContentStatus = "pending" | "approved" | "rejected" | "publishing" | "published" | "failed";
+
+interface ContentQueueItem {
+  id: string; automation_id: string; automation_name?: string;
+  content: Record<string, unknown>; platform: string;
+  status: ContentStatus;
+  scheduled_at: string | null; published_at: string | null;
+  created_at: string;
+}
 ```
 
 ## Appendix: TanStack Query Keys
 
 ```typescript
-WORKSPACE_KEY   = ["workspace", "me"]
-BRAND_VOICE_KEY = ["workspace", "brand-voice"]
-SETTINGS_KEY    = ["workspace", "settings"]
-// Automations (not yet defined — create in use-automations.ts)
-// suggested: ["automations"] for list, ["automations", id] for single
+WORKSPACE_KEY    = ["workspace", "me"]
+BRAND_VOICE_KEY  = ["workspace", "brand-voice"]
+SETTINGS_KEY     = ["workspace", "settings"]
+AUTOMATIONS_KEY  = ["automations"]
+automationKey    = (id: string) => ["automations", id]
+runsKey          = (id: string) => ["automations", id, "runs"]
+CONTENT_KEY      = ["content"]           // ← define in use-content.ts
+contentKey       = (id: string) => ["content", id]
 ```
 
 ## Appendix: CSS Component Classes (globals.css)
@@ -473,8 +589,8 @@ SETTINGS_KEY    = ["workspace", "settings"]
 |---|---|---|
 | F1 | Next.js scaffold, design system, auth, layout, dashboard shell | ✅ Done |
 | F2 | Workspace setup, brand voice, onboarding, settings nav, timezone utils, vitest | ✅ Done |
-| F3 | Automations CRUD — list, create, edit, delete, toggle | 🔄 **Active — start here** |
-| F4 | Content queue — calendar view, approval workflow | ⬜ |
+| F3 | Automations CRUD — list, create, edit, delete, toggle, run history | ✅ Done |
+| F4 | Content queue — approval workflow, calendar view | 🔄 **Active — start here** |
 | F5 | Integrations — OAuth connect/disconnect flows | ⬜ |
 | F6 | Analytics dashboard — charts, usage stats | ⬜ |
 | F7 | Settings — billing, team (admin panel activated) | ⬜ |
