@@ -44,7 +44,7 @@ async def get_automation(
             Automation.workspace_id == workspace_id,
         )
     )
-    return result.scalar_one_or_none()
+    return result.scalar_one_or_none()  # type: ignore[no-any-return]
 
 
 async def list_automations(

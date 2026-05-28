@@ -221,4 +221,4 @@ async def approve_and_publish(
         content_queue_id=str(content_queue_id),
         request_id=getattr(request.state, "request_id", None),
     )
-    return item
+    return item  # type: ignore[no-any-return]

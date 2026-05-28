@@ -19,17 +19,17 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login")
 
 
 def hash_password(plain: str) -> str:
-    return pwd_context.hash(plain)
+    return pwd_context.hash(plain)  # type: ignore[no-any-return]
 
 
 def verify_password(plain: str, hashed: str) -> bool:
-    return pwd_context.verify(plain, hashed)
+    return pwd_context.verify(plain, hashed)  # type: ignore[no-any-return]
 
 
 def _make_token(data: dict[str, Any], expires_delta: timedelta) -> str:
     payload = data.copy()
     payload["exp"] = datetime.now(UTC) + expires_delta
-    return jwt.encode(payload, settings.SECRET_KEY, algorithm=settings.JWT_ALGORITHM)
+    return jwt.encode(payload, settings.SECRET_KEY, algorithm=settings.JWT_ALGORITHM)  # type: ignore[no-any-return]
 
 
 def create_access_token(data: dict[str, Any]) -> str:
@@ -67,7 +67,7 @@ def decrypt_credential(encrypted: str) -> str:
     aesgcm = AESGCM(_aes_key())
     raw = base64.b64decode(encrypted)
     nonce, ct = raw[:12], raw[12:]
-    return aesgcm.decrypt(nonce, ct, None).decode()
+    return aesgcm.decrypt(nonce, ct, None).decode()  # type: ignore[no-any-return]
 
 
 async def get_current_user(

@@ -1,5 +1,5 @@
 import uuid
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
@@ -14,7 +14,13 @@ from app.models.automation import Automation
 from app.models.automation_run import AutomationRun
 from app.models.workspace import Workspace
 from app.schemas.audit_log import AuditLogResponse, AuditLogSummary
-from app.schemas.base import COMMON_ERROR_RESPONSES, DataResponse, PaginatedResponse, ok, paginated
+from app.schemas.base import (
+    COMMON_ERROR_RESPONSES,
+    DataResponse,
+    PaginatedResponse,
+    ok,
+    paginated,
+)
 
 router = APIRouter()
 
@@ -65,7 +71,7 @@ async def list_logs(
     result = await db.execute(query)
     logs = list(result.scalars().all())
     return paginated(
-        data=[AuditLogResponse.model_validate(l) for l in logs],
+        data=[AuditLogResponse.model_validate(entry) for entry in logs],
         total_count=total,
         limit=limit,
         offset=offset,
@@ -124,7 +130,7 @@ async def get_summary(
     workspace: Annotated[Workspace, Depends(get_current_workspace)],
     db: Annotated[AsyncSession, Depends(get_db)],
 ) -> DataResponse[AuditLogSummary]:
-    thirty_days_ago = datetime.now(tz=timezone.utc) - timedelta(days=30)
+    thirty_days_ago = datetime.now(tz=UTC) - timedelta(days=30)
 
     runs_result = await db.execute(
         select(AutomationRun.status, func.count())

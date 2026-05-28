@@ -1,6 +1,6 @@
 import json
 import uuid
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from typing import Any
 
 from sqlalchemy import select
@@ -39,7 +39,7 @@ async def rotate_integration_credential(
     merged = {**existing, **new_token_data}
 
     integration.credentials_encrypted = encrypt_credential(json.dumps(merged))
-    integration.updated_at = datetime.now(tz=timezone.utc)
+    integration.updated_at = datetime.now(tz=UTC)
 
     db.add(
         AuditLog(
@@ -70,7 +70,7 @@ async def check_expiring_credentials(db: AsyncSession) -> list[str]:
     )
     integrations = result.scalars().all()
 
-    threshold = datetime.now(tz=timezone.utc) + timedelta(hours=24)
+    threshold = datetime.now(tz=UTC) + timedelta(hours=24)
     expiring: list[str] = []
 
     for integration in integrations:
@@ -82,11 +82,11 @@ async def check_expiring_credentials(db: AsyncSession) -> list[str]:
             if expires_at is None:
                 continue
             if isinstance(expires_at, (int, float)):
-                exp_dt = datetime.fromtimestamp(float(expires_at), tz=timezone.utc)
+                exp_dt = datetime.fromtimestamp(float(expires_at), tz=UTC)
             else:
                 exp_dt = datetime.fromisoformat(str(expires_at))
                 if exp_dt.tzinfo is None:
-                    exp_dt = exp_dt.replace(tzinfo=timezone.utc)
+                    exp_dt = exp_dt.replace(tzinfo=UTC)
             if exp_dt <= threshold:
                 expiring.append(str(integration.id))
         except Exception:

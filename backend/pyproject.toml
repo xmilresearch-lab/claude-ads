@@ -49,11 +49,21 @@ target-version = "py312"
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP"]
+ignore = [
+    "E501",   # line length enforced by Black, not ruff
+    "UP046",  # Generic[T] → T syntax requires unsafe Pydantic BaseModel changes
+]
 
 [tool.mypy]
 python_version = "3.12"
 strict = true
 ignore_missing_imports = true
+disable_error_code = [
+    "misc",             # pydantic BaseModel subclass typing gap
+    "untyped-decorator",  # SlowAPI @limiter.limit() lacks py.typed stubs
+    "import-untyped",   # croniter ships no stubs
+    "type-arg",         # bare dict/list annotations — cosmetic
+]
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"

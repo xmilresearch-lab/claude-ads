@@ -8,7 +8,7 @@ Two tasks:
 
 import asyncio
 import uuid
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from typing import Any
 
 from celery.utils.log import get_task_logger
@@ -41,7 +41,7 @@ def _is_due(cron_expr: str, now: datetime) -> bool:
         naive = now.replace(tzinfo=None) if now.tzinfo else now
         itr = croniter(cron_expr, naive + timedelta(seconds=1))
         prev = itr.get_prev(datetime)
-        return 0 <= (naive - prev).total_seconds() < 60
+        return bool(0 <= (naive - prev).total_seconds() < 60)
     except Exception:
         return False
 
@@ -109,7 +109,7 @@ def poll_due_automations() -> dict[str, int]:
     """Beat task (every minute): dispatch run_scheduled_automation for due automations."""
 
     async def _scan() -> int:
-        now = datetime.now(tz=timezone.utc)
+        now = datetime.now(tz=UTC)
         dispatched = 0
 
         async with AsyncSessionLocal() as db:

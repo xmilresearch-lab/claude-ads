@@ -2,7 +2,7 @@ import json
 import secrets
 import time
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Annotated
 
 import httpx
@@ -20,7 +20,13 @@ from app.middleware.rate_limiter import LIMIT_READ, LIMIT_WRITE, limiter
 from app.models.audit_log import AuditLog
 from app.models.integration import Integration
 from app.models.workspace import Workspace
-from app.schemas.base import COMMON_ERROR_RESPONSES, DataResponse, PaginatedResponse, ok, paginated
+from app.schemas.base import (
+    COMMON_ERROR_RESPONSES,
+    DataResponse,
+    PaginatedResponse,
+    ok,
+    paginated,
+)
 from app.schemas.integration import (
     APIKeyConnectRequest,
     IntegrationConnectRequest,
@@ -88,7 +94,7 @@ async def _get_owned_integration(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Integration not found")
     if integration.workspace_id != workspace.id:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Access forbidden")
-    return integration
+    return integration  # type: ignore[no-any-return]
 
 
 def _build_health_check_request(
@@ -237,7 +243,7 @@ async def _upsert_integration(
         integration.credentials_encrypted = credentials_encrypted
         integration.status = "active"
         integration.meta = safe_meta
-    return integration
+    return integration  # type: ignore[no-any-return]
 
 
 # ── Endpoints ─────────────────────────────────────────────────────────────────
@@ -335,7 +341,7 @@ async def get_integration_status(
             IntegrationStatusResponse(
                 status="error",
                 latency_ms=0.0,
-                last_checked=datetime.now(timezone.utc).isoformat(),
+                last_checked=datetime.now(UTC).isoformat(),
             ),
             request,
         )
@@ -348,7 +354,7 @@ async def get_integration_status(
         IntegrationStatusResponse(
             status=health_status,
             latency_ms=latency_ms,
-            last_checked=datetime.now(timezone.utc).isoformat(),
+            last_checked=datetime.now(UTC).isoformat(),
         ),
         request,
     )

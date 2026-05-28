@@ -12,7 +12,7 @@ def sanitize_example(example: str) -> str:
     """Strip HTML tags, truncate to 1000 chars, remove injection-attempt lines."""
     clean = re.sub(r"<[^>]+>", "", str(example))
     clean = clean[:1000]
-    safe_lines = [l for l in clean.splitlines() if not _INJECTION_PATTERN.search(l)]
+    safe_lines = [line for line in clean.splitlines() if not _INJECTION_PATTERN.search(line)]
     return "\n".join(safe_lines)
 
 

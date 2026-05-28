@@ -1,9 +1,10 @@
 import re
-from dataclasses import dataclass, field
-from enum import Enum
+from collections.abc import Callable
+from dataclasses import dataclass
+from enum import StrEnum
 
 
-class DLPCategory(str, Enum):
+class DLPCategory(StrEnum):
     EMAIL = "email"
     PHONE_US = "phone_us"
     PHONE_INTL = "phone_intl"
@@ -93,7 +94,7 @@ _RULES: list[tuple[DLPCategory, re.Pattern[str], str]] = [
 ]
 
 # Custom maskers keyed by category (override plain placeholder substitution).
-_MASKERS: dict[DLPCategory, callable] = {  # type: ignore[type-arg]
+_MASKERS: dict[DLPCategory, Callable[..., str]] = {
     DLPCategory.EMAIL: _mask_email,
     DLPCategory.CREDIT_CARD: _mask_card,
 }

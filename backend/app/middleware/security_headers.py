@@ -1,4 +1,6 @@
-from fastapi import Request
+from typing import Any
+
+from fastapi import Request, Response
 from secure import (
     ContentSecurityPolicy,
     ReferrerPolicy,
@@ -22,7 +24,7 @@ secure_headers = Secure(
 )
 
 
-async def add_security_headers(request: Request, call_next):
+async def add_security_headers(request: Request, call_next: Any) -> Response:
     response = await call_next(request)
     await secure_headers.set_headers_async(response)
     response.headers["X-Content-Type-Options"] = "nosniff"
