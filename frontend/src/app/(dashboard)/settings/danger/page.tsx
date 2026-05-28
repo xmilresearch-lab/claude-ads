@@ -65,7 +65,7 @@ function DeleteWorkspaceDialog({
             spellCheck={false}
           />
           {confirmValue && !matches && (
-            <p className="text-2xs font-mono text-danger">Name doesn't match</p>
+            <p className="text-2xs font-mono text-danger">Name doesn&apos;t match</p>
           )}
         </div>
 
