@@ -258,7 +258,7 @@ All MCP servers require `Authorization: Bearer $MCP_AUTH_TOKEN` header.
 |6     |Celery task queue + workers                                   |✅ Done   |
 |7     |Security layer: injection guard, DLP, OWASP LLM Top 10, audit |✅ Done   |
 |8     |REST API completion + OpenAPI docs + health endpoints + docs  |✅ Done   |
-|9     |Tests + MCP evaluations                                       |🔄 Active |
+|9     |Tests + MCP evaluations                                       |✅ Done   |
 |10    |Docker packaging + deployment config                          |⏳ Queue  |
 
 -----
