@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Settings, LogOut, User, X, Zap } from "lucide-react";
+import { HealthStatusBar } from "@/components/integrations/HealthStatusBar";
 import Link from "next/link";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem,
@@ -124,6 +125,8 @@ export function Topbar() {
         {/* Right */}
         <div className="flex items-center gap-4">
           <SystemStatus />
+
+          <HealthStatusBar />
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>

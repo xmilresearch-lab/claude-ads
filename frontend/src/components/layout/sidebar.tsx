@@ -11,6 +11,7 @@ import { cn } from "@/lib/utils/cn";
 import { APP_NAME } from "@/lib/utils/constants";
 import { useAuth } from "@/lib/hooks/use-auth";
 import { listContent } from "@/lib/api/endpoints/content";
+import { useIntegrations } from "@/hooks/useIntegrations";
 
 const SETTINGS_SUB_NAV = [
   { href: "/settings/workspace",   label: "Workspace" },
@@ -31,6 +32,9 @@ const NAV_ITEMS = [
 export function Sidebar() {
   const pathname = usePathname();
   const { user, logout } = useAuth();
+
+  const { data: integrations = [] } = useIntegrations();
+  const hasIntegrationError = integrations.some((i) => i.status === "error");
 
   const { data: pendingContent = [] } = useQuery({
     queryKey: ["content", "pending-sidebar"],
@@ -64,9 +68,10 @@ export function Sidebar() {
             const hasBadge = "pendingBadge" in rest;
             const active = pathname.startsWith(href);
             const isSettingsItem = href === "/settings";
+            const isIntegrationsItem = href === "/integrations";
 
             return (
-              <div key={href}>
+              <div key={href} className={isIntegrationsItem ? "relative" : undefined}>
                 <Link href={href} className={cn("nav-item", active && "active")}>
                   <Icon className="h-4 w-4 shrink-0" />
                   <span className="flex-1">{label}</span>
@@ -82,6 +87,10 @@ export function Sidebar() {
                     )} />
                   )}
                 </Link>
+
+                {isIntegrationsItem && hasIntegrationError && (
+                  <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full" />
+                )}
 
                 {/* Settings sub-nav */}
                 {isSettingsItem && (
