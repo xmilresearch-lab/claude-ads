@@ -1,6 +1,6 @@
 import asyncio
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 
 import httpx
@@ -134,7 +134,7 @@ async def _publish(
         try:
             await _call_mcp_for_platform(platform, item)
             item.status = "published"
-            item.published_at = datetime.now(tz=timezone.utc)
+            item.published_at = datetime.now(tz=UTC)
         except MCPCallError as exc:
             item.status = "failed"
             logger.error(

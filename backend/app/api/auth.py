@@ -17,7 +17,12 @@ from app.core.security import (
 from app.middleware.rate_limiter import LIMIT_AUTH, LIMIT_READ, limiter
 from app.models.user import User
 from app.models.workspace import Workspace
-from app.schemas.auth import LoginRequest, RefreshRequest, RegisterRequest, TokenResponse
+from app.schemas.auth import (
+    LoginRequest,
+    RefreshRequest,
+    RegisterRequest,
+    TokenResponse,
+)
 from app.schemas.base import COMMON_ERROR_RESPONSES, DataResponse, ok
 from app.schemas.user import UserResponse
 

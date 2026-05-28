@@ -39,7 +39,7 @@ def get_workspace_id(request: Request) -> str:
                 return f"workspace:{sub}"
         except JWTError:
             pass
-    return get_remote_address(request)
+    return get_remote_address(request)  # type: ignore[no-any-return]
 
 
 def rate_limit_exceeded_handler(request: Request, exc: RateLimitExceeded) -> Response:

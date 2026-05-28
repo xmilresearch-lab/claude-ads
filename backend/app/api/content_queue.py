@@ -11,7 +11,13 @@ from app.middleware.rate_limiter import LIMIT_READ, LIMIT_WRITE, limiter
 from app.models.automation import Automation
 from app.models.content_queue import ContentQueue
 from app.models.workspace import Workspace
-from app.schemas.base import COMMON_ERROR_RESPONSES, DataResponse, PaginatedResponse, ok, paginated
+from app.schemas.base import (
+    COMMON_ERROR_RESPONSES,
+    DataResponse,
+    PaginatedResponse,
+    ok,
+    paginated,
+)
 from app.schemas.content_queue import ContentQueueItem, ContentQueueReject
 
 router = APIRouter()
@@ -29,7 +35,7 @@ async def _get_item_for_workspace(
         .join(Automation, ContentQueue.automation_id == Automation.id)
         .where(ContentQueue.id == item_id, Automation.workspace_id == workspace_id)
     )
-    return result.scalar_one_or_none()
+    return result.scalar_one_or_none()  # type: ignore[no-any-return]
 
 
 @router.get(

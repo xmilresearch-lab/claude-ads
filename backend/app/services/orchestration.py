@@ -103,7 +103,7 @@ async def call_claude_with_mcp(
         model=settings.CLAUDE_MODEL,
         max_tokens=4096,
         betas=["mcp-client-2025-11-20"],
-        mcp_servers=mcp_servers,  # type: ignore[arg-type]
+        mcp_servers=mcp_servers,
         system=system_prompt,
         messages=[{"role": "user", "content": user_message}],
     )

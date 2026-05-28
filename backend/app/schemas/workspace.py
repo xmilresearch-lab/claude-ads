@@ -1,9 +1,8 @@
 import re
 import uuid
 from datetime import datetime
-from typing import Annotated
 
-from pydantic import BaseModel, EmailStr, Field, field_validator
+from pydantic import BaseModel, EmailStr, field_validator
 
 from app.core.validators import reject_script_tags, reject_sql_injection
 

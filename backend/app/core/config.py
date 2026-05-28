@@ -40,7 +40,7 @@ class Settings(BaseSettings):
     def parse_origins(cls, v: Any) -> list[str]:
         if isinstance(v, str):
             return [o.strip() for o in v.split(",") if o.strip()]
-        return v  # type: ignore[return-value]
+        return v  # type: ignore[no-any-return]
 
     # Webhooks
     WEBHOOK_SECRET: str = ""

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any, Generic, TypeVar
 
 from fastapi import Request
@@ -82,7 +82,7 @@ class ErrorResponse(BaseModel):
 def _meta(request: Request) -> Meta:
     return Meta(
         request_id=getattr(request.state, "request_id", ""),
-        timestamp=datetime.now(timezone.utc).isoformat(),
+        timestamp=datetime.now(UTC).isoformat(),
     )
 
 
@@ -101,7 +101,7 @@ def paginated(
         data=data,
         meta=PaginationMeta(
             request_id=getattr(request.state, "request_id", ""),
-            timestamp=datetime.now(timezone.utc).isoformat(),
+            timestamp=datetime.now(UTC).isoformat(),
             total_count=total_count,
             limit=limit,
             offset=offset,

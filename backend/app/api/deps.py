@@ -23,4 +23,4 @@ async def get_current_workspace(
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Workspace not found"
         )
-    return workspace
+    return workspace  # type: ignore[no-any-return]

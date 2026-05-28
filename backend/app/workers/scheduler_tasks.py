@@ -1,5 +1,5 @@
 import asyncio
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from celery.utils.log import get_task_logger
 from croniter import croniter
@@ -27,7 +27,7 @@ def _is_due(cron_expr: str, now: datetime) -> bool:
         itr = croniter(cron_expr, naive_now + timedelta(seconds=1))
         prev = itr.get_prev(datetime)
         delta = (naive_now - prev).total_seconds()
-        return 0 <= delta < 60
+        return bool(0 <= delta < 60)
     except Exception:
         return False
 
@@ -43,7 +43,7 @@ def dispatch_scheduled_automations() -> dict[str, int]:
     """
 
     async def _fetch_and_dispatch() -> int:
-        now = datetime.now(tz=timezone.utc)
+        now = datetime.now(tz=UTC)
         dispatched = 0
 
         async with AsyncSessionLocal() as db:

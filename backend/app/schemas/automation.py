@@ -50,7 +50,10 @@ class AutomationCreate(BaseModel):
         if len(v) > 255:
             raise ValueError("name must be at most 255 characters")
         try:
-            from app.middleware.injection_scanner import SecurityError, require_clean  # noqa: PLC0415
+            from app.middleware.injection_scanner import (  # noqa: PLC0415
+                SecurityError,
+                require_clean,
+            )
             try:
                 require_clean(v)
             except SecurityError as exc:

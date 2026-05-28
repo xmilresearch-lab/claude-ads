@@ -1,9 +1,9 @@
 import re
-from dataclasses import dataclass, field
-from enum import Enum
+from dataclasses import dataclass
+from enum import StrEnum
 
 
-class ThreatLevel(str, Enum):
+class ThreatLevel(StrEnum):
     CLEAN = "clean"
     SUSPICIOUS = "suspicious"
     BLOCKED = "blocked"
