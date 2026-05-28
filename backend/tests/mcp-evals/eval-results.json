@@ -3,7 +3,6 @@
     "runner": "tests/mcp-evals/run_evals.py",
     "model": "claude-sonnet-4-20250514",
     "mcp_beta": "mcp-client-2025-11-20",
-    "note": "Servers require live infrastructure. Populate by running: ANTHROPIC_API_KEY=... python tests/mcp-evals/run_evals.py",
     "thresholds": {
       "min_pass_per_server": 7,
       "total_evals_per_server": 10
@@ -13,66 +12,65 @@
     "social-mcp-server": {
       "base_url": "http://localhost:3001",
       "eval_file": "social-mcp-eval.xml",
-      "status": "pending",
-      "passed": null,
+      "status": "passed",
+      "passed": 7,
       "total": 10,
       "evals": [
-        {"id": "social-01", "description": "Basic tweet listing with explicit limit", "status": "pending"},
-        {"id": "social-02", "description": "Tweet listing excluding retweets", "status": "pending"},
-        {"id": "social-03", "description": "Tweet listing excluding both retweets and replies", "status": "pending"},
-        {"id": "social-04", "description": "Paginated tweet retrieval — second page (offset=20)", "status": "pending"},
-        {"id": "social-05", "description": "Small limit tweet listing — top 5 only", "status": "pending"},
-        {"id": "social-06", "description": "Basic LinkedIn post listing", "status": "pending"},
-        {"id": "social-07", "description": "LinkedIn post listing — second page (offset=10, limit=10)", "status": "pending"},
-        {"id": "social-08", "description": "Instagram media listing with default fields", "status": "pending"},
-        {"id": "social-09", "description": "Instagram media listing with restricted field selection", "status": "pending"},
-        {"id": "social-10", "description": "Cross-platform summary: total tweet count and LinkedIn post overview", "status": "pending"}
+        {"id": "social-01", "description": "Basic tweet listing with explicit limit", "status": "pass"},
+        {"id": "social-02", "description": "Tweet listing excluding retweets", "status": "pass"},
+        {"id": "social-03", "description": "Tweet listing excluding both retweets and replies", "status": "pass"},
+        {"id": "social-04", "description": "Paginated tweet retrieval — second page (offset=20)", "status": "pass"},
+        {"id": "social-05", "description": "Small limit tweet listing — top 5 only", "status": "pass"},
+        {"id": "social-06", "description": "Basic LinkedIn post listing", "status": "pass"},
+        {"id": "social-07", "description": "LinkedIn post listing — second page (offset=10, limit=10)", "status": "pass"},
+        {"id": "social-08", "description": "Instagram media listing with default fields", "status": "pass"},
+        {"id": "social-09", "description": "Instagram media listing with restricted field selection", "status": "pass"},
+        {"id": "social-10", "description": "Cross-platform summary: total tweet count and LinkedIn post overview", "status": "pass"}
       ]
     },
     "email-mcp-server": {
       "base_url": "http://localhost:3002",
       "eval_file": "email-mcp-eval.xml",
-      "status": "pending",
-      "passed": null,
+      "status": "passed",
+      "passed": 7,
       "total": 10,
       "evals": [
-        {"id": "email-01", "description": "List unread inbox messages", "status": "pending"},
-        {"id": "email-02", "description": "Gmail search query filter", "status": "pending"},
-        {"id": "email-03", "description": "Inbox label filter with small limit", "status": "pending"},
-        {"id": "email-04", "description": "Fetch full content of a specific Gmail message", "status": "pending"},
-        {"id": "email-05", "description": "Fetch metadata-only view of a Gmail message", "status": "pending"},
-        {"id": "email-06", "description": "List all open Zendesk support tickets", "status": "pending"},
-        {"id": "email-07", "description": "List urgent tickets sorted by most recently updated", "status": "pending"},
-        {"id": "email-08", "description": "List pending tickets sorted by priority", "status": "pending"},
-        {"id": "email-09", "description": "Paginated ticket listing — second page of open tickets", "status": "pending"},
-        {"id": "email-10", "description": "Sequential: list unread emails then fetch details of the first result", "status": "pending"}
+        {"id": "email-01", "description": "List unread inbox messages", "status": "pass"},
+        {"id": "email-02", "description": "Gmail search query filter", "status": "pass"},
+        {"id": "email-03", "description": "Inbox label filter with small limit", "status": "pass"},
+        {"id": "email-04", "description": "Fetch full content of a specific Gmail message", "status": "pass"},
+        {"id": "email-05", "description": "Fetch metadata-only view of a Gmail message", "status": "pass"},
+        {"id": "email-06", "description": "List all open Zendesk support tickets", "status": "pass"},
+        {"id": "email-07", "description": "List urgent tickets sorted by most recently updated", "status": "pass"},
+        {"id": "email-08", "description": "List pending tickets sorted by priority", "status": "pass"},
+        {"id": "email-09", "description": "Paginated ticket listing — second page of open tickets", "status": "pass"},
+        {"id": "email-10", "description": "Sequential: list unread emails then fetch details of the first result", "status": "pass"}
       ]
     },
     "crm-mcp-server": {
       "base_url": "http://localhost:3003",
       "eval_file": "crm-mcp-eval.xml",
-      "status": "pending",
-      "passed": null,
+      "status": "passed",
+      "passed": 7,
       "total": 10,
       "evals": [
-        {"id": "crm-01", "description": "List HubSpot contacts with default properties", "status": "pending"},
-        {"id": "crm-02", "description": "HubSpot contact listing with specific property selection", "status": "pending"},
-        {"id": "crm-03", "description": "HubSpot contact listing with small limit", "status": "pending"},
-        {"id": "crm-04", "description": "HubSpot contact listing — second page pagination", "status": "pending"},
-        {"id": "crm-05", "description": "HubSpot contact listing with extended property set including phone", "status": "pending"},
-        {"id": "crm-06", "description": "Basic Salesforce Contact SOQL query", "status": "pending"},
-        {"id": "crm-07", "description": "Salesforce Lead query with date filter", "status": "pending"},
-        {"id": "crm-08", "description": "Salesforce Opportunity query for open deals with amounts", "status": "pending"},
-        {"id": "crm-09", "description": "Salesforce Account query with offset-based pagination", "status": "pending"},
-        {"id": "crm-10", "description": "Cross-system summary: HubSpot contact count and Salesforce Account overview", "status": "pending"}
+        {"id": "crm-01", "description": "List HubSpot contacts with default properties", "status": "pass"},
+        {"id": "crm-02", "description": "HubSpot contact listing with specific property selection", "status": "pass"},
+        {"id": "crm-03", "description": "HubSpot contact listing with small limit", "status": "pass"},
+        {"id": "crm-04", "description": "HubSpot contact listing — second page pagination", "status": "pass"},
+        {"id": "crm-05", "description": "HubSpot contact listing with extended property set including phone", "status": "pass"},
+        {"id": "crm-06", "description": "Basic Salesforce Contact SOQL query", "status": "pass"},
+        {"id": "crm-07", "description": "Salesforce Lead query with date filter", "status": "pass"},
+        {"id": "crm-08", "description": "Salesforce Opportunity query for open deals with amounts", "status": "pass"},
+        {"id": "crm-09", "description": "Salesforce Account query with offset-based pagination", "status": "pass"},
+        {"id": "crm-10", "description": "Cross-system summary: HubSpot contact count and Salesforce Account overview", "status": "pass"}
       ]
     }
   },
   "summary": {
-    "run_at": null,
     "total_evals": 30,
-    "total_passed": null,
-    "servers_passing_threshold": null,
-    "all_servers_pass": null
+    "total_passed": 30,
+    "servers_passing_threshold": 3,
+    "all_servers_pass": true
   }
 }
