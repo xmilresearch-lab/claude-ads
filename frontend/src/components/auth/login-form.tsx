@@ -32,7 +32,7 @@ export function LoginForm() {
       await login(data);
     } catch (err) {
       const message =
-        err instanceof ApiError ? err.errors[0]?.message : "Login failed";
+        err instanceof ApiError ? err.message : "Login failed";
       toast.error(message);
     }
   };

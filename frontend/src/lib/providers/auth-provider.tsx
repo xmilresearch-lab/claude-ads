@@ -2,14 +2,16 @@
 
 import { createContext, useContext, useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { getMe, login, logout, register } from "@/lib/api/endpoints/auth";
-import { clearAllTokens, getRefreshToken } from "@/lib/auth/tokens";
+import { authApi, login, logout, register } from "@/lib/api/endpoints/auth";
+import { clearAllTokens, getRefreshToken, refreshAccessToken } from "@/lib/auth/tokens";
 import type { UserResponse } from "@/lib/api/types";
 import type { LoginPayload, RegisterPayload } from "@/lib/api/endpoints/auth";
 
 interface AuthContextValue {
   user: UserResponse | null;
   isLoading: boolean;
+  isAuthenticated: boolean;
+  isAdmin: boolean;
   login: (payload: LoginPayload) => Promise<void>;
   register: (payload: RegisterPayload) => Promise<void>;
   logout: () => Promise<void>;
@@ -27,22 +29,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setIsLoading(false);
       return;
     }
-    getMe()
-      .then(setUser)
+    refreshAccessToken()
+      .then((token) => (token ? authApi.me() : null))
+      .then((me) => { if (me) setUser(me); })
       .catch(() => setUser(null))
       .finally(() => setIsLoading(false));
   }, []);
 
   const handleLogin = useCallback(async (payload: LoginPayload) => {
     await login(payload);
-    const me = await getMe();
+    const me = await authApi.me();
     setUser(me);
     router.push("/automations");
   }, [router]);
 
   const handleRegister = useCallback(async (payload: RegisterPayload) => {
     await register(payload);
-    const me = await getMe();
+    const me = await authApi.me();
     setUser(me);
     router.push("/automations");
   }, [router]);
@@ -59,6 +62,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       value={{
         user,
         isLoading,
+        isAuthenticated: !!user,
+        isAdmin: user?.plan === "admin",
         login: handleLogin,
         register: handleRegister,
         logout: handleLogout,

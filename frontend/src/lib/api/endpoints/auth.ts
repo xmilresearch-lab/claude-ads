@@ -1,34 +1,49 @@
 import { api } from "@/lib/api/client";
-import { setAccessToken, setRefreshToken } from "@/lib/auth/tokens";
+import { storeTokens } from "@/lib/auth/tokens";
 import type { TokenResponse, UserResponse } from "@/lib/api/types";
 
-export interface LoginPayload {
+export interface LoginRequest {
   email: string;
   password: string;
 }
 
-export interface RegisterPayload {
+export interface RegisterRequest {
   email: string;
   password: string;
-  workspace_name: string;
+  workspace_name?: string;
 }
+
+// Backward-compat aliases used by auth forms
+export type LoginPayload = LoginRequest;
+export type RegisterPayload = RegisterRequest & { workspace_name: string };
+
+export const authApi = {
+  login: (data: LoginRequest) =>
+    api.post<TokenResponse>("/auth/login", data, { skipAuth: true }),
+
+  register: (data: RegisterRequest) =>
+    api.post<TokenResponse>("/auth/register", data, { skipAuth: true }),
+
+  refresh: (refreshToken: string) =>
+    api.post<TokenResponse>("/auth/refresh", { refresh_token: refreshToken }, { skipAuth: true }),
+
+  me: () => api.get<UserResponse>("/auth/me"),
+};
 
 export async function login(payload: LoginPayload): Promise<TokenResponse> {
-  const data = await api.post<TokenResponse>("/auth/login", payload, { skipAuth: true });
-  setAccessToken(data.access_token);
-  if (data.refresh_token) setRefreshToken(data.refresh_token);
+  const data = await authApi.login(payload);
+  storeTokens(data.access_token, data.refresh_token ?? "");
   return data;
 }
 
 export async function register(payload: RegisterPayload): Promise<TokenResponse> {
-  const data = await api.post<TokenResponse>("/auth/register", payload, { skipAuth: true });
-  setAccessToken(data.access_token);
-  if (data.refresh_token) setRefreshToken(data.refresh_token);
+  const data = await authApi.register(payload);
+  storeTokens(data.access_token, data.refresh_token ?? "");
   return data;
 }
 
 export function getMe(): Promise<UserResponse> {
-  return api.get<UserResponse>("/auth/me");
+  return authApi.me();
 }
 
 export function logout(): Promise<void> {
