@@ -47,9 +47,13 @@ automations that run on schedules or webhooks.
     /crm-mcp-server       → TypeScript MCP server (HubSpot, Salesforce)
   /migrations       → Alembic DB migrations
   /tests
-    /unit
-    /integration
-    /mcp-evals      → XML evaluation files per MCP server
+    /unit           → Unit tests (fast, fully mocked)
+    /integration    → Integration tests (FastAPI TestClient)
+    /contract       → API contract + OpenAPI snapshot tests
+    /security       → Penetration test suite (Sprint 7)
+    /load           → Locust load test files + run script
+    /mcp-evals      → XML eval files (30 QA pairs), runner, results
+    REPORT.md       → Sprint 9 test suite summary
   docker-compose.yml
   .env.example
   alembic.ini
@@ -259,7 +263,17 @@ All MCP servers require `Authorization: Bearer $MCP_AUTH_TOKEN` header.
 |7     |Security layer: injection guard, DLP, OWASP LLM Top 10, audit |✅ Done   |
 |8     |REST API completion + OpenAPI docs + health endpoints + docs  |✅ Done   |
 |9     |Tests + MCP evaluations                                       |✅ Done   |
-|10    |Docker packaging + deployment config                          |⏳ Queue  |
+|10    |Docker packaging + deployment config                          |🔄 Active |
+
+-----
+
+## Backend Status
+
+Backend complete as of Sprint 9. All modules at 90%+ coverage (90.15% overall,
+465 tests passing). MCP evaluation protocol in place — 30 read-only QA pairs
+across 3 servers, runner uses Claude API with `mcp-client-2025-11-20` beta.
+Load test target: 100 concurrent users, p95 < 500ms (Locust, requires running stack).
+Ready for frontend integration (Next.js dashboard) and Docker packaging (Sprint 10).
 
 -----
 
