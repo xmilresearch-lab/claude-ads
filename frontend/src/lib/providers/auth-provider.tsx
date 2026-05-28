@@ -12,8 +12,8 @@ interface AuthContextValue {
   isLoading: boolean;
   isAuthenticated: boolean;
   isAdmin: boolean;
-  login: (payload: LoginPayload) => Promise<void>;
-  register: (payload: RegisterPayload) => Promise<void>;
+  login: (payload: LoginPayload, redirectTo?: string) => Promise<void>;
+  register: (payload: RegisterPayload, redirectTo?: string) => Promise<void>;
   logout: () => Promise<void>;
 }
 
@@ -36,18 +36,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       .finally(() => setIsLoading(false));
   }, []);
 
-  const handleLogin = useCallback(async (payload: LoginPayload) => {
+  const handleLogin = useCallback(async (payload: LoginPayload, redirectTo = "/automations") => {
     await login(payload);
     const me = await authApi.me();
     setUser(me);
-    router.push("/automations");
+    router.push(redirectTo);
   }, [router]);
 
-  const handleRegister = useCallback(async (payload: RegisterPayload) => {
+  const handleRegister = useCallback(async (payload: RegisterPayload, redirectTo = "/automations") => {
     await register(payload);
     const me = await authApi.me();
     setUser(me);
-    router.push("/automations");
+    router.push(redirectTo);
   }, [router]);
 
   const handleLogout = useCallback(async () => {

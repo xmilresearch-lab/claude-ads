@@ -4,8 +4,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import Link from "next/link";
-import { Loader2 } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { useSearchParams } from "next/navigation";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/lib/hooks/use-auth";
@@ -14,13 +13,16 @@ import { toast } from "sonner";
 
 const schema = z.object({
   email:    z.string().email("Invalid email address"),
-  password: z.string().min(1, "Password is required"),
+  password: z.string().min(1, "Password required"),
 });
 
 type FormData = z.infer<typeof schema>;
 
 export function LoginForm() {
   const { login } = useAuth();
+  const searchParams = useSearchParams();
+  const from = searchParams.get("from") ?? "/automations";
+
   const {
     register,
     handleSubmit,
@@ -29,16 +31,19 @@ export function LoginForm() {
 
   const onSubmit = async (data: FormData) => {
     try {
-      await login(data);
+      await login(data, from);
     } catch (err) {
-      const message =
-        err instanceof ApiError ? err.message : "Login failed";
-      toast.error(message);
+      toast.error(err instanceof ApiError ? err.message : "Login failed");
     }
   };
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+      <div className="mb-5">
+        <h2 className="font-display text-xl font-semibold text-text-primary">Sign in</h2>
+        <p className="mt-1 text-sm text-text-secondary">Access your command center.</p>
+      </div>
+
       <div className="space-y-1.5">
         <Label htmlFor="email">Email</Label>
         <Input
@@ -46,6 +51,7 @@ export function LoginForm() {
           type="email"
           placeholder="operator@company.com"
           autoComplete="email"
+          className="input-command"
           {...register("email")}
         />
         {errors.email && (
@@ -60,6 +66,7 @@ export function LoginForm() {
           type="password"
           placeholder="••••••••"
           autoComplete="current-password"
+          className="input-command"
           {...register("password")}
         />
         {errors.password && (
@@ -67,19 +74,26 @@ export function LoginForm() {
         )}
       </div>
 
-      <Button type="submit" className="w-full" disabled={isSubmitting}>
+      <button
+        type="submit"
+        disabled={isSubmitting}
+        className="w-full flex items-center justify-center gap-2 rounded bg-amber px-4 py-2.5
+                   font-display text-sm font-semibold text-bg-base
+                   hover:bg-amber-dark transition-colors duration-150
+                   disabled:opacity-60 disabled:cursor-not-allowed"
+      >
         {isSubmitting ? (
           <>
-            <Loader2 className="h-4 w-4 animate-spin" />
+            <span className="status-live" />
             Authenticating…
           </>
         ) : (
-          "Sign In"
+          "Enter command center →"
         )}
-      </Button>
+      </button>
 
-      <p className="text-center text-sm text-text-muted">
-        No account?{" "}
+      <p className="text-center text-sm text-text-secondary">
+        Don&apos;t have an account?{" "}
         <Link href="/register" className="text-amber hover:underline">
           Register
         </Link>

@@ -1,33 +1,24 @@
-import { formatDistanceToNow, format, parseISO } from "date-fns";
+import { formatDistanceToNow, parseISO } from "date-fns";
 
-export function formatDate(iso: string): string {
-  return format(parseISO(iso), "MMM d, yyyy");
-}
+export const format = {
+  // Numbers
+  number:  (n: number) => new Intl.NumberFormat().format(n),
+  compact: (n: number) => new Intl.NumberFormat("en", { notation: "compact" }).format(n),
+  percent: (n: number) => `${(n * 100).toFixed(1)}%`,
+  tokens:  (n: number) => `${format.compact(n)} tokens`,
+  usd:     (n: number) => `$${n.toFixed(4)}`,
 
-export function formatDatetime(iso: string): string {
-  return format(parseISO(iso), "MMM d, yyyy HH:mm");
-}
+  // Dates
+  date:     (s: string) =>
+    new Date(s).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }),
+  time:     (s: string) =>
+    new Date(s).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" }),
+  datetime: (s: string) => `${format.date(s)} ${format.time(s)}`,
+  relative: (s: string) => formatDistanceToNow(parseISO(s), { addSuffix: true }),
 
-export function formatRelative(iso: string): string {
-  return formatDistanceToNow(parseISO(iso), { addSuffix: true });
-}
-
-export function formatNumber(n: number): string {
-  return new Intl.NumberFormat().format(n);
-}
-
-export function formatTokens(n: number): string {
-  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
-  if (n >= 1_000) return `${(n / 1_000).toFixed(1)}k`;
-  return String(n);
-}
-
-export function formatPercent(n: number, decimals = 1): string {
-  return `${n.toFixed(decimals)}%`;
-}
-
-export function formatDuration(ms: number): string {
-  if (ms < 1_000) return `${ms}ms`;
-  if (ms < 60_000) return `${(ms / 1_000).toFixed(1)}s`;
-  return `${Math.floor(ms / 60_000)}m ${Math.round((ms % 60_000) / 1_000)}s`;
-}
+  // Strings
+  truncate:  (s: string, n = 40) => s.length > n ? `${s.slice(0, n)}…` : s,
+  initials:  (email: string) => email[0]?.toUpperCase() ?? "?",
+  planLabel: (plan: string) =>
+    ({ free: "Free", pro: "Pro", admin: "Admin" } as Record<string, string>)[plan] ?? plan,
+};
