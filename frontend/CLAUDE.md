@@ -258,6 +258,8 @@ Never put secrets in `NEXT_PUBLIC_` variables.
 - **Do NOT** call `router.push()` for auth redirects in middleware — use `NextResponse.redirect()`
 - **Do NOT** render IDs, tokens, or metrics in `font-sans` — always `font-mono`
 - **Do NOT** skip Zod validation on any form input
+- **Do NOT** add settings sub-nav links to the sidebar's `NAV_ITEMS` array — they live in `SETTINGS_SUB_NAV` inside `sidebar.tsx` and expand only on `/settings/*` paths
+- **Do NOT** use `fetch()` directly in test files — mock API calls via vitest `vi.mock()`
 
 ---
 
@@ -266,10 +268,11 @@ Never put secrets in `NEXT_PUBLIC_` variables.
 | Sprint | Focus | Status |
 |---|---|---|
 | F1 | Next.js scaffold, design system, auth, layout, dashboard shell | ✅ Done |
-| F2 | Automations CRUD — list, create, edit, delete, toggle | 🔄 Active |
-| F3 | Content queue — calendar view, approval workflow | ⬜ |
-| F4 | Integrations — OAuth connect/disconnect flows | ⬜ |
-| F5 | Analytics dashboard — charts, usage stats | ⬜ |
-| F6 | Settings — workspace, billing, team | ⬜ |
-| F7 | Admin panel — workspaces, usage, system health | ⬜ |
-| F8 | E2E tests (Playwright) + accessibility audit | ⬜ |
+| F2 | Workspace setup, brand voice, onboarding, settings nav, timezone utils, vitest | ✅ Done |
+| F3 | Automations CRUD — list, create, edit, delete, toggle | 🔄 Active |
+| F4 | Content queue — calendar view, approval workflow | ⬜ |
+| F5 | Integrations — OAuth connect/disconnect flows | ⬜ |
+| F6 | Analytics dashboard — charts, usage stats | ⬜ |
+| F7 | Settings — workspace, billing, team | ⬜ |
+| F8 | Admin panel — workspaces, usage, system health | ⬜ |
+| F9 | E2E tests (Playwright) + accessibility audit | ⬜ |

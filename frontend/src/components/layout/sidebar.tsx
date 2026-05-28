@@ -12,6 +12,12 @@ import { APP_NAME } from "@/lib/utils/constants";
 import { useAuth } from "@/lib/hooks/use-auth";
 import { listContent } from "@/lib/api/endpoints/content";
 
+const SETTINGS_SUB_NAV = [
+  { href: "/settings/workspace",   label: "Workspace" },
+  { href: "/settings/brand-voice", label: "Brand Voice" },
+  { href: "/settings/account",     label: "Account" },
+] as const;
+
 const NAV_ITEMS = [
   { href: "/automations",  label: "Automations",   icon: Zap },
   { href: "/content",      label: "Content Queue",  icon: CheckSquare2, pendingBadge: true },
@@ -34,6 +40,8 @@ export function Sidebar() {
   });
   const pendingCount = pendingContent.length;
 
+  const onSettings = pathname.startsWith("/settings");
+
   return (
     <aside className="flex h-screen w-60 shrink-0 flex-col border-r border-border bg-bg-surface">
       {/* Logo */}
@@ -54,17 +62,54 @@ export function Sidebar() {
           {NAV_ITEMS.map(({ href, label, icon: Icon, ...rest }) => {
             const hasBadge = "pendingBadge" in rest;
             const active = pathname.startsWith(href);
+            const isSettingsItem = href === "/settings";
+
             return (
-              <Link key={href} href={href} className={cn("nav-item", active && "active")}>
-                <Icon className="h-4 w-4 shrink-0" />
-                <span className="flex-1">{label}</span>
-                {hasBadge && pendingCount > 0 && (
-                  <span className="flex h-4 min-w-4 items-center justify-center rounded-full bg-amber px-1 text-2xs font-mono font-bold text-bg-base">
-                    {pendingCount > 9 ? "9+" : pendingCount}
-                  </span>
+              <div key={href}>
+                <Link href={href} className={cn("nav-item", active && "active")}>
+                  <Icon className="h-4 w-4 shrink-0" />
+                  <span className="flex-1">{label}</span>
+                  {hasBadge && pendingCount > 0 && (
+                    <span className="flex h-4 min-w-4 items-center justify-center rounded-full bg-amber px-1 text-2xs font-mono font-bold text-bg-base">
+                      {pendingCount > 9 ? "9+" : pendingCount}
+                    </span>
+                  )}
+                  {active && !hasBadge && (
+                    <ChevronRight className={cn(
+                      "h-3 w-3 text-amber transition-transform duration-150",
+                      isSettingsItem && onSettings && "rotate-90",
+                    )} />
+                  )}
+                </Link>
+
+                {/* Settings sub-nav */}
+                {isSettingsItem && (
+                  <div
+                    className="overflow-hidden transition-all duration-150"
+                    style={{ maxHeight: onSettings ? "200px" : "0px" }}
+                  >
+                    <div className="ml-4 mt-0.5 space-y-0.5 border-l border-border pl-3 pb-1">
+                      {SETTINGS_SUB_NAV.map((sub) => {
+                        const subActive = pathname === sub.href || pathname.startsWith(sub.href + "/");
+                        return (
+                          <Link
+                            key={sub.href}
+                            href={sub.href}
+                            className={cn(
+                              "flex items-center rounded px-2 py-1 text-xs transition-colors",
+                              subActive
+                                ? "text-amber font-medium"
+                                : "text-text-muted hover:text-text-secondary",
+                            )}
+                          >
+                            {sub.label}
+                          </Link>
+                        );
+                      })}
+                    </div>
+                  </div>
                 )}
-                {active && !hasBadge && <ChevronRight className="h-3 w-3 text-amber" />}
-              </Link>
+              </div>
             );
           })}
         </div>
