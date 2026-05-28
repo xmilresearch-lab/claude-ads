@@ -16,6 +16,7 @@ const SETTINGS_SUB_NAV = [
   { href: "/settings/workspace",   label: "Workspace" },
   { href: "/settings/brand-voice", label: "Brand Voice" },
   { href: "/settings/account",     label: "Account" },
+  { href: "/settings/danger",      label: "Danger Zone" },
 ] as const;
 
 const NAV_ITEMS = [
