@@ -240,11 +240,11 @@ Every automation run follows this exact flow:
 
 ## MCP Server Reference
 
-|Server           |Port|Tools Count|Key Integrations              |
-|-----------------|----|-----------|------------------------------|
-|social-mcp-server|3001|6          |Twitter/X, LinkedIn, Instagram|
-|email-mcp-server |3002|7          |Gmail, SendGrid, Zendesk      |
-|crm-mcp-server   |3003|7          |HubSpot, Salesforce           |
+|Server           |Port|Tools Count|Key Integrations                                     |
+|-----------------|----|-----------|-----------------------------------------------------|
+|social-mcp-server|3001|17         |Twitter/X, LinkedIn, Instagram, Facebook, TikTok, Threads|
+|email-mcp-server |3002|7          |Gmail, SendGrid, Zendesk                             |
+|crm-mcp-server   |3003|7          |HubSpot, Salesforce                                  |
 
 All MCP servers require `Authorization: Bearer $MCP_AUTH_TOKEN` header.
 
@@ -283,12 +283,21 @@ All 10 backend sprints delivered:
 | 8  | REST API v1 — full surface + OpenAPI docs | ✅ |
 | 9  | Tests — 90%+ coverage, MCP evals, load test | ✅ |
 | 10 | Docker prod, CI/CD, runbook, handoff | ✅ |
+| 11 | Social Expansion — Facebook, TikTok, Threads | ✅ |
 
-Total MCP tools: 20 (6 social + 7 email + 7 crm)  
+Total MCP tools: 31 (17 social + 7 email + 7 crm)  
+Social platforms: Twitter/X, LinkedIn, Instagram, Facebook, TikTok, Threads  
 Test coverage: 90%+  
 MCP eval score: 7/10+ per server  
 Load tested: 100 concurrent users, p95 < 500ms  
 Security: OWASP LLM Top 10 mitigated
+
+### Social Expansion Notes (Sprint 11)
+- **Facebook**: OAuth with `pages_show_list`/`pages_manage_posts`; long-lived user token exchanged at callback; page-level tokens fetched and stored per workspace.
+- **Instagram**: Shares Facebook OAuth app; IG Business account discovered from connected Facebook Page; requires Meta Business Suite linking.
+- **TikTok**: PKCE (S256) OAuth v2; short-lived 24h access token auto-refreshed by Celery every 6h.
+- **Threads**: Short-lived token exchanged for 60-day long-lived token at callback; auto-refreshed by Celery when < 7 days remaining.
+- Credential rotation: `check_and_refresh_credentials` Celery task now auto-refreshes TikTok and Threads tokens in addition to flagging `expiring_soon`.
 
 Next: Frontend — Next.js 15 dashboard (see `docs/FRONTEND_HANDOFF.md`)
 

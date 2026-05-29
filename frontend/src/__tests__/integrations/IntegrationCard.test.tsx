@@ -30,10 +30,15 @@ describe("IntegrationCard", () => {
     expect(screen.getByText("Add API Key")).toBeInTheDocument();
   });
 
-  it("renders Coming Soon badge for instagram and disables connect button", () => {
+  it("renders Connect button for instagram (no longer Coming Soon)", () => {
     render(<IntegrationCard provider="instagram" onApiKeyConnect={vi.fn()} />, { wrapper: Wrapper });
-    expect(screen.getByText("Coming Soon")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /connect/i })).toBeDisabled();
+    expect(screen.queryByText("Coming Soon")).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /connect/i })).not.toBeDisabled();
+  });
+
+  it("renders note text for instagram when not connected", () => {
+    render(<IntegrationCard provider="instagram" onApiKeyConnect={vi.fn()} />, { wrapper: Wrapper });
+    expect(screen.getByText(/Facebook Page/i)).toBeInTheDocument();
   });
 
   it("calls onApiKeyConnect with provider id when api_key button clicked", () => {

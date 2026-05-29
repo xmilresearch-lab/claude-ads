@@ -12,6 +12,9 @@ export type ContentPlatform =
   | "twitter"
   | "linkedin"
   | "instagram"
+  | "facebook"
+  | "tiktok"
+  | "threads"
   | "gmail"
   | "sendgrid";
 

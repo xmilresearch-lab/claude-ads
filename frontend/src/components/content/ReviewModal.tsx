@@ -6,9 +6,17 @@ import { formatDistanceToNow, format } from "date-fns";
 import { CONTENT_STATUS_CONFIG, CONTENT_PLATFORM_CONFIG } from "@/lib/content/config";
 import { getCharCountState } from "@/lib/content/limits";
 import { useEditContent, useApproveContent } from "@/hooks/useContent";
-import type { ContentItem } from "@/lib/api/content";
+import type { ContentItem, ContentPlatform } from "@/lib/api/content";
 import { cn } from "@/lib/utils/cn";
 import { toast } from "sonner";
+
+const PLATFORM_CONTEXT: Partial<Record<ContentPlatform, string>> = {
+  twitter:   "Threads longer than 280 chars are split automatically.",
+  tiktok:    "TikTok captions appear below the video. Limit: 2,200 characters.",
+  threads:   "Threads supports text, links, images, and videos.",
+  facebook:  "Facebook posts support up to 63,206 characters.",
+  instagram: "Instagram captions support up to 2,200 characters plus hashtags.",
+};
 
 interface ReviewModalProps {
   item: ContentItem | null;
@@ -228,6 +236,11 @@ export function ReviewModal({ item, onClose, onReject }: ReviewModalProps) {
                   {charState.count} / {charState.limit}
                 </span>
               </div>
+            )}
+            {PLATFORM_CONTEXT[item.platform] && (
+              <p className="text-[10px] font-mono text-[#6B7280]/70 mt-1.5 leading-relaxed">
+                {PLATFORM_CONTEXT[item.platform]}
+              </p>
             )}
           </div>
 

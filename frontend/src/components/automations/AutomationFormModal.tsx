@@ -21,15 +21,26 @@ interface AutomationFormModalProps {
 
 const PLATFORMS: AutomationPlatform[] = ["social", "email", "support", "crm"];
 
+const SOCIAL_PLATFORMS = ["twitter", "linkedin", "instagram", "facebook", "tiktok", "threads"] as const;
+type SocialPlatform = typeof SOCIAL_PLATFORMS[number];
+
 const schema = z.object({
   name: z.string().min(3, "Name must be at least 3 characters").max(80),
   description: z.string().max(200).optional(),
   platform: z.enum(["social", "email", "support", "crm"]),
+  social_platform: z.enum(SOCIAL_PLATFORMS).optional(),
   cron_expression: z.string().refine(
     (val) => validateCron(val) === null,
     (val) => ({ message: validateCron(val) ?? "Invalid cron expression" }),
   ),
   integration_id: z.string().optional(),
+  config: z.object({
+    post_type: z.enum(["text", "video"]).optional(),
+    disable_comments: z.boolean().optional(),
+    reply_control: z.enum(["everyone", "accounts_you_follow", "mentioned_only"]).optional(),
+    page_id: z.string().optional(),
+    media_type: z.enum(["image", "video", "reel", "carousel"]).optional(),
+  }).optional(),
 });
 
 type FormValues = z.infer<typeof schema>;
@@ -64,6 +75,8 @@ export function AutomationFormModal({ open, automation, onClose }: AutomationFor
   });
 
   const cronValue = watch("cron_expression");
+  const selectedPlatform = watch("platform");
+  const selectedSocialPlatform = watch("social_platform");
   const selectedPreset = CRON_PRESETS.find((p) => p.value === cronValue && p.value !== "");
 
   useEffect(() => {
@@ -75,15 +88,19 @@ export function AutomationFormModal({ open, automation, onClose }: AutomationFor
             name: automation.name,
             description: automation.description ?? "",
             platform: automation.platform,
+            social_platform: (automation.config as { social_platform?: SocialPlatform })?.social_platform,
             cron_expression: automation.cron_expression,
             integration_id: automation.integration_id ?? "",
+            config: {},
           }
         : {
             name: "",
             description: "",
             platform: "social",
+            social_platform: undefined,
             cron_expression: "0 9 * * *",
             integration_id: "",
+            config: {},
           },
     );
   }, [open, automation, reset]);
@@ -105,7 +122,10 @@ export function AutomationFormModal({ open, automation, onClose }: AutomationFor
         description: values.description || undefined,
         platform: values.platform,
         cron_expression: values.cron_expression,
-        config: {},
+        config: {
+          ...(values.social_platform ? { social_platform: values.social_platform } : {}),
+          ...values.config,
+        },
         integration_id: values.integration_id || undefined,
       };
       if (isEdit && automation) {
@@ -212,6 +232,162 @@ export function AutomationFormModal({ open, automation, onClose }: AutomationFor
                 <p className="text-xs text-red-400 mt-1">{errors.platform.message}</p>
               )}
             </div>
+
+            {/* Social Platform + Platform Settings */}
+            {selectedPlatform === "social" && (
+              <>
+                <div>
+                  <label className="text-xs font-mono text-[#9CA3AF] mb-1 block">
+                    Social Platform
+                  </label>
+                  <Controller
+                    name="social_platform"
+                    control={control}
+                    render={({ field }) => (
+                      <div className="grid grid-cols-3 gap-1.5 bg-[#060709] p-1 rounded-[6px]">
+                        {SOCIAL_PLATFORMS.map((p) => (
+                          <button
+                            key={p}
+                            type="button"
+                            onClick={() => field.onChange(field.value === p ? undefined : p)}
+                            className={cn(
+                              "px-2 py-2 rounded-[4px] text-xs font-mono transition-colors capitalize",
+                              field.value === p
+                                ? "bg-[#0D0E14] border border-[#1E2330] text-white"
+                                : "text-[#6B7280] hover:text-white",
+                            )}
+                          >
+                            {p}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  />
+                </div>
+
+                {selectedSocialPlatform === "tiktok" && (
+                  <div className="space-y-3 border border-[#1E2330] rounded-[6px] p-4">
+                    <p className="text-xs font-mono text-[#9CA3AF] uppercase tracking-wider">TikTok Settings</p>
+                    <div>
+                      <label className="text-xs font-mono text-[#9CA3AF] mb-1 block">Post Type</label>
+                      <Controller
+                        name="config.post_type"
+                        control={control}
+                        render={({ field }) => (
+                          <div className="flex gap-1.5 bg-[#060709] p-1 rounded-[6px]">
+                            {(["text", "video"] as const).map((t) => (
+                              <button
+                                key={t}
+                                type="button"
+                                onClick={() => field.onChange(t)}
+                                className={cn(
+                                  "flex-1 px-2 py-1.5 rounded-[4px] text-xs font-mono transition-colors capitalize",
+                                  field.value === t
+                                    ? "bg-[#0D0E14] border border-[#1E2330] text-white"
+                                    : "text-[#6B7280] hover:text-white",
+                                )}
+                              >
+                                {t}
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                      />
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        id="disable_comments"
+                        className="rounded-[2px] border border-[#1E2330] bg-[#060709] accent-amber-500"
+                        {...register("config.disable_comments")}
+                      />
+                      <label htmlFor="disable_comments" className="text-xs font-mono text-[#9CA3AF] cursor-pointer">
+                        Disable comments
+                      </label>
+                    </div>
+                  </div>
+                )}
+
+                {selectedSocialPlatform === "threads" && (
+                  <div className="space-y-3 border border-[#1E2330] rounded-[6px] p-4">
+                    <p className="text-xs font-mono text-[#9CA3AF] uppercase tracking-wider">Threads Settings</p>
+                    <div>
+                      <label className="text-xs font-mono text-[#9CA3AF] mb-1 block">Reply Control</label>
+                      <Controller
+                        name="config.reply_control"
+                        control={control}
+                        render={({ field }) => (
+                          <div className="flex flex-col gap-1.5 bg-[#060709] p-1 rounded-[6px]">
+                            {(["everyone", "accounts_you_follow", "mentioned_only"] as const).map((opt) => (
+                              <button
+                                key={opt}
+                                type="button"
+                                onClick={() => field.onChange(opt)}
+                                className={cn(
+                                  "px-2 py-1.5 rounded-[4px] text-xs font-mono transition-colors text-left capitalize",
+                                  field.value === opt
+                                    ? "bg-[#0D0E14] border border-[#1E2330] text-white"
+                                    : "text-[#6B7280] hover:text-white",
+                                )}
+                              >
+                                {opt.replace(/_/g, " ")}
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {selectedSocialPlatform === "facebook" && (
+                  <div className="space-y-3 border border-[#1E2330] rounded-[6px] p-4">
+                    <p className="text-xs font-mono text-[#9CA3AF] uppercase tracking-wider">Facebook Settings</p>
+                    <div>
+                      <label className="text-xs font-mono text-[#9CA3AF] mb-1 block">Page ID (optional)</label>
+                      <input
+                        type="text"
+                        placeholder="Leave blank to use default page"
+                        className="input-command w-full px-3 py-2 rounded-[4px] text-xs"
+                        {...register("config.page_id")}
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {selectedSocialPlatform === "instagram" && (
+                  <div className="space-y-3 border border-[#1E2330] rounded-[6px] p-4">
+                    <p className="text-xs font-mono text-[#9CA3AF] uppercase tracking-wider">Instagram Settings</p>
+                    <div>
+                      <label className="text-xs font-mono text-[#9CA3AF] mb-1 block">Media Type</label>
+                      <Controller
+                        name="config.media_type"
+                        control={control}
+                        render={({ field }) => (
+                          <div className="grid grid-cols-2 gap-1.5 bg-[#060709] p-1 rounded-[6px]">
+                            {(["image", "video", "reel", "carousel"] as const).map((t) => (
+                              <button
+                                key={t}
+                                type="button"
+                                onClick={() => field.onChange(t)}
+                                className={cn(
+                                  "px-2 py-1.5 rounded-[4px] text-xs font-mono transition-colors capitalize",
+                                  field.value === t
+                                    ? "bg-[#0D0E14] border border-[#1E2330] text-white"
+                                    : "text-[#6B7280] hover:text-white",
+                                )}
+                              >
+                                {t}
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                      />
+                    </div>
+                  </div>
+                )}
+              </>
+            )}
 
             {/* Schedule */}
             <div>
