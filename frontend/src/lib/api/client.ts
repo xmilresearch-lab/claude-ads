@@ -1,4 +1,4 @@
-import { API_URL } from "@/lib/utils/constants";
+import { env } from "@/lib/env";
 import { getAccessToken, refreshAccessToken, clearTokens } from "@/lib/auth/tokens";
 
 export class ApiError extends Error {
@@ -29,7 +29,7 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
     headers["Authorization"] = `Bearer ${token}`;
   }
 
-  const res = await fetch(`${API_URL}${path}`, { ...init, headers });
+  const res = await fetch(`${env.apiUrl}${path}`, { ...init, headers });
 
   if (res.status === 401 && !skipAuth) {
     const newToken = await refreshAccessToken();
@@ -39,7 +39,7 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
       throw new ApiError("unauthorized", "Session expired", 401);
     }
     headers["Authorization"] = `Bearer ${newToken}`;
-    const retry = await fetch(`${API_URL}${path}`, { ...init, headers });
+    const retry = await fetch(`${env.apiUrl}${path}`, { ...init, headers });
     return parseResponse<T>(retry);
   }
 
