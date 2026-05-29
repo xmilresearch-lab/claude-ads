@@ -3,9 +3,11 @@ import uuid
 from datetime import UTC, datetime, timedelta
 from typing import Any
 
+import httpx
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.config import settings
 from app.core.security import decrypt_credential, encrypt_credential
 from app.models.audit_log import AuditLog
 from app.models.integration import Integration
@@ -121,3 +123,44 @@ async def mark_integration_error(
         )
     )
     await db.commit()
+
+
+async def refresh_tiktok_token(refresh_token: str) -> dict[str, Any]:
+    """
+    Exchange a TikTok refresh token for a new access token + refresh token.
+    New access_token valid 24h; new refresh_token valid 365 days.
+    """
+    async with httpx.AsyncClient(timeout=15.0) as client:
+        r = await client.post(
+            "https://open.tiktokapis.com/v2/oauth/token/",
+            data={
+                "client_key": settings.TIKTOK_CLIENT_KEY,
+                "client_secret": settings.TIKTOK_CLIENT_SECRET,
+                "grant_type": "refresh_token",
+                "refresh_token": refresh_token,
+            },
+            headers={"Content-Type": "application/x-www-form-urlencoded"},
+        )
+        try:
+            return r.json()  # type: ignore[no-any-return]
+        except Exception:
+            return {}
+
+
+async def refresh_threads_token(access_token: str) -> dict[str, Any]:
+    """
+    Refresh a Threads long-lived token. Only valid when token is >= 24h old.
+    New token valid ~60 days.
+    """
+    async with httpx.AsyncClient(timeout=15.0) as client:
+        r = await client.get(
+            "https://graph.threads.net/refresh_access_token",
+            params={
+                "grant_type": "th_refresh_token",
+                "access_token": access_token,
+            },
+        )
+        try:
+            return r.json()  # type: ignore[no-any-return]
+        except Exception:
+            return {}

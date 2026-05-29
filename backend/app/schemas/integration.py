@@ -5,7 +5,8 @@ from typing import Literal
 from pydantic import BaseModel
 
 ALL_PROVIDER_TYPES = Literal[
-    "twitter", "linkedin", "gmail", "hubspot", "salesforce", "sendgrid", "zendesk"
+    "twitter", "linkedin", "gmail", "hubspot", "salesforce", "sendgrid", "zendesk",
+    "facebook", "instagram", "tiktok", "threads",
 ]
 
 
