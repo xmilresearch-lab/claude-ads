@@ -272,7 +272,7 @@ Never put secrets in `NEXT_PUBLIC_` variables.
 | F3 | Integrations — provider configs, API key modal, OAuth connect/disconnect, HealthStatusBar, 12 unit tests | ✅ Done |
 | F4 | Automations CRUD — API layer, cron utility, hooks (polling), AutomationCard, AutomationFormModal, RunDetailModal, page, 12 tests | ✅ Done |
 | F5 | Content queue — contentApi (7 endpoints), CONTENT_STATUS_CONFIG (6 statuses), getCharCountState (platform char limits), useContent hooks (polls 10s pending / 5s publishing), ContentCard (checkbox select), ReviewModal (inline edit + char counter + auto-save on blur), RejectModal, BulkActionBar (floating, inline reject reason), ContentQueuePage (filter tabs + platform filter + pagination), sidebar amber count badge, 12 unit tests | ✅ Done |
-| F6 | Analytics dashboard — charts, usage stats | ⬜ |
+| F6 | Analytics — analyticsApi (6 endpoints + CSV export), dateRange utility (buildDateAxis, fillTimeSeries, formatters), useAnalytics hooks (5min stale, no polling), ChartPrimitives (custom tooltip/colors), KpiCard, RunTrendChart (stacked area), TokenUsageChart (dual-axis), PlatformChart (horizontal bars), AutomationTable (sortable), AnalyticsPage (date range toggle + CSV export), 12 unit tests | ✅ Done |
 | F7 | Settings — workspace, billing, team | ⬜ |
 | F8 | Admin panel — workspaces, usage, system health | ⬜ |
 | F9 | E2E tests (Playwright) + accessibility audit | ⬜ |
@@ -394,4 +394,49 @@ src/components/content/
   BulkActionBar.tsx                      → floating bulk action bar, data-testid="selected-count"
 src/app/(dashboard)/content/page.tsx     → queue page with tabs + pagination
 src/__tests__/content/                   → 12 unit tests (5 limits + 4 card + 3 bulk)
+```
+
+### Analytics (Sprint F6)
+
+**Data Flow**
+- All 5 analytics queries keyed by `DateRange` ('7d' | '30d' | '90d')
+- `staleTime`: 5 minutes — analytics data doesn't change rapidly
+- No `refetchInterval` — switching date range creates new query keys → fresh fetch
+
+**Chart System**
+- All charts import shared primitives from `ChartPrimitives.tsx`:
+  `ChartTooltip`, `CHART_COLORS`, `xAxisProps`, `yAxisProps`, `gridProps`, `ChartSkeleton`, `ChartEmpty`
+- `CHART_COLORS` order: cyan (#06B6D4), amber (#F59E0B), violet, emerald, rose
+- Never use raw recharts colors or className-based colors in charts
+- `recharts` `ResponsiveContainer` used for all charts (no fixed width)
+
+**Sparse Time Series Handling**
+- `fillTimeSeries()` merges backend data with a full date axis, filling gaps with zero-value defaults
+- `buildDateAxis()` generates the full axis ending today
+
+**CSV Export**
+- `exportAnalyticsCSV()` uses raw `fetch` (not apiClient) to get a blob response
+- Creates a temporary `<a>` with `download` attribute, clicks it, revokes the object URL
+- Filename format: `"analytics-{range}-{YYYY-MM-DD}.csv"`
+
+**AutomationTable**
+- Client-side sort by `total_runs` or `tokens_used` (asc/desc), default `total_runs desc`
+- Sort icon rendered as plain function (`sortIcon(col)`) — NOT a component declared inside render
+  (avoids `react-hooks/static-components` lint error)
+- Capped at 10 rows with "Show all" expansion
+
+**Key Files Added in F6**
+```
+src/lib/api/analytics.ts                 → 6 functions + all types
+src/lib/analytics/dateRange.ts           → buildDateAxis, fillTimeSeries, formatters
+src/hooks/useAnalytics.ts                → analyticsKeys + 6 hooks
+src/components/analytics/
+  ChartPrimitives.tsx                    → shared tooltip, colors, axis props
+  KpiCard.tsx                            → KPI with trend indicator
+  RunTrendChart.tsx                      → stacked area, successful vs failed
+  TokenUsageChart.tsx                    → line chart, dual Y-axis (tokens + cost)
+  PlatformChart.tsx                      → horizontal bar, published/pending/failed
+  AutomationTable.tsx                    → sortable data table
+src/app/(dashboard)/analytics/page.tsx  → full dashboard page
+src/__tests__/analytics/                 → 12 unit tests (7 dateRange + 5 KpiCard)
 ```
