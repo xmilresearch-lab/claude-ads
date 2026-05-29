@@ -1,6 +1,9 @@
+import base64
+import hashlib
 import json
 import secrets
 import time
+import urllib.parse
 import uuid
 from datetime import UTC, datetime
 from typing import Annotated
@@ -68,6 +71,34 @@ _OAUTH_CONFIG: dict[str, dict[str, str]] = {
         "token_url": "https://api.hubapi.com/oauth/v1/token",
         "client_secret_key": "HUBSPOT_CLIENT_SECRET",
     },
+    "facebook": {
+        "auth_url": "https://www.facebook.com/v19.0/dialog/oauth",
+        "scopes": "pages_manage_posts pages_read_engagement pages_show_list instagram_basic instagram_content_publish instagram_manage_insights",
+        "client_id_key": "FACEBOOK_CLIENT_ID",
+        "token_url": "https://graph.facebook.com/v19.0/oauth/access_token",
+        "client_secret_key": "FACEBOOK_CLIENT_SECRET",
+    },
+    "instagram": {
+        "auth_url": "https://www.facebook.com/v19.0/dialog/oauth",
+        "scopes": "instagram_basic instagram_content_publish instagram_manage_insights pages_show_list",
+        "client_id_key": "FACEBOOK_CLIENT_ID",
+        "token_url": "https://graph.facebook.com/v19.0/oauth/access_token",
+        "client_secret_key": "FACEBOOK_CLIENT_SECRET",
+    },
+    "tiktok": {
+        "auth_url": "https://www.tiktok.com/v2/auth/authorize/",
+        "scopes": "user.info.basic,video.upload,video.publish",
+        "client_id_key": "TIKTOK_CLIENT_KEY",
+        "token_url": "https://open.tiktokapis.com/v2/oauth/token/",
+        "client_secret_key": "TIKTOK_CLIENT_SECRET",
+    },
+    "threads": {
+        "auth_url": "https://threads.net/oauth/authorize",
+        "scopes": "threads_basic threads_content_publish threads_read_replies threads_manage_replies threads_manage_insights",
+        "client_id_key": "THREADS_CLIENT_ID",
+        "token_url": "https://graph.threads.net/oauth/access_token",
+        "client_secret_key": "THREADS_CLIENT_SECRET",
+    },
 }
 
 _HEALTH_CHECK_URLS: dict[str, str] = {
@@ -78,7 +109,24 @@ _HEALTH_CHECK_URLS: dict[str, str] = {
     "linkedin": "https://api.linkedin.com/v2/me",
     "sendgrid": "https://api.sendgrid.com/v3/user/account",
     "salesforce": "https://{instance_url}/services/data/v57.0/",
+    # New platforms handled by _check_provider_health directly
+    "facebook": "",
+    "instagram": "",
+    "tiktok": "",
+    "threads": "",
 }
+
+# ── PKCE helpers ───────────────────────────────────────────────────────────────
+
+
+def _generate_pkce_pair() -> tuple[str, str]:
+    """Returns (code_verifier, code_challenge) for PKCE (S256 method)."""
+    verifier = base64.urlsafe_b64encode(secrets.token_bytes(32)).rstrip(b"=").decode()
+    challenge = base64.urlsafe_b64encode(
+        hashlib.sha256(verifier.encode()).digest()
+    ).rstrip(b"=").decode()
+    return verifier, challenge
+
 
 # ── Internal helpers ───────────────────────────────────────────────────────────
 
@@ -124,6 +172,77 @@ async def _call_provider_api(url: str, headers: dict[str, str]) -> tuple[int, di
         except Exception:
             body = {}
         return r.status_code, body
+
+
+async def _check_provider_health(
+    integration_type: str,
+    creds: dict,
+    meta: dict | None,
+) -> tuple[int, dict]:
+    """Provider-specific health check returning (http_status_code, body)."""
+    match integration_type:
+        case "facebook":
+            token = creds.get("access_token", "")
+            async with httpx.AsyncClient(timeout=10.0) as client:
+                r = await client.get(
+                    "https://graph.facebook.com/v19.0/me/accounts",
+                    params={"access_token": token, "fields": "id,name"},
+                )
+                try:
+                    return r.status_code, r.json()
+                except Exception:
+                    return r.status_code, {}
+
+        case "instagram":
+            token = creds.get("page_access_token") or creds.get("access_token", "")
+            ig_user_id = creds.get("ig_user_id", "")
+            if not ig_user_id:
+                return 503, {}
+            async with httpx.AsyncClient(timeout=10.0) as client:
+                r = await client.get(
+                    f"https://graph.facebook.com/v19.0/{ig_user_id}",
+                    params={"fields": "id", "access_token": token},
+                )
+                try:
+                    return r.status_code, r.json()
+                except Exception:
+                    return r.status_code, {}
+
+        case "tiktok":
+            token = creds.get("access_token", "")
+            async with httpx.AsyncClient(timeout=10.0) as client:
+                r = await client.post(
+                    "https://open.tiktokapis.com/v2/user/info/",
+                    headers={
+                        "Authorization": f"Bearer {token}",
+                        "Content-Type": "application/json; charset=UTF-8",
+                    },
+                    json={"fields": ["open_id", "display_name"]},
+                )
+                try:
+                    body = r.json()
+                    err = body.get("error", {})
+                    if err.get("code") and err.get("code") != "ok":
+                        return 401, body
+                    return r.status_code, body
+                except Exception:
+                    return r.status_code, {}
+
+        case "threads":
+            token = creds.get("access_token", "")
+            async with httpx.AsyncClient(timeout=10.0) as client:
+                r = await client.get(
+                    "https://graph.threads.net/v1.0/me",
+                    params={"fields": "id", "access_token": token},
+                )
+                try:
+                    return r.status_code, r.json()
+                except Exception:
+                    return r.status_code, {}
+
+        case _:
+            url, headers = _build_health_check_request(integration_type, creds, meta)
+            return await _call_provider_api(url, headers)
 
 
 async def _exchange_oauth_code(provider: str, code: str, redirect_uri: str) -> dict:
@@ -178,6 +297,59 @@ async def _fetch_oauth_userinfo(provider: str, access_token: str) -> dict:
         normalized["account_id"] = str(body.get("hub_id", ""))
         normalized["account_name"] = body.get("hub_domain", "")
     return normalized
+
+
+async def _exchange_facebook_long_lived_token(short_token: str) -> dict:
+    """Exchange a short-lived FB user token for a ~60-day long-lived token."""
+    async with httpx.AsyncClient(timeout=15.0) as client:
+        r = await client.get(
+            "https://graph.facebook.com/v19.0/oauth/access_token",
+            params={
+                "grant_type": "fb_exchange_token",
+                "client_id": settings.FACEBOOK_CLIENT_ID,
+                "client_secret": settings.FACEBOOK_CLIENT_SECRET,
+                "fb_exchange_token": short_token,
+            },
+        )
+        try:
+            return r.json()  # type: ignore[no-any-return]
+        except Exception:
+            return {}
+
+
+async def _fetch_facebook_pages(user_token: str) -> list[dict]:
+    """Fetch all Pages (with page-level tokens) the user manages."""
+    async with httpx.AsyncClient(timeout=15.0) as client:
+        r = await client.get(
+            "https://graph.facebook.com/v19.0/me/accounts",
+            params={
+                "fields": "id,name,access_token,instagram_business_account",
+                "access_token": user_token,
+            },
+        )
+        try:
+            data = r.json()
+            return data.get("data", [])  # type: ignore[no-any-return]
+        except Exception:
+            return []
+
+
+async def _fetch_tiktok_user_info(access_token: str) -> dict:
+    """Fetch TikTok user display info."""
+    async with httpx.AsyncClient(timeout=10.0) as client:
+        r = await client.post(
+            "https://open.tiktokapis.com/v2/user/info/",
+            headers={
+                "Authorization": f"Bearer {access_token}",
+                "Content-Type": "application/json; charset=UTF-8",
+            },
+            json={"fields": ["open_id", "display_name", "avatar_url"]},
+        )
+        try:
+            data = r.json()
+            return data.get("data", {}).get("user", {})  # type: ignore[no-any-return]
+        except Exception:
+            return {}
 
 
 async def _validate_apikey(
@@ -319,7 +491,7 @@ async def get_integration(
     summary="Get Integration Health",
     description=(
         "Perform a live health check against the external provider API using the stored credentials. "
-        "Returns latency in milliseconds and `healthy` or `unhealthy` status. "
+        "Returns latency in milliseconds and `healthy`, `unhealthy`, `expiring`, or `error` status. "
         "Returns `error` if credentials cannot be decrypted."
     ),
     response_description="Live health status and latency",
@@ -345,9 +517,42 @@ async def get_integration_status(
             ),
             request,
         )
-    url, headers = _build_health_check_request(integration.type, creds, integration.meta)
+
+    # Short-lived token expiry check (TikTok: 24h, Threads: 60 days)
+    now_ts = datetime.now(UTC).timestamp()
+    expires_at = creds.get("expires_at")
+    if expires_at is not None:
+        secs_until_expiry = float(expires_at) - now_ts
+        if secs_until_expiry <= 0:
+            return ok(
+                IntegrationStatusResponse(
+                    status="unhealthy",
+                    latency_ms=0.0,
+                    last_checked=datetime.now(UTC).isoformat(),
+                ),
+                request,
+            )
+        if integration.type == "tiktok" and secs_until_expiry < 3600:
+            return ok(
+                IntegrationStatusResponse(
+                    status="expiring",
+                    latency_ms=0.0,
+                    last_checked=datetime.now(UTC).isoformat(),
+                ),
+                request,
+            )
+        if integration.type == "threads" and secs_until_expiry < 7 * 86400:
+            return ok(
+                IntegrationStatusResponse(
+                    status="expiring",
+                    latency_ms=0.0,
+                    last_checked=datetime.now(UTC).isoformat(),
+                ),
+                request,
+            )
+
     start = time.monotonic()
-    status_code, _ = await _call_provider_api(url, headers)
+    status_code, _ = await _check_provider_health(integration.type, creds, integration.meta)
     latency_ms = round((time.monotonic() - start) * 1000, 2)
     health_status = "healthy" if status_code < 400 else "unhealthy"
     return ok(
@@ -364,8 +569,9 @@ async def get_integration_status(
     "/oauth/initiate",
     summary="Initiate OAuth Flow",
     description=(
-        "Generate an OAuth 2.0 authorization URL for a supported provider (Twitter, LinkedIn, Gmail, HubSpot). "
+        "Generate an OAuth 2.0 authorization URL for a supported provider. "
         "A one-time `state` token is stored in Redis for 10 minutes to prevent CSRF. "
+        "TikTok flows also store a PKCE code_verifier. "
         "Redirect the user to `authorization_url` to begin the OAuth flow."
     ),
     response_description="Authorization URL and state token",
@@ -386,22 +592,41 @@ async def oauth_initiate(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"Provider {provider!r} does not use OAuth. Use the /apikey endpoint.",
         )
-    state = secrets.token_urlsafe(32)
+    # State embeds provider name so callback can verify it matches the request
+    state = f"{provider}:{secrets.token_urlsafe(16)}"
     await redis.setex(
         f"oauth_state:{state}",
         600,
         json.dumps({"workspace_id": str(workspace.id), "provider": provider}),
     )
     cfg = _OAUTH_CONFIG[provider]
-    client_id = getattr(settings, cfg["client_id_key"])
-    params = "&".join([
-        f"client_id={client_id}",
-        f"redirect_uri={settings.OAUTH_REDIRECT_URI}",
-        "response_type=code",
-        f"scope={cfg['scopes'].replace(' ', '%20')}",
-        f"state={state}",
-    ])
-    auth_url = f"{cfg['auth_url']}?{params}"
+    client_id = getattr(settings, cfg["client_id_key"], "")
+    redirect_uri = settings.OAUTH_REDIRECT_URI
+
+    params: dict[str, str] = {
+        "response_type": "code",
+        "state": state,
+    }
+
+    if provider == "tiktok":
+        code_verifier, code_challenge = _generate_pkce_pair()
+        await redis.setex(f"pkce:{state}", 600, code_verifier)
+        params["client_key"] = client_id
+        params["scope"] = cfg["scopes"]  # comma-separated for TikTok
+        params["redirect_uri"] = redirect_uri
+        params["code_challenge"] = code_challenge
+        params["code_challenge_method"] = "S256"
+    elif provider in ("facebook", "instagram"):
+        params["client_id"] = client_id
+        params["redirect_uri"] = redirect_uri
+        params["scope"] = cfg["scopes"].replace(" ", ",")
+        params["display"] = "page"
+    else:
+        params["client_id"] = client_id
+        params["redirect_uri"] = redirect_uri
+        params["scope"] = cfg["scopes"]
+
+    auth_url = cfg["auth_url"] + "?" + urllib.parse.urlencode(params)
     return ok({"authorization_url": auth_url, "state": state}, request)
 
 
@@ -410,8 +635,8 @@ async def oauth_initiate(
     summary="Complete OAuth Callback",
     description=(
         "Exchange the OAuth authorization code for tokens. "
-        "Verifies the one-time `state` token (CSRF protection), exchanges the code with the provider, "
-        "fetches user info, encrypts tokens with AES-256-GCM, and upserts the integration record. "
+        "Verifies the one-time `state` token (CSRF protection), performs provider-specific "
+        "token exchange, encrypts credentials with AES-256-GCM, and upserts the integration. "
         "Writes an `integration_connected` audit log entry."
     ),
     response_description="The connected integration record",
@@ -426,7 +651,7 @@ async def oauth_callback(
     db: Annotated[AsyncSession, Depends(get_db)],
     redis: Annotated[aioredis.Redis, Depends(get_redis)],
 ) -> DataResponse[IntegrationResponse]:
-    # 1. Verify state (one-time use)
+    # 1. Verify state (one-time use, CSRF protection)
     state_key = f"oauth_state:{payload.state}"
     stored = await redis.get(state_key)
     if not stored:
@@ -435,40 +660,220 @@ async def oauth_callback(
             detail="Invalid or expired OAuth state",
         )
     await redis.delete(state_key)
-
-    # 2. Exchange code for tokens
-    tokens = await _exchange_oauth_code(
-        payload.provider, payload.code, settings.OAUTH_REDIRECT_URI
-    )
-    if "access_token" not in tokens:
+    state_data = json.loads(stored)
+    provider = payload.provider
+    if state_data.get("provider") != provider:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="OAuth token exchange failed",
+            detail="OAuth state provider mismatch",
         )
 
-    # 3. Fetch provider user info
-    user_info = await _fetch_oauth_userinfo(payload.provider, tokens["access_token"])
+    now_ts = datetime.now(UTC).timestamp()
+    credentials: dict = {}
+    safe_meta: dict = {}
 
-    # 4. Encrypt — never store token in plain text
-    cred_data = {
-        "access_token": tokens["access_token"],
-        "refresh_token": tokens.get("refresh_token", ""),
-    }
-    encrypted = encrypt_credential(json.dumps(cred_data))
-    safe_meta = {k: v for k, v in user_info.items()}
+    # ── Facebook ──────────────────────────────────────────────────────────────
+    if provider == "facebook":
+        token_resp = await _exchange_oauth_code(
+            "facebook", payload.code, settings.OAUTH_REDIRECT_URI
+        )
+        if "access_token" not in token_resp:
+            raise HTTPException(status_code=400, detail="Facebook token exchange failed")
+        long_lived = await _exchange_facebook_long_lived_token(token_resp["access_token"])
+        if "access_token" not in long_lived:
+            raise HTTPException(status_code=400, detail="Failed to exchange long-lived Facebook token")
+        pages = await _fetch_facebook_pages(long_lived["access_token"])
+        expires_in = long_lived.get("expires_in", 5183944)
+        credentials = {
+            "access_token": long_lived["access_token"],
+            "expires_in": expires_in,
+            "expires_at": now_ts + float(expires_in),
+            "pages": [
+                {
+                    "id": p["id"],
+                    "name": p["name"],
+                    "access_token": p["access_token"],
+                    "instagram_business_account_id": (
+                        p.get("instagram_business_account", {}).get("id")
+                    ),
+                }
+                for p in pages
+            ],
+        }
+        display_name = pages[0]["name"] if pages else "Facebook"
+        safe_meta = {"account_name": display_name, "page_count": len(pages)}
 
-    # 5. Upsert integration
-    integration = await _upsert_integration(
-        workspace, payload.provider, encrypted, safe_meta, db
-    )
+    # ── Instagram ─────────────────────────────────────────────────────────────
+    elif provider == "instagram":
+        token_resp = await _exchange_oauth_code(
+            "facebook", payload.code, settings.OAUTH_REDIRECT_URI
+        )
+        if "access_token" not in token_resp:
+            raise HTTPException(status_code=400, detail="Instagram token exchange failed")
+        long_lived = await _exchange_facebook_long_lived_token(token_resp["access_token"])
+        if "access_token" not in long_lived:
+            raise HTTPException(status_code=400, detail="Failed to exchange long-lived Instagram token")
+        pages = await _fetch_facebook_pages(long_lived["access_token"])
+        ig_account: dict | None = None
+        for page in pages:
+            if page.get("instagram_business_account"):
+                ig_account = {
+                    "id": page["instagram_business_account"]["id"],
+                    "page_id": page["id"],
+                    "page_access_token": page["access_token"],
+                    "page_name": page["name"],
+                }
+                break
+        if not ig_account:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=(
+                    "No Instagram Business account found linked to your Facebook Pages. "
+                    "Connect your Instagram account to a Facebook Page in Meta Business Suite first."
+                ),
+            )
+        expires_in = long_lived.get("expires_in", 5183944)
+        credentials = {
+            "access_token": long_lived["access_token"],
+            "ig_user_id": ig_account["id"],
+            "page_id": ig_account["page_id"],
+            "page_access_token": ig_account["page_access_token"],
+            "expires_in": expires_in,
+            "expires_at": now_ts + float(expires_in),
+        }
+        safe_meta = {
+            "account_name": f"Instagram ({ig_account['page_name']})",
+            "ig_user_id": ig_account["id"],
+        }
 
-    # 6. Audit log
+    # ── TikTok ────────────────────────────────────────────────────────────────
+    elif provider == "tiktok":
+        pkce_key = f"pkce:{payload.state}"
+        code_verifier_raw = await redis.get(pkce_key)
+        if not code_verifier_raw:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="PKCE state expired or invalid. Please try connecting again.",
+            )
+        await redis.delete(pkce_key)
+        code_verifier = (
+            code_verifier_raw.decode()
+            if isinstance(code_verifier_raw, bytes)
+            else str(code_verifier_raw)
+        )
+        async with httpx.AsyncClient(timeout=15.0) as client:
+            r = await client.post(
+                "https://open.tiktokapis.com/v2/oauth/token/",
+                data={
+                    "client_key": settings.TIKTOK_CLIENT_KEY,
+                    "client_secret": settings.TIKTOK_CLIENT_SECRET,
+                    "code": payload.code,
+                    "grant_type": "authorization_code",
+                    "redirect_uri": settings.OAUTH_REDIRECT_URI,
+                    "code_verifier": code_verifier,
+                },
+                headers={"Content-Type": "application/x-www-form-urlencoded"},
+            )
+            token_data = r.json()
+        if "access_token" not in token_data:
+            raise HTTPException(status_code=400, detail="TikTok token exchange failed")
+        user_info = await _fetch_tiktok_user_info(token_data["access_token"])
+        tt_expires_in = int(token_data.get("expires_in", 86400))
+        tt_refresh_expires_in = int(token_data.get("refresh_expires_in", 31536000))
+        credentials = {
+            "access_token": token_data["access_token"],
+            "refresh_token": token_data.get("refresh_token", ""),
+            "open_id": token_data.get("open_id", ""),
+            "expires_in": tt_expires_in,
+            "expires_at": now_ts + float(tt_expires_in),
+            "refresh_expires_in": tt_refresh_expires_in,
+            "refresh_expires_at": now_ts + float(tt_refresh_expires_in),
+        }
+        tt_display = user_info.get("display_name", token_data.get("open_id", "TikTok"))
+        safe_meta = {
+            "account_name": f"TikTok ({tt_display})",
+            "open_id": token_data.get("open_id", ""),
+        }
+
+    # ── Threads ───────────────────────────────────────────────────────────────
+    elif provider == "threads":
+        async with httpx.AsyncClient(timeout=15.0) as client:
+            short_r = await client.post(
+                "https://graph.threads.net/oauth/access_token",
+                data={
+                    "client_id": settings.THREADS_CLIENT_ID,
+                    "client_secret": settings.THREADS_CLIENT_SECRET,
+                    "grant_type": "authorization_code",
+                    "redirect_uri": settings.OAUTH_REDIRECT_URI,
+                    "code": payload.code,
+                },
+                headers={"Content-Type": "application/x-www-form-urlencoded"},
+            )
+            short_token = short_r.json()
+        if "access_token" not in short_token:
+            raise HTTPException(status_code=400, detail="Threads token exchange failed")
+        async with httpx.AsyncClient(timeout=15.0) as client:
+            long_r = await client.get(
+                "https://graph.threads.net/access_token",
+                params={
+                    "grant_type": "th_exchange_token",
+                    "client_secret": settings.THREADS_CLIENT_SECRET,
+                    "access_token": short_token["access_token"],
+                },
+            )
+            long_token = long_r.json()
+        if "access_token" not in long_token:
+            raise HTTPException(status_code=400, detail="Failed to exchange Threads long-lived token")
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            me_r = await client.get(
+                "https://graph.threads.net/v1.0/me",
+                params={
+                    "fields": "id,username,name",
+                    "access_token": long_token["access_token"],
+                },
+            )
+            me = me_r.json()
+        th_expires_in = int(long_token.get("expires_in", 5183944))
+        credentials = {
+            "access_token": long_token["access_token"],
+            "threads_user_id": me.get("id", ""),
+            "username": me.get("username", ""),
+            "expires_in": th_expires_in,
+            "expires_at": now_ts + float(th_expires_in),
+        }
+        th_username = me.get("username", me.get("id", "threads"))
+        safe_meta = {
+            "account_name": f"Threads (@{th_username})",
+            "threads_user_id": me.get("id", ""),
+            "username": me.get("username", ""),
+        }
+
+    # ── Standard OAuth (twitter, linkedin, gmail, hubspot) ───────────────────
+    else:
+        tokens = await _exchange_oauth_code(
+            provider, payload.code, settings.OAUTH_REDIRECT_URI
+        )
+        if "access_token" not in tokens:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="OAuth token exchange failed",
+            )
+        user_info = await _fetch_oauth_userinfo(provider, tokens["access_token"])
+        credentials = {
+            "access_token": tokens["access_token"],
+            "refresh_token": tokens.get("refresh_token", ""),
+        }
+        safe_meta = {k: v for k, v in user_info.items()}
+
+    # ── Encrypt & store ───────────────────────────────────────────────────────
+    encrypted = encrypt_credential(json.dumps(credentials))
+    integration = await _upsert_integration(workspace, provider, encrypted, safe_meta, db)
     db.add(
         AuditLog(
             workspace_id=workspace.id,
             action="integration_connected",
             actor="user",
-            log_metadata={"integration_type": payload.provider, "account": safe_meta},
+            log_metadata={"integration_type": provider, "account": safe_meta},
         )
     )
     await db.commit()

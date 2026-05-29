@@ -60,6 +60,9 @@ class Settings(BaseSettings):
     TIKTOK_CLIENT_SECRET: str = ""
     THREADS_CLIENT_ID: str = ""
     THREADS_CLIENT_SECRET: str = ""
+    FACEBOOK_REDIRECT_URI: str = ""
+    TIKTOK_REDIRECT_URI: str = ""
+    THREADS_REDIRECT_URI: str = ""
 
     @property
     def database_url_sync(self) -> str:
