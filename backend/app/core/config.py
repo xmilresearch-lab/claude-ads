@@ -54,6 +54,12 @@ class Settings(BaseSettings):
     GOOGLE_CLIENT_SECRET: str = ""
     HUBSPOT_CLIENT_ID: str = ""
     HUBSPOT_CLIENT_SECRET: str = ""
+    FACEBOOK_CLIENT_ID: str = ""
+    FACEBOOK_CLIENT_SECRET: str = ""
+    TIKTOK_CLIENT_KEY: str = ""
+    TIKTOK_CLIENT_SECRET: str = ""
+    THREADS_CLIENT_ID: str = ""
+    THREADS_CLIENT_SECRET: str = ""
 
     @property
     def database_url_sync(self) -> str:
