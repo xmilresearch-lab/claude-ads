@@ -5,9 +5,13 @@ import { bearerAuth } from "./lib/auth.js";
 import { registerTwitterTools } from "./tools/twitter.js";
 import { registerLinkedInTools } from "./tools/linkedin.js";
 import { registerInstagramTools } from "./tools/instagram.js";
+import { registerFacebookTools } from "./tools/facebook.js";
+import { registerTikTokTools } from "./tools/tiktok.js";
+import { registerThreadsTools } from "./tools/threads.js";
+import { registerSocialTools } from "./tools/social.js";
 
 const PORT = parseInt(process.env["PORT"] ?? "3001", 10);
-const TOOL_COUNT = 6;
+const TOOL_COUNT = 17;
 
 const httpApp = express();
 httpApp.use(express.json());
@@ -20,6 +24,10 @@ function buildMcpServer(): McpServer {
   registerTwitterTools(server);
   registerLinkedInTools(server);
   registerInstagramTools(server);
+  registerFacebookTools(server);
+  registerTikTokTools(server);
+  registerThreadsTools(server);
+  registerSocialTools(server);
   return server;
 }
 
