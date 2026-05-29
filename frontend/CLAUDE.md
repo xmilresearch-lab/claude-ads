@@ -275,8 +275,38 @@ Never put secrets in `NEXT_PUBLIC_` variables.
 | F6 | Analytics | ✅ Done | Recharts dashboard, date range, CSV export, token usage |
 | F7 | Audit + Admin | ✅ Done | Audit log viewer, admin users/workspaces/system, change pw |
 | F8 | Production | ✅ Done | next.config, env validation, error boundaries, CI/CD, Vercel |
+| F9 | Social Expansion | ✅ Done | +Facebook, +TikTok, +Threads; Instagram no longer comingSoon |
 
 ## STATUS: ALL SPRINTS COMPLETE ✅
+
+---
+
+## Social Platform Coverage (F9)
+
+### Supported ContentPlatforms
+`twitter` · `linkedin` · `instagram` · `facebook` · `tiktok` · `threads` · `gmail` · `sendgrid`
+
+### Char limits
+| Platform  | Limit  |
+|-----------|--------|
+| Twitter   | 280    |
+| LinkedIn  | 3,000  |
+| Instagram | 2,200  |
+| Facebook  | 63,206 |
+| TikTok    | 2,200  |
+| Threads   | 500    |
+| Gmail     | —      |
+| SendGrid  | —      |
+
+### OAuth Notes
+- **Facebook** OAuth also discovers and stores the linked Instagram Business account.
+- **TikTok** OAuth uses PKCE (S256) — `code_verifier` stored in Redis during the OAuth flow.
+- **Threads** short-lived token is exchanged for a 60-day long-lived token at callback time.
+- **Instagram** requires the account to be linked to a Facebook Page in Meta Business Suite.
+
+### Token Auto-Refresh Schedule (Celery, every 6 hours)
+- TikTok tokens (24h TTL) — auto-refreshed when expiring within 6 hours.
+- Threads tokens (60-day TTL) — auto-refreshed when expiring within 7 days.
 
 ---
 

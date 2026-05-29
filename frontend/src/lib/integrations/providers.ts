@@ -17,6 +17,7 @@ export interface ProviderConfig {
     required: boolean;
   }[];
   comingSoon?: boolean;
+  note?: string;
 }
 
 export const PROVIDER_CONFIGS: Record<string, ProviderConfig> = {
@@ -59,7 +60,39 @@ export const PROVIDER_CONFIGS: Record<string, ProviderConfig> = {
     lettermark: "IG",
     description: "Schedule posts and reels via Meta Graph API",
     scopes: ["instagram_basic", "instagram_content_publish"],
-    comingSoon: true,
+    note: "Requires your Instagram account to be linked to a Facebook Page in Meta Business Suite.",
+  },
+  facebook: {
+    id: "facebook",
+    name: "Facebook",
+    category: "social",
+    authType: "oauth",
+    color: "#1877F2",
+    lettermark: "Fb",
+    description: "Publish posts to your Facebook Pages",
+    scopes: ["pages_show_list", "pages_read_engagement", "pages_manage_posts"],
+    note: "Connecting Facebook also enables Instagram Business posting.",
+  },
+  tiktok: {
+    id: "tiktok",
+    name: "TikTok",
+    category: "social",
+    authType: "oauth",
+    color: "#010101",
+    lettermark: "Tk",
+    description: "Publish videos to your TikTok Business or Creator account",
+    scopes: ["user.info.basic", "video.publish", "video.upload"],
+    note: "Requires a TikTok Business or Creator account.",
+  },
+  threads: {
+    id: "threads",
+    name: "Threads",
+    category: "social",
+    authType: "oauth",
+    color: "#101010",
+    lettermark: "Th",
+    description: "Publish text and media posts to Threads",
+    scopes: ["threads_basic", "threads_content_publish"],
   },
   sendgrid: {
     id: "sendgrid",

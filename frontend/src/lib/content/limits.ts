@@ -4,6 +4,9 @@ export const PLATFORM_CHAR_LIMITS: Record<ContentPlatform, number | null> = {
   twitter:   280,
   linkedin:  3000,
   instagram: 2200,
+  facebook:  63206,
+  tiktok:    2200,
+  threads:   500,
   gmail:     null,
   sendgrid:  null,
 };

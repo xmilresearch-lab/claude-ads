@@ -65,6 +65,9 @@ export const CONTENT_PLATFORM_CONFIG: Record<
   twitter:   { label: "X / Twitter", color: "#000000", lettermark: "X"  },
   linkedin:  { label: "LinkedIn",    color: "#0A66C2", lettermark: "in" },
   instagram: { label: "Instagram",   color: "#E1306C", lettermark: "IG" },
+  facebook:  { label: "Facebook",    color: "#1877F2", lettermark: "Fb" },
+  tiktok:    { label: "TikTok",      color: "#010101", lettermark: "Tk" },
+  threads:   { label: "Threads",     color: "#101010", lettermark: "Th" },
   gmail:     { label: "Gmail",       color: "#EA4335", lettermark: "Gm" },
   sendgrid:  { label: "SendGrid",    color: "#1A82E2", lettermark: "SG" },
 };

@@ -68,6 +68,9 @@ export function IntegrationCard({ provider, integration, onApiKeyConnect }: Inte
             )}
           </div>
           <p className="text-xs text-[#6B7280] mt-0.5">{config?.description}</p>
+          {!integration && config?.note && (
+            <p className="text-[10px] text-[#6B7280]/70 font-mono mt-1.5 leading-relaxed">{config.note}</p>
+          )}
         </div>
 
         {/* Status badge */}
