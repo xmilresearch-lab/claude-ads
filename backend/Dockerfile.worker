@@ -1,0 +1,45 @@
+# ── Stage 1: Builder (identical to Dockerfile.prod) ───────────────────────────
+FROM python:3.12-slim AS builder
+
+WORKDIR /build
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    gcc libpq-dev curl \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY pyproject.toml .
+RUN python -m venv /build/venv \
+    && /build/venv/bin/pip install --upgrade pip \
+    && /build/venv/bin/pip install --no-cache-dir . \
+    && /build/venv/bin/pip install --no-cache-dir uvloop httptools
+
+# ── Stage 2: Runtime ──────────────────────────────────────────────────────────
+FROM python:3.12-slim AS runtime
+
+RUN groupadd -r appuser && useradd -r -g appuser appuser
+
+WORKDIR /app
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libpq-dev curl \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY --from=builder /build/venv /app/venv
+COPY app/        /app/app/
+COPY alembic/    /app/alembic/
+COPY alembic.ini /app/
+COPY main.py     /app/
+
+ENV PATH="/app/venv/bin:$PATH"
+ENV PYTHONUNBUFFERED=1
+ENV PYTHONDONTWRITEBYTECODE=1
+
+USER appuser
+
+# No EXPOSE — workers do not listen on any port
+
+# Default: high-priority queue. Override per service in docker-compose.prod.yml.
+CMD ["celery", "-A", "app.workers.celery_app", "worker", \
+     "--loglevel=info", \
+     "--without-gossip", \
+     "--without-mingle"]

@@ -1,0 +1,4368 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "AI Automation Platform API",
+    "description": "## Overview\n\nAutomate social media posting, email campaigns, customer support replies, and CRM updates\nusing Claude AI as the engine. Multi-tenant, workspace-scoped, with human-in-the-loop\napproval for all generated content.\n\n## Authentication\n\nAll endpoints except `POST /api/v1/auth/register` and `POST /api/v1/auth/login` require a\nBearer token in the `Authorization` header:\n\n```\nAuthorization: Bearer <access_token>\n```\n\nTokens are issued by `POST /api/v1/auth/login` and expire after **30 minutes**.\nUse `POST /api/v1/auth/refresh` to obtain a new access token without re-authenticating.\n\n## Rate Limits\n\n| Scope | Limit |\n|---|---|\n| Read endpoints (GET) | 300 / minute |\n| Write endpoints (POST, PUT, PATCH, DELETE) | 60 / minute |\n| Auth endpoints | 10 / minute |\n| Automation trigger | 30 / minute |\n| Analytics export | 10 / hour |\n| Webhooks | 200 / minute |\n\nExceeded limits return `429 Too Many Requests`.\n\n## Response Envelope\n\nAll responses wrap their payload in a consistent envelope:\n\n```json\n{\n  \"data\": { \"...\": \"...\" },\n  \"meta\": { \"request_id\": \"uuid\", \"timestamp\": \"2024-01-01T00:00:00Z\" }\n}\n```\n\nPaginated responses include `total_count`, `limit`, `offset`, and `has_more` inside `meta`.\n\n## Error Format\n\n```json\n{\n  \"errors\": [{ \"code\": \"not_found\", \"message\": \"Automation not found\", \"field\": null }],\n  \"meta\": { \"request_id\": \"uuid\", \"timestamp\": \"2024-01-01T00:00:00Z\" }\n}\n```\n",
+    "contact": {
+      "name": "API Support",
+      "email": "support@yourplatform.com"
+    },
+    "license": {
+      "name": "Private"
+    },
+    "version": "1.0.0",
+    "x-api-conventions": {
+      "pagination": "offset-based via limit/offset query params",
+      "dates": "ISO 8601 UTC",
+      "ids": "UUID v4 strings",
+      "envelope": "all responses wrapped in {data, meta}",
+      "errors": "all errors wrapped in {errors: [{code, message, field}], meta}",
+      "auth": "Bearer token in Authorization header"
+    }
+  },
+  "paths": {
+    "/api/v1/auth/register": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Register New User",
+        "description": "Create a new user account and workspace. Returns access and refresh tokens immediately upon success. Passwords must be at least 8 characters and include uppercase, lowercase, digit, and special character.",
+        "operationId": "register_api_v1_auth_register_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegisterRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "User registered successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DataResponse_TokenResponse_"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated \u2014 Bearer token missing or expired"
+          },
+          "403": {
+            "description": "Forbidden \u2014 you do not own this resource"
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "422": {
+            "description": "Validation error \u2014 request body or query parameter invalid"
+          },
+          "429": {
+            "description": "Rate limit exceeded \u2014 slow down and retry"
+          },
+          "500": {
+            "description": "Internal server error"
+          },
+          "409": {
+            "description": "Email already registered"
+          }
+        },
+        "x-mutation": true,
+        "x-rate-limit": "10/minute"
+      }
+    },
+    "/api/v1/auth/login": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Login",
+        "description": "Authenticate with email and password. Returns short-lived access token (30 min) and long-lived refresh token (30 days). Rate-limited to 10 requests/minute per IP.",
+        "operationId": "login_api_v1_auth_login_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "JWT access token and refresh token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DataResponse_TokenResponse_"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid credentials or inactive account"
+          },
+          "403": {
+            "description": "Forbidden \u2014 you do not own this resource"
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "422": {
+            "description": "Validation error \u2014 request body or query parameter invalid"
+          },
+          "429": {
+            "description": "Rate limit exceeded \u2014 slow down and retry"
+          },
+          "500": {
+            "description": "Internal server error"
+          },
+          "409": {
+            "description": "Email already registered"
+          }
+        },
+        "x-mutation": true,
+        "x-rate-limit": "10/minute"
+      }
+    },
+    "/api/v1/auth/refresh": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Refresh Access Token",
+        "description": "Exchange a valid refresh token for a new access + refresh token pair. Use this when the access token has expired. Both the old and new token pairs are returned.",
+        "operationId": "refresh_api_v1_auth_refresh_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RefreshRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "New JWT access token and refresh token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DataResponse_TokenResponse_"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated \u2014 Bearer token missing or expired"
+          },
+          "403": {
+            "description": "Forbidden \u2014 you do not own this resource"
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "422": {
+            "description": "Validation error \u2014 request body or query parameter invalid"
+          },
+          "429": {
+            "description": "Rate limit exceeded \u2014 slow down and retry"
+          },
+          "500": {
+            "description": "Internal server error"
+          },
+          "409": {
+            "description": "Email already registered"
+          }
+        },
+        "x-mutation": true,
+        "x-rate-limit": "10/minute"
+      }
+    },
+    "/api/v1/auth/me": {
+      "get": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Get Current User",
+        "description": "Return the authenticated user's profile. Requires a valid Bearer token in the Authorization header.",
+        "operationId": "me_api_v1_auth_me_get",
+        "responses": {
+          "200": {
+            "description": "Authenticated user profile",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DataResponse_UserResponse_"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated \u2014 Bearer token missing or expired"
+          },
+          "403": {
+            "description": "Forbidden \u2014 you do not own this resource"
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "422": {
+            "description": "Validation error \u2014 request body or query parameter invalid"
+          },
+          "429": {
+            "description": "Rate limit exceeded \u2014 slow down and retry"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "x-rate-limit": "10/minute"
+      }
+    },
+    "/api/v1/automations/": {
+      "post": {
+        "tags": [
+          "Automations"
+        ],
+        "summary": "Create Automation",
+        "description": "Create a new automation for the current workspace. Supports schedule-based (cron) and webhook-triggered automations. The `name` field is scanned for injection patterns before saving.",
+        "operationId": "create_api_v1_automations__post",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AutomationCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Automation created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DataResponse_AutomationResponse_"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated \u2014 Bearer token missing or expired"
+          },
+          "403": {
+            "description": "Forbidden \u2014 you do not own this resource"
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "422": {
+            "description": "Validation error \u2014 request body or query parameter invalid"
+          },
+          "429": {
+            "description": "Rate limit exceeded \u2014 slow down and retry"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        },
+        "x-mutation": true,
+        "x-rate-limit": "60/minute"
+      },
+      "get": {
+        "tags": [
+          "Automations"
+        ],
+        "summary": "List Automations",
+        "description": "Return a paginated list of all automations for the current workspace. Use `offset` and `limit` query parameters to page through results.",
+        "operationId": "list_all_api_v1_automations__get",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0,
+              "title": "Offset"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "default": 50,
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Paginated list of automations",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaginatedResponse_AutomationResponse_"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated \u2014 Bearer token missing or expired"
+          },
+          "403": {
+            "description": "Forbidden \u2014 you do not own this resource"
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "422": {
+            "description": "Validation error \u2014 request body or query parameter invalid"
+          },
+          "429": {
+            "description": "Rate limit exceeded \u2014 slow down and retry"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        },
+        "x-paginated": true,
+        "x-rate-limit": "300/minute"
+      }
+    },
+    "/api/v1/automations/{automation_id}": {
+      "get": {
+        "tags": [
+          "Automations"
+        ],
+        "summary": "Get Automation",
+        "description": "Fetch a single automation by ID. Returns 404 if not found or not owned by the workspace.",
+        "operationId": "get_api_v1_automations__automation_id__get",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "automation_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Automation Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The requested automation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DataResponse_AutomationResponse_"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated \u2014 Bearer token missing or expired"
+          },
+          "403": {
+            "description": "Forbidden \u2014 you do not own this resource"
+          },
+          "404": {
+            "description": "Automation not found"
+          },
+          "422": {
+            "description": "Validation error \u2014 request body or query parameter invalid"
+          },
+          "429": {
+            "description": "Rate limit exceeded \u2014 slow down and retry"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        },
+        "x-paginated": true,
+        "x-rate-limit": "300/minute"
+      },
+      "patch": {
+        "tags": [
+          "Automations"
+        ],
+        "summary": "Update Automation",
+        "description": "Partially update an automation. Only the fields provided in the request body are changed. Use `active: false` to pause an automation without deleting it.",
+        "operationId": "update_api_v1_automations__automation_id__patch",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "automation_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Automation Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AutomationUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The updated automation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DataResponse_AutomationResponse_"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated \u2014 Bearer token missing or expired"
+          },
+          "403": {
+            "description": "Forbidden \u2014 you do not own this resource"
+          },
+          "404": {
+            "description": "Automation not found"
+          },
+          "422": {
+            "description": "Validation error \u2014 request body or query parameter invalid"
+          },
+          "429": {
+            "description": "Rate limit exceeded \u2014 slow down and retry"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        },
+        "x-mutation": true,
+        "x-rate-limit": "60/minute"
+      },
+      "delete": {
+        "tags": [
+          "Automations"
+        ],
+        "summary": "Delete Automation",
+        "description": "Permanently delete an automation and all its associated runs. This action cannot be undone.",
+        "operationId": "delete_api_v1_automations__automation_id__delete",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "automation_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Automation Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No content \u2014 automation deleted"
+          },
+          "401": {
+            "description": "Not authenticated \u2014 Bearer token missing or expired"
+          },
+          "403": {
+            "description": "Forbidden \u2014 you do not own this resource"
+          },
+          "404": {
+            "description": "Automation not found"
+          },
+          "422": {
+            "description": "Validation error \u2014 request body or query parameter invalid"
+          },
+          "429": {
+            "description": "Rate limit exceeded \u2014 slow down and retry"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        },
+        "x-mutation": true,
+        "x-rate-limit": "60/minute"
+      }
+    },
+    "/api/v1/automations/{automation_id}/run": {
+      "post": {
+        "tags": [
+          "Automations"
+        ],
+        "summary": "Trigger Automation Run",
+        "description": "Manually trigger an automation run with an optional payload. The run is queued asynchronously via Celery \u2014 this endpoint returns immediately with a pending run. Poll `GET /{id}/runs` to check completion status.",
+        "operationId": "run_api_v1_automations__automation_id__run_post",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "automation_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Automation Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TriggerRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Pending AutomationRun record",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DataResponse_AutomationRunResponse_"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated \u2014 Bearer token missing or expired"
+          },
+          "403": {
+            "description": "Forbidden \u2014 you do not own this resource"
+          },
+          "404": {
+            "description": "Automation not found"
+          },
+          "422": {
+            "description": "Automation is inactive or payload invalid"
+          },
+          "429": {
+            "description": "Rate limit exceeded \u2014 slow down and retry"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        },
+        "x-mutation": true,
+        "x-rate-limit": "30/minute"
+      }
+    },
+    "/api/v1/automations/{automation_id}/runs": {
+      "get": {
+        "tags": [
+          "Automations"
+        ],
+        "summary": "List Automation Runs",
+        "description": "Return a paginated history of all runs for an automation, newest first. Useful for monitoring run status, token usage, and error messages.",
+        "operationId": "list_runs_api_v1_automations__automation_id__runs_get",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "automation_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Automation Id"
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0,
+              "title": "Offset"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 50,
+              "default": 50,
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Paginated list of automation runs",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaginatedResponse_AutomationRunResponse_"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated \u2014 Bearer token missing or expired"
+          },
+          "403": {
+            "description": "Forbidden \u2014 you do not own this resource"
+          },
+          "404": {
+            "description": "Automation not found"
+          },
+          "422": {
+            "description": "Validation error \u2014 request body or query parameter invalid"
+          },
+          "429": {
+            "description": "Rate limit exceeded \u2014 slow down and retry"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        },
+        "x-paginated": true,
+        "x-rate-limit": "30/minute"
+      }
+    },
+    "/api/v1/content/queue": {
+      "get": {
+        "tags": [
+          "Content Queue"
+        ],
+        "summary": "List Pending Content",
+        "description": "Return all content items currently awaiting human approval, ordered oldest-first. Items remain here until approved (dispatched for publishing) or rejected. Only items belonging to this workspace are returned.",
+        "operationId": "list_pending_api_v1_content_queue_get",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0,
+              "title": "Offset"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "default": 50,
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Paginated list of pending content queue items",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaginatedResponse_ContentQueueItem_"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated \u2014 Bearer token missing or expired"
+          },
+          "403": {
+            "description": "Forbidden \u2014 you do not own this resource"
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "422": {
+            "description": "Validation error \u2014 request body or query parameter invalid"
+          },
+          "429": {
+            "description": "Rate limit exceeded \u2014 slow down and retry"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        },
+        "x-paginated": true,
+        "x-rate-limit": "300/minute"
+      }
+    },
+    "/api/v1/content/{item_id}": {
+      "get": {
+        "tags": [
+          "Content Queue"
+        ],
+        "summary": "Get Content Item",
+        "description": "Fetch a single content queue item by ID. Returns 404 if not found or not owned by the workspace.",
+        "operationId": "get_item_api_v1_content__item_id__get",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "item_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Item Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The requested content queue item",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DataResponse_ContentQueueItem_"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated \u2014 Bearer token missing or expired"
+          },
+          "403": {
+            "description": "Forbidden \u2014 you do not own this resource"
+          },
+          "404": {
+            "description": "Content item not found"
+          },
+          "422": {
+            "description": "Validation error \u2014 request body or query parameter invalid"
+          },
+          "429": {
+            "description": "Rate limit exceeded \u2014 slow down and retry"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        },
+        "x-rate-limit": "300/minute"
+      },
+      "delete": {
+        "tags": [
+          "Content Queue"
+        ],
+        "summary": "Delete Content Item",
+        "description": "Permanently delete a content queue item. Use this only for items that should not appear in the audit trail. For most cases, prefer rejecting rather than deleting.",
+        "operationId": "delete_item_api_v1_content__item_id__delete",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "item_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Item Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No content \u2014 item deleted"
+          },
+          "401": {
+            "description": "Not authenticated \u2014 Bearer token missing or expired"
+          },
+          "403": {
+            "description": "Forbidden \u2014 you do not own this resource"
+          },
+          "404": {
+            "description": "Content item not found"
+          },
+          "422": {
+            "description": "Validation error \u2014 request body or query parameter invalid"
+          },
+          "429": {
+            "description": "Rate limit exceeded \u2014 slow down and retry"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        },
+        "x-mutation": true,
+        "x-rate-limit": "60/minute"
+      }
+    },
+    "/api/v1/content/{item_id}/approve": {
+      "patch": {
+        "tags": [
+          "Content Queue"
+        ],
+        "summary": "Approve Content",
+        "description": "Approve a pending content item for publishing. This immediately dispatches a Celery task to post the content via the appropriate MCP server. Status changes from `pending_approval` to `approved`.",
+        "operationId": "approve_item_api_v1_content__item_id__approve_patch",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "item_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Item Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The approved content queue item",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DataResponse_ContentQueueItem_"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated \u2014 Bearer token missing or expired"
+          },
+          "403": {
+            "description": "Forbidden \u2014 you do not own this resource"
+          },
+          "404": {
+            "description": "Content item not found"
+          },
+          "422": {
+            "description": "Validation error \u2014 request body or query parameter invalid"
+          },
+          "429": {
+            "description": "Rate limit exceeded \u2014 slow down and retry"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        },
+        "x-mutation": true,
+        "x-rate-limit": "60/minute"
+      }
+    },
+    "/api/v1/content/{item_id}/reject": {
+      "patch": {
+        "tags": [
+          "Content Queue"
+        ],
+        "summary": "Reject Content",
+        "description": "Reject a pending content item with an optional reason. Status changes to `rejected` and the reason is stored in the content metadata. Rejected items are not published and remain in the queue for auditing.",
+        "operationId": "reject_item_api_v1_content__item_id__reject_patch",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "item_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Item Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ContentQueueReject"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The rejected content queue item",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DataResponse_ContentQueueItem_"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated \u2014 Bearer token missing or expired"
+          },
+          "403": {
+            "description": "Forbidden \u2014 you do not own this resource"
+          },
+          "404": {
+            "description": "Content item not found"
+          },
+          "422": {
+            "description": "Validation error \u2014 request body or query parameter invalid"
+          },
+          "429": {
+            "description": "Rate limit exceeded \u2014 slow down and retry"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        },
+        "x-mutation": true,
+        "x-rate-limit": "60/minute"
+      }
+    },
+    "/api/v1/audit/logs": {
+      "get": {
+        "tags": [
+          "Audit Logs"
+        ],
+        "summary": "List Audit Logs",
+        "description": "Return a paginated, newest-first list of audit log entries for the current workspace. Filter by `action` type or a date range using `from_date` and `to_date`. Sensitive metadata keys (tokens, passwords) are automatically redacted.",
+        "operationId": "list_logs_api_v1_audit_logs_get",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "action",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Action"
+            }
+          },
+          {
+            "name": "from_date",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "From Date"
+            }
+          },
+          {
+            "name": "to_date",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "To Date"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 200,
+              "minimum": 1,
+              "default": 50,
+              "title": "Limit"
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0,
+              "title": "Offset"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Paginated list of audit log entries",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaginatedResponse_AuditLogResponse_"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated \u2014 Bearer token missing or expired"
+          },
+          "403": {
+            "description": "Forbidden \u2014 you do not own this resource"
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "422": {
+            "description": "Validation error \u2014 request body or query parameter invalid"
+          },
+          "429": {
+            "description": "Rate limit exceeded \u2014 slow down and retry"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        },
+        "x-paginated": true,
+        "x-rate-limit": "300/minute"
+      }
+    },
+    "/api/v1/audit/logs/{log_id}": {
+      "get": {
+        "tags": [
+          "Audit Logs"
+        ],
+        "summary": "Get Audit Log Entry",
+        "description": "Fetch a single audit log entry by ID. Returns 403 if the log belongs to a different workspace (IDOR protection). Sensitive metadata keys are redacted from the response.",
+        "operationId": "get_log_api_v1_audit_logs__log_id__get",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "log_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Log Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The requested audit log entry",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DataResponse_AuditLogResponse_"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated \u2014 Bearer token missing or expired"
+          },
+          "403": {
+            "description": "Forbidden \u2014 you do not own this resource"
+          },
+          "404": {
+            "description": "Audit log not found"
+          },
+          "422": {
+            "description": "Validation error \u2014 request body or query parameter invalid"
+          },
+          "429": {
+            "description": "Rate limit exceeded \u2014 slow down and retry"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        },
+        "x-paginated": true,
+        "x-rate-limit": "300/minute"
+      }
+    },
+    "/api/v1/audit/summary": {
+      "get": {
+        "tags": [
+          "Audit Logs"
+        ],
+        "summary": "Audit Log Summary",
+        "description": "Return aggregated statistics from the last 30 days: run counts by status, DLP violations, tokens used, and content published. Use this for a quick security and usage overview.",
+        "operationId": "get_summary_api_v1_audit_summary_get",
+        "responses": {
+          "200": {
+            "description": "30-day summary of automation runs, DLP events, and token usage",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DataResponse_AuditLogSummary_"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated \u2014 Bearer token missing or expired"
+          },
+          "403": {
+            "description": "Forbidden \u2014 you do not own this resource"
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "422": {
+            "description": "Validation error \u2014 request body or query parameter invalid"
+          },
+          "429": {
+            "description": "Rate limit exceeded \u2014 slow down and retry"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "x-rate-limit": "300/minute"
+      }
+    },
+    "/api/v1/workspaces/me": {
+      "get": {
+        "tags": [
+          "Workspaces"
+        ],
+        "summary": "Get My Workspace",
+        "description": "Return the current workspace with live counts: total integrations, total automations, and active automations.",
+        "operationId": "get_my_workspace_api_v1_workspaces_me_get",
+        "responses": {
+          "200": {
+            "description": "Workspace detail with counts",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DataResponse_WorkspaceDetailResponse_"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated \u2014 Bearer token missing or expired"
+          },
+          "403": {
+            "description": "Forbidden \u2014 you do not own this resource"
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "422": {
+            "description": "Validation error \u2014 request body or query parameter invalid"
+          },
+          "429": {
+            "description": "Rate limit exceeded \u2014 slow down and retry"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "x-rate-limit": "300/minute"
+      },
+      "patch": {
+        "tags": [
+          "Workspaces"
+        ],
+        "summary": "Update My Workspace",
+        "description": "Partially update workspace name or settings. Only provided fields are changed.",
+        "operationId": "update_my_workspace_api_v1_workspaces_me_patch",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WorkspaceUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Updated workspace detail",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DataResponse_WorkspaceDetailResponse_"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated \u2014 Bearer token missing or expired"
+          },
+          "403": {
+            "description": "Forbidden \u2014 you do not own this resource"
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "422": {
+            "description": "Validation error \u2014 request body or query parameter invalid"
+          },
+          "429": {
+            "description": "Rate limit exceeded \u2014 slow down and retry"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "x-mutation": true,
+        "x-rate-limit": "60/minute"
+      }
+    },
+    "/api/v1/workspaces/me/brand-voice": {
+      "get": {
+        "tags": [
+          "Workspaces"
+        ],
+        "summary": "Get Brand Voice",
+        "description": "Return the workspace brand voice configuration. Brand voice is injected into every Claude API call to ensure consistent tone and style. Returns `null` data if no brand voice has been configured yet.",
+        "operationId": "get_brand_voice_api_v1_workspaces_me_brand_voice_get",
+        "responses": {
+          "200": {
+            "description": "Brand voice schema or null",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DataResponse_Union_BrandVoiceSchema__NoneType__"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated \u2014 Bearer token missing or expired"
+          },
+          "403": {
+            "description": "Forbidden \u2014 you do not own this resource"
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "422": {
+            "description": "Validation error \u2014 request body or query parameter invalid"
+          },
+          "429": {
+            "description": "Rate limit exceeded \u2014 slow down and retry"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "x-rate-limit": "300/minute"
+      },
+      "put": {
+        "tags": [
+          "Workspaces"
+        ],
+        "summary": "Set Brand Voice",
+        "description": "Replace the workspace brand voice. The brand voice is sanitized via `sanitize_example()` before being persisted to prevent prompt injection through user-controlled brand voice examples (LLM04). All existing brand voice configuration is replaced.",
+        "operationId": "set_brand_voice_api_v1_workspaces_me_brand_voice_put",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BrandVoiceSchema"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Updated brand voice schema",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DataResponse_BrandVoiceSchema_"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated \u2014 Bearer token missing or expired"
+          },
+          "403": {
+            "description": "Forbidden \u2014 you do not own this resource"
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "422": {
+            "description": "Validation error \u2014 request body or query parameter invalid"
+          },
+          "429": {
+            "description": "Rate limit exceeded \u2014 slow down and retry"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "x-mutation": true,
+        "x-rate-limit": "60/minute"
+      },
+      "delete": {
+        "tags": [
+          "Workspaces"
+        ],
+        "summary": "Delete Brand Voice",
+        "description": "Remove the workspace brand voice. After deletion, Claude API calls will use the default system prompt without brand voice injection.",
+        "operationId": "delete_brand_voice_api_v1_workspaces_me_brand_voice_delete",
+        "responses": {
+          "204": {
+            "description": "No content \u2014 brand voice removed"
+          },
+          "401": {
+            "description": "Not authenticated \u2014 Bearer token missing or expired"
+          },
+          "403": {
+            "description": "Forbidden \u2014 you do not own this resource"
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "422": {
+            "description": "Validation error \u2014 request body or query parameter invalid"
+          },
+          "429": {
+            "description": "Rate limit exceeded \u2014 slow down and retry"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "x-mutation": true,
+        "x-rate-limit": "60/minute"
+      }
+    },
+    "/api/v1/workspaces/me/settings": {
+      "get": {
+        "tags": [
+          "Workspaces"
+        ],
+        "summary": "Get Workspace Settings",
+        "description": "Return the workspace JSONB settings blob. Returns an empty object if no settings have been set.",
+        "operationId": "get_settings_api_v1_workspaces_me_settings_get",
+        "responses": {
+          "200": {
+            "description": "Workspace settings as a key-value object",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DataResponse_dict_"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated \u2014 Bearer token missing or expired"
+          },
+          "403": {
+            "description": "Forbidden \u2014 you do not own this resource"
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "422": {
+            "description": "Validation error \u2014 request body or query parameter invalid"
+          },
+          "429": {
+            "description": "Rate limit exceeded \u2014 slow down and retry"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "x-rate-limit": "300/minute"
+      },
+      "patch": {
+        "tags": [
+          "Workspaces"
+        ],
+        "summary": "Update Workspace Settings",
+        "description": "Deep-merge the provided settings into the existing workspace settings. Only keys present in the request body are updated; other keys are preserved.",
+        "operationId": "patch_settings_api_v1_workspaces_me_settings_patch",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WorkspaceSettingsUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Updated workspace settings",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DataResponse_dict_"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated \u2014 Bearer token missing or expired"
+          },
+          "403": {
+            "description": "Forbidden \u2014 you do not own this resource"
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "422": {
+            "description": "Validation error \u2014 request body or query parameter invalid"
+          },
+          "429": {
+            "description": "Rate limit exceeded \u2014 slow down and retry"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "x-mutation": true,
+        "x-rate-limit": "60/minute"
+      }
+    },
+    "/api/v1/integrations": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "summary": "List Integrations",
+        "description": "Return all integrations connected to the current workspace, newest first. Credentials are never included in list responses \u2014 only metadata and status.",
+        "operationId": "list_integrations_api_v1_integrations_get",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 200,
+              "minimum": 1,
+              "default": 50,
+              "title": "Limit"
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0,
+              "title": "Offset"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Paginated list of integrations",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaginatedResponse_IntegrationResponse_"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated \u2014 Bearer token missing or expired"
+          },
+          "403": {
+            "description": "Forbidden \u2014 you do not own this resource"
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "422": {
+            "description": "Validation error \u2014 request body or query parameter invalid"
+          },
+          "429": {
+            "description": "Rate limit exceeded \u2014 slow down and retry"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        },
+        "x-paginated": true,
+        "x-rate-limit": "300/minute"
+      }
+    },
+    "/api/v1/integrations/{integration_id}": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "summary": "Get Integration",
+        "description": "Fetch a single integration by ID. Returns 403 if it belongs to a different workspace (IDOR protection).",
+        "operationId": "get_integration_api_v1_integrations__integration_id__get",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "integration_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Integration Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The requested integration",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DataResponse_IntegrationResponse_"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated \u2014 Bearer token missing or expired"
+          },
+          "403": {
+            "description": "Forbidden \u2014 you do not own this resource"
+          },
+          "404": {
+            "description": "Integration not found"
+          },
+          "422": {
+            "description": "Validation error \u2014 request body or query parameter invalid"
+          },
+          "429": {
+            "description": "Rate limit exceeded \u2014 slow down and retry"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        },
+        "x-paginated": true,
+        "x-rate-limit": "300/minute"
+      },
+      "delete": {
+        "tags": [
+          "Integrations"
+        ],
+        "summary": "Disconnect Integration",
+        "description": "Disconnect an integration by overwriting its credentials with an empty encrypted blob and setting status to `disconnected`. The record is retained for audit trail purposes \u2014 use this instead of deleting. Writes an `integration_disconnected` audit log entry.",
+        "operationId": "disconnect_integration_api_v1_integrations__integration_id__delete",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "integration_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Integration Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No content \u2014 integration disconnected"
+          },
+          "401": {
+            "description": "Not authenticated \u2014 Bearer token missing or expired"
+          },
+          "403": {
+            "description": "Forbidden \u2014 you do not own this resource"
+          },
+          "404": {
+            "description": "Integration not found"
+          },
+          "422": {
+            "description": "Validation error \u2014 request body or query parameter invalid"
+          },
+          "429": {
+            "description": "Rate limit exceeded \u2014 slow down and retry"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        },
+        "x-mutation": true,
+        "x-rate-limit": "60/minute"
+      }
+    },
+    "/api/v1/integrations/{integration_id}/status": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "summary": "Get Integration Health",
+        "description": "Perform a live health check against the external provider API using the stored credentials. Returns latency in milliseconds and `healthy` or `unhealthy` status. Returns `error` if credentials cannot be decrypted.",
+        "operationId": "get_integration_status_api_v1_integrations__integration_id__status_get",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "integration_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Integration Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Live health status and latency",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DataResponse_IntegrationStatusResponse_"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated \u2014 Bearer token missing or expired"
+          },
+          "403": {
+            "description": "Forbidden \u2014 you do not own this resource"
+          },
+          "404": {
+            "description": "Integration not found"
+          },
+          "422": {
+            "description": "Validation error \u2014 request body or query parameter invalid"
+          },
+          "429": {
+            "description": "Rate limit exceeded \u2014 slow down and retry"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        },
+        "x-paginated": true,
+        "x-rate-limit": "300/minute"
+      }
+    },
+    "/api/v1/integrations/oauth/initiate": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "summary": "Initiate OAuth Flow",
+        "description": "Generate an OAuth 2.0 authorization URL for a supported provider (Twitter, LinkedIn, Gmail, HubSpot). A one-time `state` token is stored in Redis for 10 minutes to prevent CSRF. Redirect the user to `authorization_url` to begin the OAuth flow.",
+        "operationId": "oauth_initiate_api_v1_integrations_oauth_initiate_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/IntegrationConnectRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Authorization URL and state token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DataResponse_dict_"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated \u2014 Bearer token missing or expired"
+          },
+          "403": {
+            "description": "Forbidden \u2014 you do not own this resource"
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "422": {
+            "description": "Validation error \u2014 request body or query parameter invalid"
+          },
+          "429": {
+            "description": "Rate limit exceeded \u2014 slow down and retry"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "x-mutation": true,
+        "x-rate-limit": "60/minute"
+      }
+    },
+    "/api/v1/integrations/oauth/callback": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "summary": "Complete OAuth Callback",
+        "description": "Exchange the OAuth authorization code for tokens. Verifies the one-time `state` token (CSRF protection), exchanges the code with the provider, fetches user info, encrypts tokens with AES-256-GCM, and upserts the integration record. Writes an `integration_connected` audit log entry.",
+        "operationId": "oauth_callback_api_v1_integrations_oauth_callback_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OAuthCallbackRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "The connected integration record",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DataResponse_IntegrationResponse_"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated \u2014 Bearer token missing or expired"
+          },
+          "403": {
+            "description": "Forbidden \u2014 you do not own this resource"
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "422": {
+            "description": "Validation error \u2014 request body or query parameter invalid"
+          },
+          "429": {
+            "description": "Rate limit exceeded \u2014 slow down and retry"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "x-mutation": true,
+        "x-rate-limit": "60/minute"
+      }
+    },
+    "/api/v1/integrations/apikey": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "summary": "Connect via API Key",
+        "description": "Connect an integration using an API key (supported: SendGrid, Zendesk). The key is validated against the provider before being stored. Keys are encrypted with AES-256-GCM \u2014 never stored in plain text. Returns 400 if the provider does not support API key auth or if the key is invalid.",
+        "operationId": "connect_apikey_api_v1_integrations_apikey_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/APIKeyConnectRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "The connected integration record",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DataResponse_IntegrationResponse_"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated \u2014 Bearer token missing or expired"
+          },
+          "403": {
+            "description": "Forbidden \u2014 you do not own this resource"
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "422": {
+            "description": "Validation error \u2014 request body or query parameter invalid"
+          },
+          "429": {
+            "description": "Rate limit exceeded \u2014 slow down and retry"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "x-mutation": true,
+        "x-rate-limit": "60/minute"
+      }
+    },
+    "/api/v1/analytics/overview": {
+      "get": {
+        "tags": [
+          "Analytics"
+        ],
+        "summary": "Analytics Overview",
+        "description": "Return aggregated KPIs for the workspace over the last `days` days: run counts by status, token usage, estimated cost, content pipeline counts, injection blocks, and DLP violations. Use `days` (1\u201390) to control the reporting window.",
+        "operationId": "get_overview_api_v1_analytics_overview_get",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "days",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 90,
+              "minimum": 1,
+              "default": 30,
+              "title": "Days"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Aggregated analytics overview",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DataResponse_AnalyticsOverview_"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated \u2014 Bearer token missing or expired"
+          },
+          "403": {
+            "description": "Forbidden \u2014 you do not own this resource"
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "422": {
+            "description": "Validation error \u2014 request body or query parameter invalid"
+          },
+          "429": {
+            "description": "Rate limit exceeded \u2014 slow down and retry"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        },
+        "x-rate-limit": "300/minute"
+      }
+    },
+    "/api/v1/analytics/automations": {
+      "get": {
+        "tags": [
+          "Analytics"
+        ],
+        "summary": "Automations Breakdown",
+        "description": "Return per-automation run counts, success/failure rates, average token usage, and last run timestamp, sorted by run volume descending. Useful for identifying high-traffic or failing automations.",
+        "operationId": "get_automations_breakdown_api_v1_analytics_automations_get",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "days",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 90,
+              "minimum": 1,
+              "default": 30,
+              "title": "Days"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "default": 20,
+              "title": "Limit"
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0,
+              "title": "Offset"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Paginated automation performance breakdown",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaginatedResponse_AutomationBreakdown_"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated \u2014 Bearer token missing or expired"
+          },
+          "403": {
+            "description": "Forbidden \u2014 you do not own this resource"
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "422": {
+            "description": "Validation error \u2014 request body or query parameter invalid"
+          },
+          "429": {
+            "description": "Rate limit exceeded \u2014 slow down and retry"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        },
+        "x-paginated": true,
+        "x-rate-limit": "300/minute"
+      }
+    },
+    "/api/v1/analytics/platforms": {
+      "get": {
+        "tags": [
+          "Analytics"
+        ],
+        "summary": "Platform Stats",
+        "description": "Return published, pending, and rejected content counts grouped by platform (e.g., twitter, linkedin, gmail) for the given time window. Platforms are derived from the content queue records.",
+        "operationId": "get_platform_stats_api_v1_analytics_platforms_get",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "days",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 90,
+              "minimum": 1,
+              "default": 30,
+              "title": "Days"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Per-platform content counts",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DataResponse_list_PlatformStats__"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated \u2014 Bearer token missing or expired"
+          },
+          "403": {
+            "description": "Forbidden \u2014 you do not own this resource"
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "422": {
+            "description": "Validation error \u2014 request body or query parameter invalid"
+          },
+          "429": {
+            "description": "Rate limit exceeded \u2014 slow down and retry"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        },
+        "x-rate-limit": "300/minute"
+      }
+    },
+    "/api/v1/analytics/tokens": {
+      "get": {
+        "tags": [
+          "Analytics"
+        ],
+        "summary": "Token Usage Series",
+        "description": "Return a daily time series of AI token usage for the last `days` days. Gaps (days with no runs) are filled with zeros so clients always receive a complete, contiguous series. Each point includes the estimated cost in USD.",
+        "operationId": "get_token_series_api_v1_analytics_tokens_get",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "days",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 90,
+              "minimum": 1,
+              "default": 30,
+              "title": "Days"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Daily token usage series with gap filling",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DataResponse_list_TokenUsageSeries__"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated \u2014 Bearer token missing or expired"
+          },
+          "403": {
+            "description": "Forbidden \u2014 you do not own this resource"
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "422": {
+            "description": "Validation error \u2014 request body or query parameter invalid"
+          },
+          "429": {
+            "description": "Rate limit exceeded \u2014 slow down and retry"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        },
+        "x-rate-limit": "300/minute"
+      }
+    },
+    "/api/v1/analytics/export": {
+      "get": {
+        "tags": [
+          "Analytics"
+        ],
+        "summary": "Export Analytics",
+        "description": "Export analytics data as JSON (default) or CSV (`format=csv`). The export includes the overview KPIs plus the full daily token usage series. CSV responses are streamed as a file attachment. Rate-limited to 10 requests per hour to prevent data scraping.",
+        "operationId": "export_analytics_api_v1_analytics_export_get",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "days",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 90,
+              "minimum": 1,
+              "default": 30,
+              "title": "Days"
+            }
+          },
+          {
+            "name": "format",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "json",
+              "title": "Format"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Analytics export in JSON or CSV format",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated \u2014 Bearer token missing or expired"
+          },
+          "403": {
+            "description": "Forbidden \u2014 you do not own this resource"
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "422": {
+            "description": "Validation error \u2014 request body or query parameter invalid"
+          },
+          "429": {
+            "description": "Rate limit exceeded \u2014 slow down and retry"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        },
+        "x-rate-limit": "10/hour"
+      }
+    },
+    "/webhooks/zendesk": {
+      "post": {
+        "tags": [
+          "webhooks"
+        ],
+        "summary": "Zendesk Webhook",
+        "description": "Receive Zendesk ticket events.\nVerified via HMAC-SHA256 (hexdigest) of the raw body signed with WEBHOOK_SECRET.\nReturns 200 immediately; processing is async via Celery.",
+        "operationId": "zendesk_webhook_webhooks_zendesk_post",
+        "parameters": [
+          {
+            "name": "workspace_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Workspace Id"
+            }
+          },
+          {
+            "name": "x-zendesk-webhook-signature",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "",
+              "title": "X-Zendesk-Webhook-Signature"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "string"
+                  },
+                  "title": "Response Zendesk Webhook Webhooks Zendesk Post"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "x-mutation": true,
+        "x-rate-limit": "200/minute"
+      }
+    },
+    "/webhooks/hubspot": {
+      "post": {
+        "tags": [
+          "webhooks"
+        ],
+        "summary": "Hubspot Webhook",
+        "description": "Receive HubSpot CRM events.\nVerified via HMAC-SHA256 of (method + uri + body) keyed with HUBSPOT_CLIENT_SECRET.\nReturns 200 immediately; processing is async via Celery.",
+        "operationId": "hubspot_webhook_webhooks_hubspot_post",
+        "parameters": [
+          {
+            "name": "workspace_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Workspace Id"
+            }
+          },
+          {
+            "name": "x-hubspot-signature-v3",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "",
+              "title": "X-Hubspot-Signature-V3"
+            }
+          },
+          {
+            "name": "x-hubspot-request-timestamp",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "",
+              "title": "X-Hubspot-Request-Timestamp"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "string"
+                  },
+                  "title": "Response Hubspot Webhook Webhooks Hubspot Post"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "x-mutation": true,
+        "x-rate-limit": "200/minute"
+      }
+    },
+    "/webhooks/content/approve/{content_queue_id}": {
+      "post": {
+        "tags": [
+          "webhooks"
+        ],
+        "summary": "Approve And Publish",
+        "description": "Internal webhook: approve a ContentQueue item and enqueue it for publishing.\nRequires standard Bearer auth.",
+        "operationId": "approve_and_publish_webhooks_content_approve__content_queue_id__post",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "content_queue_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Content Queue Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContentQueueItem"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "x-mutation": true,
+        "x-rate-limit": "200/minute"
+      }
+    },
+    "/health": {
+      "get": {
+        "tags": [
+          "Health"
+        ],
+        "summary": "Liveness Check",
+        "description": "Returns `ok` if the process is running. Use for liveness probes.",
+        "operationId": "health_health_get",
+        "responses": {
+          "200": {
+            "description": "Service liveness status",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": {
+                    "type": "string"
+                  },
+                  "type": "object",
+                  "title": "Response Health Health Get"
+                }
+              }
+            }
+          }
+        },
+        "x-rate-limit": "300/minute"
+      }
+    },
+    "/health/live": {
+      "get": {
+        "tags": [
+          "Health"
+        ],
+        "summary": "Liveness Probe",
+        "description": "Alias for `GET /health`. Returns `ok` if the process is alive.",
+        "operationId": "health_live_health_live_get",
+        "responses": {
+          "200": {
+            "description": "Service liveness status",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": {
+                    "type": "string"
+                  },
+                  "type": "object",
+                  "title": "Response Health Live Health Live Get"
+                }
+              }
+            }
+          }
+        },
+        "x-rate-limit": "300/minute"
+      }
+    },
+    "/health/ready": {
+      "get": {
+        "tags": [
+          "Health"
+        ],
+        "summary": "Readiness Probe",
+        "description": "Checks PostgreSQL, Redis, and all three MCP servers. Returns `ready` (200) when all are healthy, `degraded` (200) when only MCP servers are unreachable, or `not_ready` (503) when PostgreSQL or Redis is down.",
+        "operationId": "health_ready_health_ready_get",
+        "responses": {
+          "200": {
+            "description": "Detailed readiness status for each dependency",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        },
+        "x-rate-limit": "300/minute"
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "APIKeyConnectRequest": {
+        "properties": {
+          "type": {
+            "type": "string",
+            "title": "Type"
+          },
+          "api_key": {
+            "type": "string",
+            "title": "Api Key"
+          },
+          "extra_config": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Extra Config"
+          }
+        },
+        "type": "object",
+        "required": [
+          "type",
+          "api_key"
+        ],
+        "title": "APIKeyConnectRequest",
+        "example": {
+          "api_key": "SG.xxxxx",
+          "type": "sendgrid"
+        }
+      },
+      "AnalyticsOverview": {
+        "properties": {
+          "period_days": {
+            "type": "integer",
+            "title": "Period Days"
+          },
+          "total_runs": {
+            "type": "integer",
+            "title": "Total Runs"
+          },
+          "successful_runs": {
+            "type": "integer",
+            "title": "Successful Runs"
+          },
+          "failed_runs": {
+            "type": "integer",
+            "title": "Failed Runs"
+          },
+          "success_rate": {
+            "type": "number",
+            "title": "Success Rate"
+          },
+          "total_tokens_used": {
+            "type": "integer",
+            "title": "Total Tokens Used"
+          },
+          "estimated_cost_usd": {
+            "type": "number",
+            "title": "Estimated Cost Usd"
+          },
+          "content_published": {
+            "type": "integer",
+            "title": "Content Published"
+          },
+          "content_pending_approval": {
+            "type": "integer",
+            "title": "Content Pending Approval"
+          },
+          "blocked_injection_attempts": {
+            "type": "integer",
+            "title": "Blocked Injection Attempts"
+          },
+          "dlp_violations_caught": {
+            "type": "integer",
+            "title": "Dlp Violations Caught"
+          }
+        },
+        "type": "object",
+        "required": [
+          "period_days",
+          "total_runs",
+          "successful_runs",
+          "failed_runs",
+          "success_rate",
+          "total_tokens_used",
+          "estimated_cost_usd",
+          "content_published",
+          "content_pending_approval",
+          "blocked_injection_attempts",
+          "dlp_violations_caught"
+        ],
+        "title": "AnalyticsOverview",
+        "example": {
+          "blocked_injection_attempts": 5,
+          "content_pending_approval": 12,
+          "content_published": 87,
+          "dlp_violations_caught": 2,
+          "estimated_cost_usd": 0.3705,
+          "failed_runs": 10,
+          "period_days": 30,
+          "success_rate": 0.8966,
+          "successful_runs": 130,
+          "total_runs": 145,
+          "total_tokens_used": 123500
+        }
+      },
+      "AuditLogResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "workspace_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Workspace Id"
+          },
+          "action": {
+            "type": "string",
+            "title": "Action"
+          },
+          "actor": {
+            "type": "string",
+            "title": "Actor"
+          },
+          "log_metadata": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Log Metadata"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "workspace_id",
+          "action",
+          "actor",
+          "log_metadata",
+          "created_at"
+        ],
+        "title": "AuditLogResponse"
+      },
+      "AuditLogSummary": {
+        "properties": {
+          "total_runs": {
+            "type": "integer",
+            "title": "Total Runs"
+          },
+          "successful_runs": {
+            "type": "integer",
+            "title": "Successful Runs"
+          },
+          "failed_runs": {
+            "type": "integer",
+            "title": "Failed Runs"
+          },
+          "blocked_injections": {
+            "type": "integer",
+            "title": "Blocked Injections"
+          },
+          "dlp_violations": {
+            "type": "integer",
+            "title": "Dlp Violations"
+          },
+          "content_published": {
+            "type": "integer",
+            "title": "Content Published"
+          },
+          "tokens_used": {
+            "type": "integer",
+            "title": "Tokens Used"
+          }
+        },
+        "type": "object",
+        "required": [
+          "total_runs",
+          "successful_runs",
+          "failed_runs",
+          "blocked_injections",
+          "dlp_violations",
+          "content_published",
+          "tokens_used"
+        ],
+        "title": "AuditLogSummary"
+      },
+      "AutomationBreakdown": {
+        "properties": {
+          "automation_id": {
+            "type": "string",
+            "title": "Automation Id"
+          },
+          "automation_name": {
+            "type": "string",
+            "title": "Automation Name"
+          },
+          "type": {
+            "type": "string",
+            "title": "Type"
+          },
+          "runs_total": {
+            "type": "integer",
+            "title": "Runs Total"
+          },
+          "runs_successful": {
+            "type": "integer",
+            "title": "Runs Successful"
+          },
+          "runs_failed": {
+            "type": "integer",
+            "title": "Runs Failed"
+          },
+          "avg_tokens_per_run": {
+            "type": "number",
+            "title": "Avg Tokens Per Run"
+          },
+          "last_run_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Run At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "automation_id",
+          "automation_name",
+          "type",
+          "runs_total",
+          "runs_successful",
+          "runs_failed",
+          "avg_tokens_per_run",
+          "last_run_at"
+        ],
+        "title": "AutomationBreakdown"
+      },
+      "AutomationCreate": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "type": {
+            "type": "string",
+            "title": "Type"
+          },
+          "config": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Config",
+            "default": {}
+          },
+          "schedule": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Schedule"
+          },
+          "trigger": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Trigger"
+          },
+          "active": {
+            "type": "boolean",
+            "title": "Active",
+            "default": true
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "type"
+        ],
+        "title": "AutomationCreate",
+        "example": {
+          "active": true,
+          "config": {
+            "platforms": [
+              "linkedin"
+            ],
+            "require_approval": true,
+            "tone": "professional",
+            "topic": "AI industry trends"
+          },
+          "name": "Daily LinkedIn Post",
+          "schedule": "0 9 * * MON-FRI",
+          "trigger": "schedule",
+          "type": "social_post"
+        }
+      },
+      "AutomationResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "workspace_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Workspace Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "type": {
+            "type": "string",
+            "title": "Type"
+          },
+          "config": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Config"
+          },
+          "schedule": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Schedule"
+          },
+          "trigger": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Trigger"
+          },
+          "active": {
+            "type": "boolean",
+            "title": "Active"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "workspace_id",
+          "name",
+          "type",
+          "config",
+          "schedule",
+          "trigger",
+          "active",
+          "created_at"
+        ],
+        "title": "AutomationResponse",
+        "example": {
+          "active": true,
+          "config": {
+            "platforms": [
+              "linkedin"
+            ],
+            "topic": "AI trends"
+          },
+          "created_at": "2025-01-15T09:00:00+00:00",
+          "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+          "name": "Daily LinkedIn Post",
+          "schedule": "0 9 * * MON-FRI",
+          "trigger": "schedule",
+          "type": "social_post",
+          "workspace_id": "3fa85f64-5717-4562-b3fc-2c963f66afa7"
+        }
+      },
+      "AutomationRunResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "automation_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Automation Id"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "result": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Result"
+          },
+          "error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error"
+          },
+          "ai_tokens_used": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ai Tokens Used"
+          },
+          "started_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Started At"
+          },
+          "finished_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Finished At"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "automation_id",
+          "status",
+          "result",
+          "error",
+          "ai_tokens_used",
+          "started_at",
+          "finished_at",
+          "created_at"
+        ],
+        "title": "AutomationRunResponse",
+        "example": {
+          "ai_tokens_used": 850,
+          "automation_id": "3fa85f64-5717-4562-b3fc-2c963f66afa7",
+          "created_at": "2025-01-15T09:00:00+00:00",
+          "finished_at": "2025-01-15T09:00:04+00:00",
+          "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+          "result": {
+            "content": "AI is transforming industries...",
+            "platform": "linkedin"
+          },
+          "started_at": "2025-01-15T09:00:01+00:00",
+          "status": "success"
+        }
+      },
+      "AutomationUpdate": {
+        "properties": {
+          "name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "config": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Config"
+          },
+          "schedule": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Schedule"
+          },
+          "trigger": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Trigger"
+          },
+          "active": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Active"
+          }
+        },
+        "type": "object",
+        "title": "AutomationUpdate"
+      },
+      "BrandVoiceSchema": {
+        "properties": {
+          "tone": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tone"
+          },
+          "avoid": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Avoid"
+          },
+          "examples": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Examples"
+          },
+          "industry": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Industry"
+          },
+          "target_audience": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Target Audience"
+          }
+        },
+        "type": "object",
+        "title": "BrandVoiceSchema"
+      },
+      "ContentQueueItem": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "automation_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Automation Id"
+          },
+          "platform": {
+            "type": "string",
+            "title": "Platform"
+          },
+          "content": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Content"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "scheduled_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Scheduled At"
+          },
+          "published_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Published At"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "automation_id",
+          "platform",
+          "content",
+          "status",
+          "scheduled_at",
+          "published_at",
+          "created_at"
+        ],
+        "title": "ContentQueueItem"
+      },
+      "ContentQueueReject": {
+        "properties": {
+          "reason": {
+            "type": "string",
+            "title": "Reason",
+            "default": ""
+          }
+        },
+        "type": "object",
+        "title": "ContentQueueReject"
+      },
+      "DataResponse_AnalyticsOverview_": {
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/AnalyticsOverview"
+          },
+          "meta": {
+            "$ref": "#/components/schemas/Meta"
+          }
+        },
+        "type": "object",
+        "required": [
+          "data",
+          "meta"
+        ],
+        "title": "DataResponse[AnalyticsOverview]"
+      },
+      "DataResponse_AuditLogResponse_": {
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/AuditLogResponse"
+          },
+          "meta": {
+            "$ref": "#/components/schemas/Meta"
+          }
+        },
+        "type": "object",
+        "required": [
+          "data",
+          "meta"
+        ],
+        "title": "DataResponse[AuditLogResponse]"
+      },
+      "DataResponse_AuditLogSummary_": {
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/AuditLogSummary"
+          },
+          "meta": {
+            "$ref": "#/components/schemas/Meta"
+          }
+        },
+        "type": "object",
+        "required": [
+          "data",
+          "meta"
+        ],
+        "title": "DataResponse[AuditLogSummary]"
+      },
+      "DataResponse_AutomationResponse_": {
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/AutomationResponse"
+          },
+          "meta": {
+            "$ref": "#/components/schemas/Meta"
+          }
+        },
+        "type": "object",
+        "required": [
+          "data",
+          "meta"
+        ],
+        "title": "DataResponse[AutomationResponse]"
+      },
+      "DataResponse_AutomationRunResponse_": {
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/AutomationRunResponse"
+          },
+          "meta": {
+            "$ref": "#/components/schemas/Meta"
+          }
+        },
+        "type": "object",
+        "required": [
+          "data",
+          "meta"
+        ],
+        "title": "DataResponse[AutomationRunResponse]"
+      },
+      "DataResponse_BrandVoiceSchema_": {
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/BrandVoiceSchema"
+          },
+          "meta": {
+            "$ref": "#/components/schemas/Meta"
+          }
+        },
+        "type": "object",
+        "required": [
+          "data",
+          "meta"
+        ],
+        "title": "DataResponse[BrandVoiceSchema]"
+      },
+      "DataResponse_ContentQueueItem_": {
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/ContentQueueItem"
+          },
+          "meta": {
+            "$ref": "#/components/schemas/Meta"
+          }
+        },
+        "type": "object",
+        "required": [
+          "data",
+          "meta"
+        ],
+        "title": "DataResponse[ContentQueueItem]"
+      },
+      "DataResponse_IntegrationResponse_": {
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/IntegrationResponse"
+          },
+          "meta": {
+            "$ref": "#/components/schemas/Meta"
+          }
+        },
+        "type": "object",
+        "required": [
+          "data",
+          "meta"
+        ],
+        "title": "DataResponse[IntegrationResponse]"
+      },
+      "DataResponse_IntegrationStatusResponse_": {
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/IntegrationStatusResponse"
+          },
+          "meta": {
+            "$ref": "#/components/schemas/Meta"
+          }
+        },
+        "type": "object",
+        "required": [
+          "data",
+          "meta"
+        ],
+        "title": "DataResponse[IntegrationStatusResponse]"
+      },
+      "DataResponse_TokenResponse_": {
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/TokenResponse"
+          },
+          "meta": {
+            "$ref": "#/components/schemas/Meta"
+          }
+        },
+        "type": "object",
+        "required": [
+          "data",
+          "meta"
+        ],
+        "title": "DataResponse[TokenResponse]"
+      },
+      "DataResponse_Union_BrandVoiceSchema__NoneType__": {
+        "properties": {
+          "data": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/BrandVoiceSchema"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "meta": {
+            "$ref": "#/components/schemas/Meta"
+          }
+        },
+        "type": "object",
+        "required": [
+          "data",
+          "meta"
+        ],
+        "title": "DataResponse[Union[BrandVoiceSchema, NoneType]]"
+      },
+      "DataResponse_UserResponse_": {
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/UserResponse"
+          },
+          "meta": {
+            "$ref": "#/components/schemas/Meta"
+          }
+        },
+        "type": "object",
+        "required": [
+          "data",
+          "meta"
+        ],
+        "title": "DataResponse[UserResponse]"
+      },
+      "DataResponse_WorkspaceDetailResponse_": {
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/WorkspaceDetailResponse"
+          },
+          "meta": {
+            "$ref": "#/components/schemas/Meta"
+          }
+        },
+        "type": "object",
+        "required": [
+          "data",
+          "meta"
+        ],
+        "title": "DataResponse[WorkspaceDetailResponse]"
+      },
+      "DataResponse_dict_": {
+        "properties": {
+          "data": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Data"
+          },
+          "meta": {
+            "$ref": "#/components/schemas/Meta"
+          }
+        },
+        "type": "object",
+        "required": [
+          "data",
+          "meta"
+        ],
+        "title": "DataResponse[dict]"
+      },
+      "DataResponse_list_PlatformStats__": {
+        "properties": {
+          "data": {
+            "items": {
+              "$ref": "#/components/schemas/PlatformStats"
+            },
+            "type": "array",
+            "title": "Data"
+          },
+          "meta": {
+            "$ref": "#/components/schemas/Meta"
+          }
+        },
+        "type": "object",
+        "required": [
+          "data",
+          "meta"
+        ],
+        "title": "DataResponse[list[PlatformStats]]"
+      },
+      "DataResponse_list_TokenUsageSeries__": {
+        "properties": {
+          "data": {
+            "items": {
+              "$ref": "#/components/schemas/TokenUsageSeries"
+            },
+            "type": "array",
+            "title": "Data"
+          },
+          "meta": {
+            "$ref": "#/components/schemas/Meta"
+          }
+        },
+        "type": "object",
+        "required": [
+          "data",
+          "meta"
+        ],
+        "title": "DataResponse[list[TokenUsageSeries]]"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "IntegrationConnectRequest": {
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": [
+              "twitter",
+              "linkedin",
+              "gmail",
+              "hubspot",
+              "salesforce",
+              "sendgrid",
+              "zendesk"
+            ],
+            "title": "Type"
+          }
+        },
+        "type": "object",
+        "required": [
+          "type"
+        ],
+        "title": "IntegrationConnectRequest",
+        "example": {
+          "type": "linkedin"
+        }
+      },
+      "IntegrationResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "workspace_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Workspace Id"
+          },
+          "type": {
+            "type": "string",
+            "title": "Type"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "meta": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Meta"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "workspace_id",
+          "type",
+          "status",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "IntegrationResponse",
+        "example": {
+          "created_at": "2025-01-15T09:00:00+00:00",
+          "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+          "meta": {
+            "account_id": "urn:li:person:abc123",
+            "account_name": "Alice Smith"
+          },
+          "status": "active",
+          "type": "linkedin",
+          "updated_at": "2025-01-15T09:00:00+00:00",
+          "workspace_id": "3fa85f64-5717-4562-b3fc-2c963f66afa7"
+        }
+      },
+      "IntegrationStatusResponse": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "latency_ms": {
+            "type": "number",
+            "title": "Latency Ms"
+          },
+          "last_checked": {
+            "type": "string",
+            "title": "Last Checked"
+          }
+        },
+        "type": "object",
+        "required": [
+          "status",
+          "latency_ms",
+          "last_checked"
+        ],
+        "title": "IntegrationStatusResponse",
+        "example": {
+          "last_checked": "2025-01-15T09:00:00+00:00",
+          "latency_ms": 142.5,
+          "status": "healthy"
+        }
+      },
+      "LoginRequest": {
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email",
+            "title": "Email"
+          },
+          "password": {
+            "type": "string",
+            "title": "Password"
+          }
+        },
+        "type": "object",
+        "required": [
+          "email",
+          "password"
+        ],
+        "title": "LoginRequest",
+        "example": {
+          "email": "alice@acme.com",
+          "password": "Str0ng!Pass"
+        }
+      },
+      "Meta": {
+        "properties": {
+          "request_id": {
+            "type": "string",
+            "title": "Request Id"
+          },
+          "timestamp": {
+            "type": "string",
+            "title": "Timestamp"
+          },
+          "version": {
+            "type": "string",
+            "title": "Version",
+            "default": "v1"
+          }
+        },
+        "type": "object",
+        "required": [
+          "request_id",
+          "timestamp"
+        ],
+        "title": "Meta"
+      },
+      "OAuthCallbackRequest": {
+        "properties": {
+          "code": {
+            "type": "string",
+            "title": "Code"
+          },
+          "state": {
+            "type": "string",
+            "title": "State"
+          },
+          "provider": {
+            "type": "string",
+            "title": "Provider"
+          }
+        },
+        "type": "object",
+        "required": [
+          "code",
+          "state",
+          "provider"
+        ],
+        "title": "OAuthCallbackRequest",
+        "example": {
+          "code": "AQW3...",
+          "provider": "linkedin",
+          "state": "abc123xyz"
+        }
+      },
+      "PaginatedResponse_AuditLogResponse_": {
+        "properties": {
+          "data": {
+            "items": {
+              "$ref": "#/components/schemas/AuditLogResponse"
+            },
+            "type": "array",
+            "title": "Data"
+          },
+          "meta": {
+            "$ref": "#/components/schemas/PaginationMeta"
+          }
+        },
+        "type": "object",
+        "required": [
+          "data",
+          "meta"
+        ],
+        "title": "PaginatedResponse[AuditLogResponse]"
+      },
+      "PaginatedResponse_AutomationBreakdown_": {
+        "properties": {
+          "data": {
+            "items": {
+              "$ref": "#/components/schemas/AutomationBreakdown"
+            },
+            "type": "array",
+            "title": "Data"
+          },
+          "meta": {
+            "$ref": "#/components/schemas/PaginationMeta"
+          }
+        },
+        "type": "object",
+        "required": [
+          "data",
+          "meta"
+        ],
+        "title": "PaginatedResponse[AutomationBreakdown]"
+      },
+      "PaginatedResponse_AutomationResponse_": {
+        "properties": {
+          "data": {
+            "items": {
+              "$ref": "#/components/schemas/AutomationResponse"
+            },
+            "type": "array",
+            "title": "Data"
+          },
+          "meta": {
+            "$ref": "#/components/schemas/PaginationMeta"
+          }
+        },
+        "type": "object",
+        "required": [
+          "data",
+          "meta"
+        ],
+        "title": "PaginatedResponse[AutomationResponse]"
+      },
+      "PaginatedResponse_AutomationRunResponse_": {
+        "properties": {
+          "data": {
+            "items": {
+              "$ref": "#/components/schemas/AutomationRunResponse"
+            },
+            "type": "array",
+            "title": "Data"
+          },
+          "meta": {
+            "$ref": "#/components/schemas/PaginationMeta"
+          }
+        },
+        "type": "object",
+        "required": [
+          "data",
+          "meta"
+        ],
+        "title": "PaginatedResponse[AutomationRunResponse]"
+      },
+      "PaginatedResponse_ContentQueueItem_": {
+        "properties": {
+          "data": {
+            "items": {
+              "$ref": "#/components/schemas/ContentQueueItem"
+            },
+            "type": "array",
+            "title": "Data"
+          },
+          "meta": {
+            "$ref": "#/components/schemas/PaginationMeta"
+          }
+        },
+        "type": "object",
+        "required": [
+          "data",
+          "meta"
+        ],
+        "title": "PaginatedResponse[ContentQueueItem]"
+      },
+      "PaginatedResponse_IntegrationResponse_": {
+        "properties": {
+          "data": {
+            "items": {
+              "$ref": "#/components/schemas/IntegrationResponse"
+            },
+            "type": "array",
+            "title": "Data"
+          },
+          "meta": {
+            "$ref": "#/components/schemas/PaginationMeta"
+          }
+        },
+        "type": "object",
+        "required": [
+          "data",
+          "meta"
+        ],
+        "title": "PaginatedResponse[IntegrationResponse]"
+      },
+      "PaginationMeta": {
+        "properties": {
+          "request_id": {
+            "type": "string",
+            "title": "Request Id"
+          },
+          "timestamp": {
+            "type": "string",
+            "title": "Timestamp"
+          },
+          "version": {
+            "type": "string",
+            "title": "Version",
+            "default": "v1"
+          },
+          "total_count": {
+            "type": "integer",
+            "title": "Total Count"
+          },
+          "limit": {
+            "type": "integer",
+            "title": "Limit"
+          },
+          "offset": {
+            "type": "integer",
+            "title": "Offset"
+          },
+          "has_more": {
+            "type": "boolean",
+            "title": "Has More"
+          }
+        },
+        "type": "object",
+        "required": [
+          "request_id",
+          "timestamp",
+          "total_count",
+          "limit",
+          "offset",
+          "has_more"
+        ],
+        "title": "PaginationMeta"
+      },
+      "PlatformStats": {
+        "properties": {
+          "platform": {
+            "type": "string",
+            "title": "Platform"
+          },
+          "content_published": {
+            "type": "integer",
+            "title": "Content Published"
+          },
+          "content_pending": {
+            "type": "integer",
+            "title": "Content Pending"
+          },
+          "content_rejected": {
+            "type": "integer",
+            "title": "Content Rejected"
+          }
+        },
+        "type": "object",
+        "required": [
+          "platform",
+          "content_published",
+          "content_pending",
+          "content_rejected"
+        ],
+        "title": "PlatformStats"
+      },
+      "RefreshRequest": {
+        "properties": {
+          "refresh_token": {
+            "type": "string",
+            "title": "Refresh Token"
+          }
+        },
+        "type": "object",
+        "required": [
+          "refresh_token"
+        ],
+        "title": "RefreshRequest",
+        "example": {
+          "refresh_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+        }
+      },
+      "RegisterRequest": {
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email",
+            "title": "Email"
+          },
+          "password": {
+            "type": "string",
+            "title": "Password"
+          },
+          "workspace_name": {
+            "type": "string",
+            "title": "Workspace Name",
+            "default": "My Workspace"
+          }
+        },
+        "type": "object",
+        "required": [
+          "email",
+          "password"
+        ],
+        "title": "RegisterRequest",
+        "example": {
+          "email": "alice@acme.com",
+          "password": "Str0ng!Pass",
+          "workspace_name": "Acme Corp"
+        }
+      },
+      "TokenResponse": {
+        "properties": {
+          "access_token": {
+            "type": "string",
+            "title": "Access Token"
+          },
+          "refresh_token": {
+            "type": "string",
+            "title": "Refresh Token"
+          },
+          "token_type": {
+            "type": "string",
+            "title": "Token Type",
+            "default": "bearer"
+          }
+        },
+        "type": "object",
+        "required": [
+          "access_token",
+          "refresh_token"
+        ],
+        "title": "TokenResponse",
+        "example": {
+          "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+          "refresh_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+          "token_type": "bearer"
+        }
+      },
+      "TokenUsageSeries": {
+        "properties": {
+          "date": {
+            "type": "string",
+            "title": "Date"
+          },
+          "input_tokens": {
+            "type": "integer",
+            "title": "Input Tokens"
+          },
+          "output_tokens": {
+            "type": "integer",
+            "title": "Output Tokens"
+          },
+          "total_tokens": {
+            "type": "integer",
+            "title": "Total Tokens"
+          },
+          "estimated_cost_usd": {
+            "type": "number",
+            "title": "Estimated Cost Usd"
+          }
+        },
+        "type": "object",
+        "required": [
+          "date",
+          "input_tokens",
+          "output_tokens",
+          "total_tokens",
+          "estimated_cost_usd"
+        ],
+        "title": "TokenUsageSeries",
+        "example": {
+          "date": "2025-01-15",
+          "estimated_cost_usd": 0.0126,
+          "input_tokens": 0,
+          "output_tokens": 0,
+          "total_tokens": 4200
+        }
+      },
+      "TriggerRequest": {
+        "properties": {
+          "payload": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Payload",
+            "default": {}
+          }
+        },
+        "type": "object",
+        "title": "TriggerRequest",
+        "example": {
+          "payload": {
+            "tone": "professional",
+            "topic": "AI trends in 2025"
+          }
+        }
+      },
+      "UserResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "title": "Email"
+          },
+          "plan": {
+            "type": "string",
+            "title": "Plan"
+          },
+          "is_active": {
+            "type": "boolean",
+            "title": "Is Active"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "email",
+          "plan",
+          "is_active",
+          "created_at"
+        ],
+        "title": "UserResponse"
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "ctx": {
+            "type": "object",
+            "title": "Context"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      },
+      "WorkspaceDetailResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "user_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "User Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "brand_voice": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Brand Voice"
+          },
+          "settings": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Settings"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "integrations_count": {
+            "type": "integer",
+            "title": "Integrations Count",
+            "default": 0
+          },
+          "automations_count": {
+            "type": "integer",
+            "title": "Automations Count",
+            "default": 0
+          },
+          "active_automations_count": {
+            "type": "integer",
+            "title": "Active Automations Count",
+            "default": 0
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "user_id",
+          "name",
+          "brand_voice",
+          "settings",
+          "created_at"
+        ],
+        "title": "WorkspaceDetailResponse",
+        "description": "WorkspaceResponse extended with computed counts."
+      },
+      "WorkspaceSettingsUpdate": {
+        "properties": {
+          "require_approval_default": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Require Approval Default"
+          },
+          "default_timezone": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Default Timezone"
+          },
+          "notification_email": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "email"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notification Email"
+          },
+          "content_language": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Content Language"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "WorkspaceSettingsUpdate",
+        "description": "Typed patch for workspace settings \u2014 rejects unknown keys."
+      },
+      "WorkspaceUpdate": {
+        "properties": {
+          "name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "settings": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Settings"
+          }
+        },
+        "type": "object",
+        "title": "WorkspaceUpdate"
+      }
+    },
+    "securitySchemes": {
+      "OAuth2PasswordBearer": {
+        "type": "oauth2",
+        "flows": {
+          "password": {
+            "scopes": {},
+            "tokenUrl": "/api/v1/auth/login"
+          }
+        }
+      }
+    }
+  },
+  "tags": [
+    {
+      "name": "Auth",
+      "description": "Registration, login, token refresh, and current user info."
+    },
+    {
+      "name": "Workspaces",
+      "description": "Workspace settings, brand voice configuration, and per-workspace preferences."
+    },
+    {
+      "name": "Automations",
+      "description": "Create and manage automations; trigger manual runs; view run history."
+    },
+    {
+      "name": "Content Queue",
+      "description": "Review, approve, or reject AI-generated content before it is published."
+    },
+    {
+      "name": "Audit Logs",
+      "description": "Immutable, workspace-scoped log of every action taken on the platform."
+    },
+    {
+      "name": "Integrations",
+      "description": "Connect external services via OAuth or API key. Includes live health checks per integration."
+    },
+    {
+      "name": "Analytics",
+      "description": "Run metrics, token usage, platform stats, and data export (CSV / JSON)."
+    },
+    {
+      "name": "Health",
+      "description": "Liveness and readiness probes for orchestration and monitoring."
+    }
+  ]
+}
