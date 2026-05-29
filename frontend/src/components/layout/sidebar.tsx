@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
-  Zap, Inbox, Plug, BarChart3, Shield,
+  Zap, Inbox, Plug, BarChart2, ScrollText,
   Settings, ChevronRight, LogOut,
 } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
@@ -23,8 +23,8 @@ const NAV_ITEMS = [
   { href: "/automations",  label: "Automations",   icon: Zap },
   { href: "/content",      label: "Content Queue",  icon: Inbox, pendingBadge: true },
   { href: "/integrations", label: "Integrations",   icon: Plug },
-  { href: "/analytics",    label: "Analytics",      icon: BarChart3 },
-  { href: "/audit",        label: "Audit Log",       icon: Shield },
+  { href: "/analytics",    label: "Analytics",      icon: BarChart2 },
+  { href: "/audit",        label: "Audit Log",       icon: ScrollText },
   { href: "/settings",     label: "Settings",        icon: Settings },
 ] as const;
 
