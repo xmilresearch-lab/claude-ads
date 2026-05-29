@@ -48,3 +48,10 @@ export function getMe(): Promise<UserResponse> {
 export function logout(): Promise<void> {
   return api.post<void>("/auth/logout").catch(() => undefined);
 }
+
+export function changePassword(params: {
+  current_password: string;
+  new_password: string;
+}): Promise<void> {
+  return api.post<void>("/auth/change-password", params);
+}
