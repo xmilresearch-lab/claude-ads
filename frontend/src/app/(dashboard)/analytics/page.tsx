@@ -1,13 +1,12 @@
 "use client";
 
 import { useState } from "react";
+import dynamic from "next/dynamic";
 import { Download, Loader2 } from "lucide-react";
 import { PageHeader } from "@/components/layout/page-header";
 import { EmptyState } from "@/components/shared/empty-state";
 import { KpiCard } from "@/components/analytics/KpiCard";
-import { RunTrendChart } from "@/components/analytics/RunTrendChart";
-import { TokenUsageChart } from "@/components/analytics/TokenUsageChart";
-import { PlatformChart } from "@/components/analytics/PlatformChart";
+import { ChartSkeleton } from "@/components/analytics/ChartPrimitives";
 import { AutomationTable } from "@/components/analytics/AutomationTable";
 import { DATE_RANGE_OPTIONS, formatNumber, formatCost } from "@/lib/analytics/dateRange";
 import {
@@ -19,6 +18,19 @@ import {
   useExportCSV,
 } from "@/hooks/useAnalytics";
 import type { DateRange } from "@/lib/api/analytics";
+
+const RunTrendChart = dynamic(
+  () => import("@/components/analytics/RunTrendChart").then((m) => ({ default: m.RunTrendChart })),
+  { ssr: false, loading: () => <ChartSkeleton height={220} /> },
+);
+const TokenUsageChart = dynamic(
+  () => import("@/components/analytics/TokenUsageChart").then((m) => ({ default: m.TokenUsageChart })),
+  { ssr: false, loading: () => <ChartSkeleton height={220} /> },
+);
+const PlatformChart = dynamic(
+  () => import("@/components/analytics/PlatformChart").then((m) => ({ default: m.PlatformChart })),
+  { ssr: false, loading: () => <ChartSkeleton height={220} /> },
+);
 
 export default function AnalyticsPage() {
   const [range, setRange] = useState<DateRange>("30d");

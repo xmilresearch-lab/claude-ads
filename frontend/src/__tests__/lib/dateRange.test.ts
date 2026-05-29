@@ -33,7 +33,7 @@ describe('buildDateAxis — 90d', () => {
 
 describe('fillTimeSeries — edge cases', () => {
   it('returns all defaults when data array is empty', () => {
-    const filled = fillTimeSeries([], '7d', { count: 0 })
+    const filled = fillTimeSeries<{ date: string; count: number }>([], '7d', { count: 0 })
     expect(filled).toHaveLength(7)
     expect(filled.every(d => d.count === 0)).toBe(true)
   })

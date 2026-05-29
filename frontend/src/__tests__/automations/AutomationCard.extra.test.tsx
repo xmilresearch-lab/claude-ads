@@ -44,8 +44,6 @@ describe('AutomationCard — menu and toggle', () => {
       />,
       { wrapper: Wrapper },
     )
-    // The MoreHorizontal button has no accessible name, target by aria-label pattern
-    const menuBtn = screen.getByRole('button', { name: '' })
     // Find the 3-dot button by looking at the buttons
     const allBtns = screen.getAllByRole('button')
     // The three-dot button is the small icon button (not toggle, run now)
@@ -69,7 +67,7 @@ describe('AutomationCard — menu and toggle', () => {
     // Open menu
     const allBtns = screen.getAllByRole('button')
     // Find the MoreHorizontal button (has an svg, not disabled)
-    const menuBtn = allBtns.find(b => !b.hasAttribute('aria-label') && !b.disabled)
+    const menuBtn = allBtns.find(b => !b.hasAttribute('aria-label') && !(b as HTMLButtonElement).disabled)
     if (menuBtn) {
       fireEvent.click(menuBtn)
       // Click Edit
