@@ -11,10 +11,16 @@ import {
   type AdminUsersParams,
 } from "@/lib/api/admin";
 
+export interface AdminWorkspacesParams {
+  search?: string;
+  limit?: number;
+  offset?: number;
+}
+
 export const adminKeys = {
   all: ["admin"] as const,
   users: (params: AdminUsersParams) => [...adminKeys.all, "users", params] as const,
-  workspaces: (search?: string) => [...adminKeys.all, "workspaces", search] as const,
+  workspaces: (params?: AdminWorkspacesParams) => [...adminKeys.all, "workspaces", params] as const,
   health: () => [...adminKeys.all, "health"] as const,
   tokens: () => [...adminKeys.all, "tokens"] as const,
 };
@@ -48,10 +54,10 @@ export function useUnsuspendUser() {
   });
 }
 
-export function useAdminWorkspaces(search?: string) {
+export function useAdminWorkspaces(params?: AdminWorkspacesParams) {
   return useQuery({
-    queryKey: adminKeys.workspaces(search),
-    queryFn: () => listAdminWorkspaces({ search }),
+    queryKey: adminKeys.workspaces(params),
+    queryFn: () => listAdminWorkspaces(params),
     staleTime: 30_000,
   });
 }
