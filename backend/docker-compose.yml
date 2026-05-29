@@ -1,0 +1,135 @@
+services:
+  api:
+    build: .
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./app:/app/app
+      - ./main.py:/app/main.py
+    env_file:
+      - .env
+    command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  postgres:
+    image: postgres:16-alpine
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: pass
+      POSTGRES_DB: automation_db
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U user -d automation_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  celery_worker_high:
+    build: .
+    command: >
+      celery -A app.workers.celery_app worker
+      --queues=high_priority
+      --concurrency=4
+      --loglevel=info
+      --hostname=worker-high@%h
+    env_file:
+      - .env
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+
+  celery_worker_medium:
+    build: .
+    command: >
+      celery -A app.workers.celery_app worker
+      --queues=medium_priority
+      --concurrency=4
+      --loglevel=info
+      --hostname=worker-medium@%h
+    env_file:
+      - .env
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+
+  celery_worker_low:
+    build: .
+    command: >
+      celery -A app.workers.celery_app worker
+      --queues=low_priority
+      --concurrency=2
+      --loglevel=info
+      --hostname=worker-low@%h
+    env_file:
+      - .env
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+
+  celery_beat:
+    build: .
+    command: >
+      celery -A app.workers.celery_app beat
+      --scheduler celery.beat:PersistentScheduler
+      --loglevel=info
+    env_file:
+      - .env
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+
+  flower:
+    image: mher/flower:2.0
+    command: celery flower --port=5555
+    environment:
+      - CELERY_BROKER_URL=${REDIS_URL}
+    ports:
+      - "5555:5555"
+    depends_on:
+      - redis
+
+  weaviate:
+    image: cr.weaviate.io/semitechnologies/weaviate:1.27.0
+    ports:
+      - "8080:8080"
+      - "50051:50051"
+    environment:
+      QUERY_DEFAULTS_LIMIT: "25"
+      AUTHENTICATION_ANONYMOUS_ACCESS_ENABLED: "true"
+      PERSISTENCE_DATA_PATH: /var/lib/weaviate
+      DEFAULT_VECTORIZER_MODULE: none
+    volumes:
+      - weaviate_data:/var/lib/weaviate
+
+volumes:
+  postgres_data:
+  weaviate_data:
