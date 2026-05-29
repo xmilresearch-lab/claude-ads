@@ -23,9 +23,6 @@ export function cronToHuman(expression: string): string {
   if (!expression || typeof expression !== "string") return "Invalid schedule";
   const trimmed = expression.trim();
 
-  const preset = CRON_PRESETS.find((p) => p.value === trimmed && p.value !== "");
-  if (preset) return preset.label;
-
   const parts = trimmed.split(" ");
   if (parts.length !== 5) return trimmed;
 
@@ -56,6 +53,14 @@ export function cronToHuman(expression: string): string {
   if (/^\d+$/.test(minute) && /^\d+$/.test(hour)) {
     const timeStr = formatTime(hour, minute);
 
+    // When both a specific dom AND a specific dow are set, the expression is
+    // ambiguous — return the raw string rather than guess.
+    const hasSpecificDom = /^\d+$/.test(dayOfMonth);
+    const hasSpecificDow = /^\d$/.test(dayOfWeek) || /^\d-\d$/.test(dayOfWeek);
+    if (hasSpecificDom && hasSpecificDow) {
+      return trimmed;
+    }
+
     if (/^\d$/.test(dayOfWeek)) {
       const dayName = dayNames[parseInt(dayOfWeek, 10)];
       return dayName ? `Every ${dayName} at ${timeStr}` : trimmed;
@@ -68,7 +73,7 @@ export function cronToHuman(expression: string): string {
       return `${dayNames[start]}–${dayNames[end]} at ${timeStr}`;
     }
 
-    if (/^\d+$/.test(dayOfMonth)) {
+    if (hasSpecificDom && dayOfWeek === "*") {
       const d = parseInt(dayOfMonth, 10);
       const suffix = d === 1 ? "st" : d === 2 ? "nd" : d === 3 ? "rd" : "th";
       return `${d}${suffix} of month at ${timeStr}`;
