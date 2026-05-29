@@ -7,11 +7,11 @@ import { cn } from "@/lib/utils/cn";
 import { APP_NAME } from "@/lib/utils/constants";
 
 const ADMIN_NAV = [
-  { href: "/admin",            label: "Overview",      icon: LayoutDashboard, exact: true },
-  { href: "/admin/users",      label: "Users",          icon: Users },
-  { href: "/admin/workspaces", label: "Workspaces",     icon: Building2 },
-  { href: "/admin/usage",      label: "Usage & Tokens", icon: Server },
-  { href: "/admin/system",     label: "System Health",  icon: ScrollText },
+  { href: "/admin",       label: "Overview",      icon: LayoutDashboard, exact: true },
+  { href: "/users",       label: "Users",          icon: Users },
+  { href: "/workspaces",  label: "Workspaces",     icon: Building2 },
+  { href: "/system",      label: "System Health",  icon: Server },
+  { href: "/admin/audit", label: "Audit Log",      icon: ScrollText },
 ] as const;
 
 export function AdminSidebar() {
@@ -42,7 +42,7 @@ export function AdminSidebar() {
             const exact = "exact" in rest ? rest.exact : false;
             const active = exact
               ? pathname === href
-              : pathname.startsWith(href) && href !== "/admin";
+              : pathname.startsWith(href);
             return (
               <Link key={href} href={href} className={cn("nav-item", active && "active")}>
                 <Icon className="h-4 w-4 shrink-0" />

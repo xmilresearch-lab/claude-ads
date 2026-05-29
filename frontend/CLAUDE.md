@@ -273,9 +273,8 @@ Never put secrets in `NEXT_PUBLIC_` variables.
 | F4 | Automations CRUD — API layer, cron utility, hooks (polling), AutomationCard, AutomationFormModal, RunDetailModal, page, 12 tests | ✅ Done |
 | F5 | Content queue — contentApi (7 endpoints), CONTENT_STATUS_CONFIG (6 statuses), getCharCountState (platform char limits), useContent hooks (polls 10s pending / 5s publishing), ContentCard (checkbox select), ReviewModal (inline edit + char counter + auto-save on blur), RejectModal, BulkActionBar (floating, inline reject reason), ContentQueuePage (filter tabs + platform filter + pagination), sidebar amber count badge, 12 unit tests | ✅ Done |
 | F6 | Analytics — analyticsApi (6 endpoints + CSV export), dateRange utility (buildDateAxis, fillTimeSeries, formatters), useAnalytics hooks (5min stale, no polling), ChartPrimitives (custom tooltip/colors), KpiCard, RunTrendChart (stacked area), TokenUsageChart (dual-axis), PlatformChart (horizontal bars), AutomationTable (sortable), AnalyticsPage (date range toggle + CSV export), 12 unit tests | ✅ Done |
-| F7 | Settings — workspace, billing, team | ⬜ |
-| F8 | Admin panel — workspaces, usage, system health | ⬜ |
-| F9 | E2E tests (Playwright) + accessibility audit | ⬜ |
+| F7 | Audit + Admin — auditLogApi (2 endpoints + CSV export), adminApi (6 endpoints), useAuditLog + useAdmin hooks, AuditLogPage (filterable table, inline row expand, pagination), AuditLogTable shared component (showWorkspaceColumn), change password form fixed (RHF+Zod, 400→inline error), admin layout verified (amber top border, plan guard), AdminUsersPage (suspend/unsuspend inline panels), AdminWorkspacesPage (usage metrics table), AdminSystemPage (live health polling 30s, CSS token bars), admin Audit Log page (all-workspace view), 12 unit tests | ✅ Done |
+| F8 | E2E tests (Playwright) + accessibility audit | ⬜ |
 
 ---
 
@@ -439,4 +438,57 @@ src/components/analytics/
   AutomationTable.tsx                    → sortable data table
 src/app/(dashboard)/analytics/page.tsx  → full dashboard page
 src/__tests__/analytics/                 → 12 unit tests (7 dateRange + 5 KpiCard)
+```
+
+### Audit Log + Admin (Sprint F7)
+
+**Audit Log**
+- `staleTime` 60s, no polling — historical append-only data
+- Inline row expand shows entry ID, resource ID, user agent, raw metadata JSON
+- Export blob download via raw `fetch` + `URL.createObjectURL`
+- `AuditLogTable` shared component: `showWorkspaceColumn=false` for dashboard `/audit`, `showWorkspaceColumn=true` for admin `/admin/audit` (adds Workspace column, adjusts colSpan)
+- Dashboard `/audit` → current workspace events only; Admin `/admin/audit` → platform-wide
+
+**Change Password (fixed from F2 stub)**
+- POST `/auth/change-password { current_password, new_password }`
+- 400 response → `setError("current_password", { message: "Current password is incorrect" })`
+- Success → `toast.success("Password updated successfully")` + `reset()`
+
+**Admin Access Guard**
+- `(admin)` route group layout checks `useAuth().isAdmin`; redirects to `/automations` if not admin
+- Admin layout: `border-t-2 border-t-amber` at viewport top, "ADMIN" amber label in sidebar
+
+**Admin Route Paths**
+- `/admin` → overview (`(admin)/admin/page.tsx`)
+- `/users` → `(admin)/users/page.tsx` (admin layout applied via route group)
+- `/workspaces` → `(admin)/workspaces/page.tsx`
+- `/system` → `(admin)/system/page.tsx`
+- `/admin/audit` → `(admin)/admin/audit/page.tsx`
+
+**System Health Polling**
+- `useSystemHealth()` polls every 30s (`refetchInterval: 30_000`)
+- Services: border `border-[#1E2330]` (up) / `border-amber-500/30` (slow) / `border-red-500/30` (down)
+- Queue depth KPI card: amber if >100, red if >500 (custom inline card, not KpiCard — value color can't be overridden via className)
+- Token usage by workspace: pure CSS proportional bars, max 8 rows, sorted desc by tokens
+- "Last checked" timestamp flashes amber on refetch (setState-during-render + setTimeout cleanup)
+
+**Key Files Added in F7**
+```
+src/lib/api/auditLog.ts                  → listAuditLog, exportAuditLogCSV + types
+src/lib/api/admin.ts                     → 6 functions + AdminUser, AdminWorkspace, SystemHealth types
+src/hooks/useAuditLog.ts                 → useAuditLog (60s stale), useExportAuditLog
+src/hooks/useAdmin.ts                    → useAdminUsers, useSuspendUser, useUnsuspendUser,
+                                           useAdminWorkspaces, useSystemHealth (polls 30s),
+                                           useAdminTokenUsage
+src/components/audit/AuditLogTable.tsx   → shared filterable table, showWorkspaceColumn prop
+src/app/(dashboard)/audit/page.tsx       → wraps AuditLogTable showWorkspaceColumn=false
+src/app/(dashboard)/settings/account/   → change password form fixed (was "coming soon" stub)
+src/app/(admin)/layout.tsx              → admin guard (isAdmin check + amber border)
+src/app/(admin)/users/page.tsx          → user list + inline suspend/unsuspend panels
+src/app/(admin)/workspaces/page.tsx     → workspace list + usage metrics
+src/app/(admin)/system/page.tsx         → live system health + CSS token usage bars
+src/app/(admin)/admin/audit/page.tsx    → admin audit log (all-workspace view)
+src/__tests__/audit/AuditLogPage.test.tsx  → 4 unit tests
+src/__tests__/admin/AdminUsersPage.test.tsx → 4 unit tests
+src/__tests__/admin/SystemHealth.test.tsx   → 4 unit tests
 ```
