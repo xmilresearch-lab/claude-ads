@@ -270,7 +270,7 @@ Never put secrets in `NEXT_PUBLIC_` variables.
 | F1 | Next.js scaffold, design system, auth, layout, dashboard shell | ✅ Done |
 | F2 | Workspace setup, brand voice, onboarding, settings nav, timezone utils, vitest | ✅ Done |
 | F3 | Integrations — provider configs, API key modal, OAuth connect/disconnect, HealthStatusBar, 12 unit tests | ✅ Done |
-| F4 | Automations CRUD — list, create, edit, delete, toggle | ⬜ |
+| F4 | Automations CRUD — API layer, cron utility, hooks (polling), AutomationCard, AutomationFormModal, RunDetailModal, page, 12 tests | ✅ Done |
 | F5 | Content queue — calendar view, approval workflow | ⬜ |
 | F6 | Analytics dashboard — charts, usage stats | ⬜ |
 | F7 | Settings — workspace, billing, team | ⬜ |
@@ -316,3 +316,28 @@ refs land in `useEffect` dep arrays and cause infinite render loops.
 
 **Sidebar error badge** — `useIntegrations()` is called in `Sidebar`; when any integration has
 `status === "error"`, a 2×2 `bg-red-500` dot is rendered absolutely over the Integrations nav item.
+
+### Automations (Sprint F4)
+
+**File layout**
+
+```
+src/lib/api/automations.ts               → 8 API functions + types
+src/lib/cron.ts                          → cronToHuman, validateCron, CRON_PRESETS (12)
+src/lib/automations/platforms.ts         → PLATFORM_CONFIGS, RUN_STATUS_CONFIG
+src/hooks/useAutomations.ts              → automationKeys + 7 hooks
+src/components/automations/
+  AutomationCard.tsx                     → card with 2s debounced trigger, 3-dot menu
+  AutomationFormModal.tsx                → create + edit, cron preset chips, live preview
+  RunDetailModal.tsx                     → live-polling run history
+src/app/(dashboard)/automations/page.tsx → filter tabs, grid, empty states
+src/__tests__/automations/               → 12 unit tests (6 cron + 6 card)
+```
+
+**Run status polling** — `useAutomationRuns` sets `refetchInterval` to 3 000 ms while any run is `pending`/`running`; returns `false` once all are terminal. Polling stops on modal unmount.
+
+**Trigger debounce** — 2-second client-side cooldown via `useState + setTimeout`. Prevents double-dispatch; backend rate limits are a second layer.
+
+**Cron display** — `cronToHuman()` converts expressions to labels. Live preview in form. Preset chips fill the cron input; "Custom" chip focuses the input for free entry.
+
+**Hook stability rule (same as F3)** — mock `useToggleAutomation` and `useTriggerAutomation` with stable `mutate` references declared once in factory scope to avoid infinite render loops.
