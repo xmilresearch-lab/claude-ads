@@ -69,7 +69,7 @@ export function BulkActionBar({ selectedIds, onClear }: BulkActionBarProps) {
         {/* Main bar */}
         <div className="flex items-center gap-4 px-5 py-3">
           {/* Count */}
-          <span className="text-sm font-mono text-text-primary whitespace-nowrap">
+          <span data-testid="selected-count" className="text-sm font-mono text-text-primary whitespace-nowrap">
             <span className="text-amber-400 font-bold">{count}</span>{" "}
             {count === 1 ? "item" : "items"} selected
           </span>
@@ -80,7 +80,7 @@ export function BulkActionBar({ selectedIds, onClear }: BulkActionBarProps) {
           <button
             type="button"
             onClick={handleApprove}
-            disabled={isActionPending}
+            disabled={!visible || isActionPending}
             className="flex items-center gap-1.5 text-sm text-emerald-400 hover:text-emerald-300 disabled:opacity-50 transition-colors"
           >
             <Check size={14} />

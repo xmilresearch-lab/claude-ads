@@ -271,7 +271,7 @@ Never put secrets in `NEXT_PUBLIC_` variables.
 | F2 | Workspace setup, brand voice, onboarding, settings nav, timezone utils, vitest | ✅ Done |
 | F3 | Integrations — provider configs, API key modal, OAuth connect/disconnect, HealthStatusBar, 12 unit tests | ✅ Done |
 | F4 | Automations CRUD — API layer, cron utility, hooks (polling), AutomationCard, AutomationFormModal, RunDetailModal, page, 12 tests | ✅ Done |
-| F5 | Content queue — calendar view, approval workflow | ⬜ |
+| F5 | Content queue — contentApi (7 endpoints), CONTENT_STATUS_CONFIG (6 statuses), getCharCountState (platform char limits), useContent hooks (polls 10s pending / 5s publishing), ContentCard (checkbox select), ReviewModal (inline edit + char counter + auto-save on blur), RejectModal, BulkActionBar (floating, inline reject reason), ContentQueuePage (filter tabs + platform filter + pagination), sidebar amber count badge, 12 unit tests | ✅ Done |
 | F6 | Analytics dashboard — charts, usage stats | ⬜ |
 | F7 | Settings — workspace, billing, team | ⬜ |
 | F8 | Admin panel — workspaces, usage, system health | ⬜ |
@@ -341,3 +341,57 @@ src/__tests__/automations/               → 12 unit tests (6 cron + 6 card)
 **Cron display** — `cronToHuman()` converts expressions to labels. Live preview in form. Preset chips fill the cron input; "Custom" chip focuses the input for free entry.
 
 **Hook stability rule (same as F3)** — mock `useToggleAutomation` and `useTriggerAutomation` with stable `mutate` references declared once in factory scope to avoid infinite render loops.
+
+### Content Queue (Sprint F5)
+
+**Approval Flow**
+```
+pending_review → (human approves) → approved → (Celery publish_worker) → published
+pending_review → (human rejects) → rejected
+approved → (publish fails) → failed
+```
+
+**Polling Strategy**
+- `useContent()` refetchInterval:
+  - 5s when any item has status `publishing` (active publish in progress)
+  - 10s when viewing `pending_review` or `all` (new AI content arrives from Celery)
+  - `false` otherwise (stable states: published, rejected, failed)
+- Separate low-cost query for pending count (`limit=1`, `total` field used for badge)
+
+**Inline Edit + Auto-Save**
+- ReviewModal lets reviewer edit content before approving
+- `useEditContent()` PATCH `/api/v1/content/{id}` called on textarea blur (800ms debounce)
+- Save state: idle → saving (spinner) → saved (green "Saved" for 2s) → idle
+- Char counter uses `getCharCountState()` from `src/lib/content/limits.ts`
+- Over-limit: Approve button disabled (can't approve content over platform limit)
+
+**Bulk Actions**
+- BulkActionBar floats centered above bottom of viewport (`fixed bottom-6`, centered)
+- Bulk reject: inline reason input slides in within the bar (no modal)
+- "Select All" in page header selects only `pending_review` items (not all)
+- `selectedIds` cleared on tab/filter change and after successful bulk action
+
+**Sidebar Badge**
+- Amber number pill (not dot) showing live `pending_review` count
+- Shows "99+" when count exceeds 99
+- Separate `useContent({ status: 'pending_review', limit: 1 })` query in Sidebar
+  — uses `total` from `PaginatedContent`, not `items.length`
+
+**setState-during-render pattern** — used in ReviewModal, RejectModal, and ContentQueuePage
+to reset local state when a prop (item id, active tab, platform filter) changes, instead of
+calling `setState` inside a `useEffect` body (which triggers the `react-hooks/set-state-in-effect` lint error).
+
+**Key Files Added in F5**
+```
+src/lib/api/content.ts                   → 7 functions + ContentItem, ContentStatus types
+src/lib/content/config.ts                → CONTENT_STATUS_CONFIG, CONTENT_PLATFORM_CONFIG
+src/lib/content/limits.ts                → getCharCountState, PLATFORM_CHAR_LIMITS
+src/hooks/useContent.ts                  → contentKeys + 7 hooks
+src/components/content/
+  ContentCard.tsx                        → selectable card, action buttons, internal approve
+  ReviewModal.tsx                        → full review with inline edit, onReject callback
+  RejectModal.tsx                        → focused reject confirm, manages own state
+  BulkActionBar.tsx                      → floating bulk action bar, data-testid="selected-count"
+src/app/(dashboard)/content/page.tsx     → queue page with tabs + pagination
+src/__tests__/content/                   → 12 unit tests (5 limits + 4 card + 3 bulk)
+```
