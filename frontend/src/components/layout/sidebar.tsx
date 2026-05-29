@@ -2,15 +2,14 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useQuery } from "@tanstack/react-query";
 import {
-  Zap, CheckSquare2, Plug, BarChart3, Shield,
+  Zap, Inbox, Plug, BarChart3, Shield,
   Settings, ChevronRight, LogOut,
 } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 import { APP_NAME } from "@/lib/utils/constants";
 import { useAuth } from "@/lib/hooks/use-auth";
-import { listContent } from "@/lib/api/endpoints/content";
+import { useContent } from "@/hooks/useContent";
 import { useIntegrations } from "@/hooks/useIntegrations";
 
 const SETTINGS_SUB_NAV = [
@@ -22,7 +21,7 @@ const SETTINGS_SUB_NAV = [
 
 const NAV_ITEMS = [
   { href: "/automations",  label: "Automations",   icon: Zap },
-  { href: "/content",      label: "Content Queue",  icon: CheckSquare2, pendingBadge: true },
+  { href: "/content",      label: "Content Queue",  icon: Inbox, pendingBadge: true },
   { href: "/integrations", label: "Integrations",   icon: Plug },
   { href: "/analytics",    label: "Analytics",      icon: BarChart3 },
   { href: "/audit",        label: "Audit Log",       icon: Shield },
@@ -36,14 +35,8 @@ export function Sidebar() {
   const { data: integrations = [] } = useIntegrations();
   const hasIntegrationError = integrations.some((i) => i.status === "error");
 
-  const { data: pendingContent = [] } = useQuery({
-    queryKey: ["content", "pending-sidebar"],
-    queryFn: () => listContent({ status: "pending_approval", limit: 99 }),
-    staleTime: 30_000,
-    enabled: !!user,
-    retry: false,
-  });
-  const pendingCount = pendingContent.length;
+  const { data: pendingContent } = useContent({ status: "pending_review", limit: 1 });
+  const pendingCount = pendingContent?.total ?? 0;
 
   const onSettings = pathname.startsWith("/settings");
 
@@ -76,8 +69,8 @@ export function Sidebar() {
                   <Icon className="h-4 w-4 shrink-0" />
                   <span className="flex-1">{label}</span>
                   {hasBadge && pendingCount > 0 && (
-                    <span className="flex h-4 min-w-4 items-center justify-center rounded-full bg-amber px-1 text-2xs font-mono font-bold text-bg-base">
-                      {pendingCount > 9 ? "9+" : pendingCount}
+                    <span className="ml-auto text-[10px] font-mono px-1.5 py-0.5 rounded-[3px] bg-amber-500/20 text-amber-400 min-w-[18px] text-center">
+                      {pendingCount > 99 ? "99+" : pendingCount}
                     </span>
                   )}
                   {active && !hasBadge && (

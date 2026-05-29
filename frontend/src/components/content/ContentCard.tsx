@@ -2,30 +2,39 @@
 
 import { formatDistanceToNow } from "date-fns";
 import { Check, X, Eye } from "lucide-react";
+import { toast } from "sonner";
 import { CONTENT_STATUS_CONFIG, CONTENT_PLATFORM_CONFIG } from "@/lib/content/config";
+import { useApproveContent } from "@/hooks/useContent";
 import type { ContentItem } from "@/lib/api/content";
 import { cn } from "@/lib/utils/cn";
 
 interface ContentCardProps {
   item: ContentItem;
   selected: boolean;
-  onSelect: (id: string, checked: boolean) => void;
-  onApprove: (id: string) => void;
-  onReject: (id: string) => void;
+  onSelectToggle: (id: string) => void;
   onReview: (item: ContentItem) => void;
+  onQuickReject: (item: ContentItem) => void;
 }
 
 export function ContentCard({
   item,
   selected,
-  onSelect,
-  onApprove,
-  onReject,
+  onSelectToggle,
   onReview,
+  onQuickReject,
 }: ContentCardProps) {
   const statusConfig = CONTENT_STATUS_CONFIG[item.status];
   const platformConfig = CONTENT_PLATFORM_CONFIG[item.platform];
   const isPendingReview = item.status === "pending_review";
+
+  const approveMutation = useApproveContent();
+
+  const handleApprove = () => {
+    approveMutation.mutate(item.id, {
+      onSuccess: () => toast.success("Content approved"),
+      onError: () => toast.error("Failed to approve content"),
+    });
+  };
 
   return (
     <div
@@ -39,7 +48,7 @@ export function ContentCard({
         {/* Checkbox */}
         <button
           type="button"
-          onClick={() => onSelect(item.id, !selected)}
+          onClick={() => onSelectToggle(item.id)}
           className={cn(
             "mt-0.5 w-4 h-4 rounded-[3px] border flex-shrink-0 flex items-center justify-center transition-colors",
             selected
@@ -66,7 +75,6 @@ export function ContentCard({
             <span className="text-xs text-text-muted font-mono truncate">
               {item.automation_name}
             </span>
-            {/* Status badge */}
             <span
               className={cn(
                 "inline-flex items-center gap-1.5 text-xs px-2 py-0.5 rounded-full flex-shrink-0",
@@ -85,12 +93,10 @@ export function ContentCard({
             </span>
           </div>
 
-          {/* Content text */}
           <p className="text-sm text-text-primary line-clamp-3 leading-relaxed">
             {item.content}
           </p>
 
-          {/* Email subject if present */}
           {item.metadata?.subject && (
             <p className="mt-1 text-xs text-text-secondary">
               Subject: {item.metadata.subject}
@@ -105,7 +111,6 @@ export function ContentCard({
           {formatDistanceToNow(new Date(item.created_at), { addSuffix: true })}
         </span>
 
-        {/* Action buttons */}
         <div className="flex items-center gap-2">
           <button
             type="button"
@@ -120,7 +125,7 @@ export function ContentCard({
             <>
               <button
                 type="button"
-                onClick={() => onReject(item.id)}
+                onClick={() => onQuickReject(item)}
                 className="flex items-center gap-1.5 text-xs text-red-400 hover:text-red-300 border border-red-400/30 hover:border-red-400/60 px-2.5 py-1 rounded-[4px] transition-colors"
               >
                 <X size={12} />
@@ -128,8 +133,9 @@ export function ContentCard({
               </button>
               <button
                 type="button"
-                onClick={() => onApprove(item.id)}
-                className="flex items-center gap-1.5 text-xs text-emerald-400 hover:text-emerald-300 border border-emerald-400/30 hover:border-emerald-400/60 px-2.5 py-1 rounded-[4px] transition-colors"
+                onClick={handleApprove}
+                disabled={approveMutation.isPending}
+                className="flex items-center gap-1.5 text-xs text-emerald-400 hover:text-emerald-300 border border-emerald-400/30 hover:border-emerald-400/60 px-2.5 py-1 rounded-[4px] transition-colors disabled:opacity-50"
               >
                 <Check size={12} />
                 Approve
