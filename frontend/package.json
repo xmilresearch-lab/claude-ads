@@ -10,7 +10,10 @@
     "typecheck": "tsc --noEmit",
     "gen-types": "openapi-typescript $NEXT_PUBLIC_API_URL/../openapi.json -o src/lib/api/types.generated.ts",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "type-check": "tsc --noEmit",
+    "build:prod": "next build",
+    "analyze": "ANALYZE=true next build"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",

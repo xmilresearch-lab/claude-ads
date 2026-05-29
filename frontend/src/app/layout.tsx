@@ -4,6 +4,7 @@ import { Toaster } from "sonner";
 import { QueryProvider } from "@/lib/providers/query-provider";
 import { AuthProvider } from "@/lib/providers/auth-provider";
 import { APP_NAME } from "@/lib/utils/constants";
+import { assertEnv } from "@/lib/env";
 import "./globals.css";
 
 const syne = Syne({
@@ -29,6 +30,7 @@ export const metadata: Metadata = {
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
+  assertEnv();
   return (
     <html lang="en" className="h-full dark" suppressHydrationWarning>
       <body
