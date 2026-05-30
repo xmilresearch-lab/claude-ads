@@ -115,3 +115,116 @@ def test_check_and_refresh_credentials_skips_non_active_integrations() -> None:
 
     assert non_active.status == "disconnected"  # unchanged
     assert result["flagged"] == 1  # counted as flagged (from expiring IDs) but status not changed
+
+
+# ── Required named tests ───────────────────────────────────────────────────────
+
+def test_check_credentials_skips_inactive_integration() -> None:
+    """Integration with status != 'active' is skipped even when in expiring list."""
+    inactive = _make_integration(status="error", expires_in_hours=6)
+
+    with patch("app.workers.credential_worker.AsyncSessionLocal") as mock_session, \
+         patch("app.workers.credential_worker.check_expiring_credentials", new_callable=AsyncMock,
+               return_value=[str(inactive.id)]):
+
+        mock_db = MagicMock()
+        mock_db.__aenter__ = AsyncMock(return_value=mock_db)
+        mock_db.__aexit__ = AsyncMock(return_value=False)
+        mock_db.execute = AsyncMock(return_value=_scalar(inactive))
+        mock_db.commit = AsyncMock()
+        mock_session.return_value = mock_db
+
+        from app.workers.credential_worker import check_and_refresh_credentials
+        result = check_and_refresh_credentials()
+
+    assert inactive.status == "error"  # not changed to expiring_soon
+    assert result["refreshed"] == 0
+
+
+def test_check_credentials_refreshes_expiring_token() -> None:
+    """TikTok integration with expiring token is auto-refreshed successfully."""
+    tiktok = _make_integration(status="active", expires_in_hours=2)
+    tiktok.type = "tiktok"
+    # Set a real refresh_token in the credentials
+    creds = {"access_token": "old_tok", "refresh_token": "ref_tok",
+             "expires_at": (datetime.now(tz=timezone.utc) + timedelta(hours=2)).timestamp()}
+    from app.core.security import encrypt_credential
+    tiktok.credentials_encrypted = encrypt_credential(json.dumps(creds))
+
+    new_token_data = {
+        "access_token": "new_tok",
+        "expires_in": 86400,
+        "refresh_expires_in": 31536000,
+    }
+
+    with patch("app.workers.credential_worker.AsyncSessionLocal") as mock_session, \
+         patch("app.workers.credential_worker.check_expiring_credentials", new_callable=AsyncMock,
+               return_value=[str(tiktok.id)]), \
+         patch("app.workers.credential_worker.refresh_tiktok_token", new_callable=AsyncMock,
+               return_value=new_token_data), \
+         patch("app.workers.credential_worker.rotate_integration_credential", new_callable=AsyncMock):
+
+        mock_db = MagicMock()
+        mock_db.__aenter__ = AsyncMock(return_value=mock_db)
+        mock_db.__aexit__ = AsyncMock(return_value=False)
+        mock_db.execute = AsyncMock(return_value=_scalar(tiktok))
+        mock_db.commit = AsyncMock()
+        mock_session.return_value = mock_db
+
+        from app.workers.credential_worker import check_and_refresh_credentials
+        result = check_and_refresh_credentials()
+
+    assert result["flagged"] == 1
+    assert result["refreshed"] == 1
+    assert tiktok.status == "active"
+
+
+def test_check_credentials_marks_failed_on_refresh_error() -> None:
+    """When TikTok refresh raises an exception, the integration is marked error."""
+    tiktok = _make_integration(status="active", expires_in_hours=2)
+    tiktok.type = "tiktok"
+    creds = {"access_token": "tok", "refresh_token": "ref",
+             "expires_at": (datetime.now(tz=timezone.utc) + timedelta(hours=2)).timestamp()}
+    from app.core.security import encrypt_credential
+    tiktok.credentials_encrypted = encrypt_credential(json.dumps(creds))
+
+    with patch("app.workers.credential_worker.AsyncSessionLocal") as mock_session, \
+         patch("app.workers.credential_worker.check_expiring_credentials", new_callable=AsyncMock,
+               return_value=[str(tiktok.id)]), \
+         patch("app.workers.credential_worker.refresh_tiktok_token", new_callable=AsyncMock,
+               side_effect=RuntimeError("TikTok API unreachable")), \
+         patch("app.workers.credential_worker.mark_integration_error", new_callable=AsyncMock) \
+         as mock_mark_error:
+
+        mock_db = MagicMock()
+        mock_db.__aenter__ = AsyncMock(return_value=mock_db)
+        mock_db.__aexit__ = AsyncMock(return_value=False)
+        mock_db.execute = AsyncMock(return_value=_scalar(tiktok))
+        mock_db.commit = AsyncMock()
+        mock_session.return_value = mock_db
+
+        from app.workers.credential_worker import check_and_refresh_credentials
+        result = check_and_refresh_credentials()
+
+    assert result["refreshed"] == 0
+    mock_mark_error.assert_awaited_once_with(
+        str(tiktok.id), "TikTok API unreachable", mock_db
+    )
+
+
+def test_check_credentials_no_op_for_valid_token() -> None:
+    """When no integrations are expiring, task returns flagged=0, refreshed=0."""
+    with patch("app.workers.credential_worker.AsyncSessionLocal") as mock_session, \
+         patch("app.workers.credential_worker.check_expiring_credentials", new_callable=AsyncMock,
+               return_value=[]):
+
+        mock_db = MagicMock()
+        mock_db.__aenter__ = AsyncMock(return_value=mock_db)
+        mock_db.__aexit__ = AsyncMock(return_value=False)
+        mock_db.commit = AsyncMock()
+        mock_session.return_value = mock_db
+
+        from app.workers.credential_worker import check_and_refresh_credentials
+        result = check_and_refresh_credentials()
+
+    assert result == {"flagged": 0, "refreshed": 0}
