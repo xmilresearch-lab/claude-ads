@@ -117,19 +117,8 @@ services:
     depends_on:
       - redis
 
-  weaviate:
-    image: cr.weaviate.io/semitechnologies/weaviate:1.27.0
-    ports:
-      - "8080:8080"
-      - "50051:50051"
-    environment:
-      QUERY_DEFAULTS_LIMIT: "25"
-      AUTHENTICATION_ANONYMOUS_ACCESS_ENABLED: "true"
-      PERSISTENCE_DATA_PATH: /var/lib/weaviate
-      DEFAULT_VECTORIZER_MODULE: none
-    volumes:
-      - weaviate_data:/var/lib/weaviate
+# Weaviate removed — semantic search scoped to V2
+# Re-add with: docker pull semitechnologies/weaviate:1.24
 
 volumes:
   postgres_data:
-  weaviate_data:
