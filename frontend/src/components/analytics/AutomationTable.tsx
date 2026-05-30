@@ -72,10 +72,11 @@ export function AutomationTable({ data, isLoading }: AutomationTableProps) {
 
   return (
     <div className="bg-[#0D0E14] border border-[#1E2330] rounded-[6px] overflow-hidden">
-      <table className="w-full text-left border-collapse">
+      <div className="overflow-x-auto">
+      <table className="w-full text-left border-collapse min-w-[520px]">
         <thead>
           <tr className="bg-[#060709] border-b border-[#1E2330]">
-            <th className="px-4 py-2.5 text-[10px] font-mono uppercase tracking-widest text-[#6B7280]">
+            <th className="sticky left-0 bg-[#060709] px-4 py-2.5 text-[10px] font-mono uppercase tracking-widest text-[#6B7280]">
               Automation
             </th>
             <th
@@ -135,7 +136,7 @@ export function AutomationTable({ data, isLoading }: AutomationTableProps) {
                   key={row.automation_id}
                   className="border-b border-[#1A1D2B] last:border-0 hover:bg-[#060709] transition-colors"
                 >
-                  <td className="px-4 py-3">
+                  <td className="sticky left-0 bg-[#0D0E14] px-4 py-3">
                     <p className="font-mono text-xs text-white">{row.automation_name}</p>
                     <p className="text-[10px] font-mono text-[#6B7280] mt-0.5">
                       {row.platform}
@@ -163,6 +164,7 @@ export function AutomationTable({ data, isLoading }: AutomationTableProps) {
           )}
         </tbody>
       </table>
+      </div>
 
       {hasMore && (
         <div className="border-t border-[#1E2330]">
