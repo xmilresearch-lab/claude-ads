@@ -68,7 +68,26 @@ def _make_run() -> MagicMock:
     return r
 
 
-# ── get (404 path) ─────────────────────────────────────────────────────────────
+# ── get (success + 404) ───────────────────────────────────────────────────────
+
+
+@pytest.mark.asyncio
+async def test_get_automation_returns_automation_when_found() -> None:
+    """get returns the automation when it exists for the workspace."""
+    from app.api.automations import get
+
+    workspace = _make_workspace()
+    automation = _make_automation()
+
+    with patch(
+        "app.services.automation_service.get_automation",
+        new_callable=AsyncMock,
+        return_value=automation,
+    ), patch("app.schemas.automation.AutomationResponse.model_validate") as mv:
+        mv.return_value = MagicMock(id=automation.id)
+        response = await get(_make_request(), automation.id, workspace, MagicMock())
+
+    assert response.data is not None
 
 
 @pytest.mark.asyncio
@@ -176,7 +195,32 @@ async def test_delete_automation_raises_404_when_missing() -> None:
     assert exc_info.value.status_code == 404
 
 
-# ── run (inactive automation) ──────────────────────────────────────────────────
+# ── run (not found + inactive) ────────────────────────────────────────────────
+
+
+@pytest.mark.asyncio
+async def test_run_raises_404_when_automation_missing() -> None:
+    """run raises 404 when automation is not found."""
+    from app.api.automations import run
+    from app.schemas.automation import TriggerRequest
+
+    workspace = _make_workspace()
+
+    with patch(
+        "app.services.automation_service.get_automation",
+        new_callable=AsyncMock,
+        return_value=None,
+    ):
+        with pytest.raises(HTTPException) as exc_info:
+            await run(
+                _make_request(),
+                uuid.uuid4(),
+                TriggerRequest(payload={}),
+                workspace,
+                MagicMock(),
+            )
+
+    assert exc_info.value.status_code == 404
 
 
 @pytest.mark.asyncio
