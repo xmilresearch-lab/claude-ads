@@ -115,7 +115,7 @@ export function ContentCard({
           <button
             type="button"
             onClick={() => onReview(item)}
-            className="flex items-center gap-1.5 text-xs text-text-secondary hover:text-text-primary border border-[#1E2330] hover:border-[#374151] px-2.5 py-1 rounded-[4px] transition-colors"
+            className="flex items-center gap-1.5 text-xs text-text-secondary hover:text-text-primary border border-[#1E2330] hover:border-[#374151] px-2.5 py-1 rounded-[4px] transition-colors min-h-[48px] sm:min-h-0"
           >
             <Eye size={12} />
             Review
@@ -126,7 +126,7 @@ export function ContentCard({
               <button
                 type="button"
                 onClick={() => onQuickReject(item)}
-                className="flex items-center gap-1.5 text-xs text-red-400 hover:text-red-300 border border-red-400/30 hover:border-red-400/60 px-2.5 py-1 rounded-[4px] transition-colors"
+                className="flex items-center gap-1.5 text-xs text-red-400 hover:text-red-300 border border-red-400/30 hover:border-red-400/60 px-2.5 py-1 rounded-[4px] transition-colors min-h-[48px] sm:min-h-0"
               >
                 <X size={12} />
                 Reject
@@ -135,7 +135,7 @@ export function ContentCard({
                 type="button"
                 onClick={handleApprove}
                 disabled={approveMutation.isPending}
-                className="flex items-center gap-1.5 text-xs text-emerald-400 hover:text-emerald-300 border border-emerald-400/30 hover:border-emerald-400/60 px-2.5 py-1 rounded-[4px] transition-colors disabled:opacity-50"
+                className="flex items-center gap-1.5 text-xs text-emerald-400 hover:text-emerald-300 border border-emerald-400/30 hover:border-emerald-400/60 px-2.5 py-1 rounded-[4px] transition-colors disabled:opacity-50 min-h-[48px] sm:min-h-0"
               >
                 <Check size={12} />
                 Approve

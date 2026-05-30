@@ -124,15 +124,15 @@ export function ReviewModal({ item, onClose, onReject }: ReviewModalProps) {
   const isActionPending = approveMutation.isPending || editMutation.isPending;
 
   return (
-    <div className="fixed inset-0 z-40 flex items-center justify-center">
+    <div className="fixed inset-0 z-40 flex items-end sm:items-center justify-center">
       {/* Backdrop */}
       <div
         className="absolute inset-0 bg-black/60 backdrop-blur-sm"
         onClick={onClose}
       />
 
-      {/* Modal */}
-      <div className="relative z-10 w-full max-w-3xl max-h-[90vh] bg-[#111318] border border-[#1E2330] rounded-[6px] shadow-2xl flex flex-col">
+      {/* Modal — full screen on mobile, centered sheet on sm+ */}
+      <div className="relative z-10 w-full h-[92dvh] sm:h-auto sm:max-w-3xl sm:max-h-[90vh] bg-[#111318] border-t sm:border border-[#1E2330] rounded-t-[6px] sm:rounded-[6px] shadow-2xl flex flex-col">
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-[#1E2330] flex-shrink-0">
           <div className="flex items-center gap-3">
@@ -244,8 +244,8 @@ export function ReviewModal({ item, onClose, onReject }: ReviewModalProps) {
             )}
           </div>
 
-          {/* Metadata sidebar */}
-          <div className="w-56 flex-shrink-0 border-l border-[#1E2330] p-5 overflow-y-auto">
+          {/* Metadata sidebar — hidden on mobile to maximize editing space */}
+          <div className="hidden sm:block w-56 flex-shrink-0 border-l border-[#1E2330] p-5 overflow-y-auto">
             <h3 className="text-xs font-mono text-text-muted uppercase tracking-wider mb-4">
               Details
             </h3>

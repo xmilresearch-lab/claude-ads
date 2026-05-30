@@ -110,7 +110,7 @@ export function IntegrationCard({ provider, integration, onApiKeyConnect }: Inte
             <button
               onClick={handleConnect}
               disabled={isLoading || isComingSoon}
-              className="bg-amber-500 hover:bg-amber-400 text-black text-xs font-medium px-3 py-1.5 rounded-[4px] transition-colors disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center gap-1.5"
+              className="bg-amber-500 hover:bg-amber-400 text-black text-xs font-medium px-3 py-1.5 rounded-[4px] transition-colors disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center gap-1.5 min-h-[48px] sm:min-h-0"
             >
               {isLoading && <Loader2 className="w-3 h-3 animate-spin" />}
               {config?.authType === "api_key" ? "Add API Key" : "Connect"}
@@ -122,7 +122,7 @@ export function IntegrationCard({ provider, integration, onApiKeyConnect }: Inte
               <button
                 onClick={handleConnect}
                 disabled={isLoading || isComingSoon}
-                className="bg-amber-500 hover:bg-amber-400 text-black text-xs font-medium px-3 py-1.5 rounded-[4px] transition-colors disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center gap-1.5"
+                className="bg-amber-500 hover:bg-amber-400 text-black text-xs font-medium px-3 py-1.5 rounded-[4px] transition-colors disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center gap-1.5 min-h-[48px] sm:min-h-0"
               >
                 {isOAuthPending && <Loader2 className="w-3 h-3 animate-spin" />}
                 Reconnect
@@ -130,7 +130,7 @@ export function IntegrationCard({ provider, integration, onApiKeyConnect }: Inte
               <button
                 onClick={handleDisconnect}
                 disabled={isLoading}
-                className="text-xs text-[#6B7280] hover:text-red-400 transition-colors underline-offset-2 hover:underline disabled:opacity-50 inline-flex items-center gap-1"
+                className="text-xs text-[#6B7280] hover:text-red-400 transition-colors underline-offset-2 hover:underline disabled:opacity-50 inline-flex items-center gap-1 min-h-[48px] sm:min-h-0"
               >
                 {isDisconnecting && <Loader2 className="w-3 h-3 animate-spin" />}
                 Disconnect
@@ -142,7 +142,7 @@ export function IntegrationCard({ provider, integration, onApiKeyConnect }: Inte
             <button
               onClick={handleDisconnect}
               disabled={isLoading}
-              className="text-xs text-[#6B7280] hover:text-red-400 transition-colors underline-offset-2 hover:underline disabled:opacity-50 inline-flex items-center gap-1"
+              className="text-xs text-[#6B7280] hover:text-red-400 transition-colors underline-offset-2 hover:underline disabled:opacity-50 inline-flex items-center gap-1 min-h-[48px] sm:min-h-0"
             >
               {isDisconnecting && <Loader2 className="w-3 h-3 animate-spin" />}
               Disconnect

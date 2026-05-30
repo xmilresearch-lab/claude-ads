@@ -173,7 +173,7 @@ export function AutomationCard({ automation, onEdit, onDelete, onRunTriggered }:
         <button
           onClick={handleTrigger}
           disabled={isRunDisabled}
-          className="bg-[#0D0E14] border border-[#1E2330] hover:border-amber-500/50 text-xs text-white px-3 py-1.5 rounded-[4px] transition-all disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center gap-1.5"
+          className="bg-[#0D0E14] border border-[#1E2330] hover:border-amber-500/50 text-xs text-white px-3 py-1.5 rounded-[4px] transition-all disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center gap-1.5 min-h-[48px] sm:min-h-0"
         >
           {isRunDisabled ? (
             <>

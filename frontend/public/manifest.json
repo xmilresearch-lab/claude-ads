@@ -1,0 +1,25 @@
+{
+  "name": "AI Platform",
+  "short_name": "AIPlatform",
+  "description": "AI-powered automation platform for social media, email, and CRM",
+  "theme_color": "#0A0B0F",
+  "background_color": "#0A0B0F",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "scope": "/",
+  "start_url": "/automations",
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

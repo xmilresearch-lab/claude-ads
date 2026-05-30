@@ -44,10 +44,10 @@ export function RunTrendChart({ data, range, isLoading }: RunTrendChartProps) {
     range === "7d" ? 0 : range === "30d" ? 4 : 13;
 
   if (isLoading) return <ChartSkeleton height={220} />;
-  if (isEmpty) return <div style={{ height: 220 }}><ChartEmpty /></div>;
+  if (isEmpty) return <div className="h-full"><ChartEmpty /></div>;
 
   return (
-    <ResponsiveContainer width="100%" height={220}>
+    <ResponsiveContainer width="100%" height="100%">
       <AreaChart data={chartData} margin={{ top: 4, right: 8, bottom: 0, left: 0 }}>
         <CartesianGrid {...gridProps} />
         <XAxis dataKey="label" {...xAxisProps} interval={tickInterval} />

@@ -67,14 +67,14 @@ export default function AnalyticsPage() {
   return (
     <div className="px-6 py-5">
       {/* Header row */}
-      <div className="flex justify-between items-center mb-6">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 mb-6">
         <PageHeader
           title="Analytics"
           subtitle="Performance and token usage across all automations"
           className="border-0 p-0"
         />
 
-        <div className="flex items-center gap-3 flex-shrink-0">
+        <div className="flex items-center gap-3 flex-shrink-0 flex-wrap">
           {/* Date range pill group */}
           <div className="bg-[#0D0E14] border border-[#1E2330] rounded-[6px] p-0.5 inline-flex">
             {DATE_RANGE_OPTIONS.map((opt) => (
@@ -158,23 +158,28 @@ export default function AnalyticsPage() {
           <h3 className="text-xs font-mono uppercase tracking-widest text-[#6B7280] mb-4">
             Run Trend
           </h3>
-          <RunTrendChart
-            data={runSeries.data ?? []}
-            range={range}
-            isLoading={runSeries.isLoading}
-          />
+          {/* Responsive chart height: 160px mobile, 220px sm+ */}
+          <div className="h-40 sm:h-[220px]">
+            <RunTrendChart
+              data={runSeries.data ?? []}
+              range={range}
+              isLoading={runSeries.isLoading}
+            />
+          </div>
         </div>
 
-        {/* Token Usage */}
-        <div className="bg-[#0D0E14] border border-[#1E2330] rounded-[6px] p-4">
+        {/* Token Usage — hidden on mobile (dual-axis too dense at small width) */}
+        <div className="hidden sm:block bg-[#0D0E14] border border-[#1E2330] rounded-[6px] p-4">
           <h3 className="text-xs font-mono uppercase tracking-widest text-[#6B7280] mb-4">
             Token Usage
           </h3>
-          <TokenUsageChart
-            data={tokenSeries.data ?? []}
-            range={range}
-            isLoading={tokenSeries.isLoading}
-          />
+          <div className="h-40 sm:h-[220px]">
+            <TokenUsageChart
+              data={tokenSeries.data ?? []}
+              range={range}
+              isLoading={tokenSeries.isLoading}
+            />
+          </div>
         </div>
 
         {/* Platform Breakdown */}

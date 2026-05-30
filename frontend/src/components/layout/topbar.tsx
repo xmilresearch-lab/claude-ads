@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Settings, LogOut, User, X, Zap } from "lucide-react";
+import { Settings, LogOut, User, X, Zap, Menu } from "lucide-react";
 import { HealthStatusBar } from "@/components/integrations/HealthStatusBar";
 import Link from "next/link";
 import {
@@ -42,12 +42,12 @@ function BrandVoiceBanner({
   if (!show) return null;
 
   return (
-    <div className="flex items-center justify-between border-b border-amber/20 bg-amber/10 px-5 py-2">
+    <div className="flex items-center justify-between border-b border-amber/20 bg-amber/10 px-4 sm:px-5 py-2">
       <p className="text-xs text-text-secondary">
         <span className="mr-1">
           <Zap className="inline h-3 w-3 text-amber" />
         </span>
-        Set up your brand voice to improve AI content quality.{" "}
+        <span className="hidden sm:inline">Set up your brand voice to improve AI content quality.{" "}</span>
         <Link href="/settings/brand-voice" className="font-medium text-amber hover:underline">
           Configure →
         </Link>
@@ -103,35 +103,53 @@ function SystemStatus() {
   );
 }
 
-export function Topbar() {
+interface TopbarProps {
+  onMenuOpen: () => void;
+}
+
+export function Topbar({ onMenuOpen }: TopbarProps) {
   const { user, logout } = useAuth();
   const { data: workspace } = useWorkspace();
 
   return (
     <>
       <header className="sticky top-0 z-10 flex h-14 items-center justify-between
-                         border-b border-border bg-bg-base/80 backdrop-blur-sm px-5">
-        {/* Left: workspace breadcrumb */}
-        <div className="flex items-center gap-2">
-          <span className="text-2xs font-mono text-text-muted uppercase tracking-widest">
-            Workspace
-          </span>
-          <span className="text-2xs font-mono text-text-muted">/</span>
-          <span className="font-mono text-xs text-text-muted">
-            {workspace?.name ?? "—"}
-          </span>
+                         border-b border-border bg-bg-base/80 backdrop-blur-sm px-4 sm:px-5">
+        {/* Left */}
+        <div className="flex items-center gap-3">
+          {/* Hamburger — mobile only */}
+          <button
+            onClick={onMenuOpen}
+            className="rounded p-1.5 text-text-muted transition-colors hover:text-text-primary md:hidden"
+            aria-label="Open navigation menu"
+          >
+            <Menu className="h-5 w-5" />
+          </button>
+
+          {/* Workspace breadcrumb — desktop only */}
+          <div className="hidden md:flex items-center gap-2">
+            <span className="text-2xs font-mono text-text-muted uppercase tracking-widest">
+              Workspace
+            </span>
+            <span className="text-2xs font-mono text-text-muted">/</span>
+            <span className="font-mono text-xs text-text-muted">
+              {workspace?.name ?? "—"}
+            </span>
+          </div>
         </div>
 
         {/* Right */}
-        <div className="flex items-center gap-4">
-          <SystemStatus />
-
-          <HealthStatusBar />
+        <div className="flex items-center gap-3 sm:gap-4">
+          {/* System status + health bar — hidden on mobile to save space */}
+          <div className="hidden sm:flex items-center gap-4">
+            <SystemStatus />
+            <HealthStatusBar />
+          </div>
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <button
-                className="flex h-7 w-7 items-center justify-center rounded-full bg-amber
+                className="flex h-8 w-8 items-center justify-center rounded-full bg-amber
                            text-xs font-display font-bold text-bg-base
                            hover:bg-amber-dark transition-colors"
                 aria-label="User menu"

@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   Zap, Inbox, Plug, BarChart2, ScrollText,
-  Settings, ChevronRight, LogOut,
+  Settings, ChevronRight, LogOut, X,
 } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 import { APP_NAME } from "@/lib/utils/constants";
@@ -28,7 +28,12 @@ const NAV_ITEMS = [
   { href: "/settings",     label: "Settings",        icon: Settings },
 ] as const;
 
-export function Sidebar() {
+interface SidebarProps {
+  open: boolean;
+  onClose: () => void;
+}
+
+export function Sidebar({ open, onClose }: SidebarProps) {
   const pathname = usePathname();
   const { user, logout } = useAuth();
 
@@ -41,102 +46,137 @@ export function Sidebar() {
   const onSettings = pathname.startsWith("/settings");
 
   return (
-    <aside className="flex h-screen w-60 shrink-0 flex-col border-r border-border bg-bg-surface">
-      {/* Logo */}
-      <div className="flex h-14 items-center gap-2 border-b border-border px-4">
-        <div className="flex h-7 w-7 items-center justify-center rounded bg-amber">
-          <Zap className="h-4 w-4 text-bg-base" />
-        </div>
-        <span className="font-display font-bold text-text-primary tracking-wide">{APP_NAME}</span>
-        <span className="ml-auto status-live" />
-      </div>
+    <>
+      {/* Mobile backdrop */}
+      <div
+        onClick={onClose}
+        aria-hidden="true"
+        className={cn(
+          "fixed inset-0 z-40 bg-black/60 backdrop-blur-sm transition-opacity md:hidden",
+          open ? "opacity-100" : "opacity-0 pointer-events-none",
+        )}
+      />
 
-      {/* Nav */}
-      <nav className="flex-1 overflow-y-auto p-2">
-        <p className="mb-1.5 px-3 pt-2 text-2xs font-mono text-text-muted uppercase tracking-widest">
-          Workspace
-        </p>
-        <div className="space-y-0.5">
-          {NAV_ITEMS.map(({ href, label, icon: Icon, ...rest }) => {
-            const hasBadge = "pendingBadge" in rest;
-            const active = pathname.startsWith(href);
-            const isSettingsItem = href === "/settings";
-            const isIntegrationsItem = href === "/integrations";
-
-            return (
-              <div key={href} className={isIntegrationsItem ? "relative" : undefined}>
-                <Link href={href} className={cn("nav-item", active && "active")}>
-                  <Icon className="h-4 w-4 shrink-0" />
-                  <span className="flex-1">{label}</span>
-                  {hasBadge && pendingCount > 0 && (
-                    <span className="ml-auto text-[10px] font-mono px-1.5 py-0.5 rounded-[3px] bg-amber-500/20 text-amber-400 min-w-[18px] text-center">
-                      {pendingCount > 99 ? "99+" : pendingCount}
-                    </span>
-                  )}
-                  {active && !hasBadge && (
-                    <ChevronRight className={cn(
-                      "h-3 w-3 text-amber transition-transform duration-150",
-                      isSettingsItem && onSettings && "rotate-90",
-                    )} />
-                  )}
-                </Link>
-
-                {isIntegrationsItem && hasIntegrationError && (
-                  <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full" />
-                )}
-
-                {/* Settings sub-nav */}
-                {isSettingsItem && (
-                  <div
-                    className="overflow-hidden transition-all duration-150"
-                    style={{ maxHeight: onSettings ? "200px" : "0px" }}
-                  >
-                    <div className="ml-4 mt-0.5 space-y-0.5 border-l border-border pl-3 pb-1">
-                      {SETTINGS_SUB_NAV.map((sub) => {
-                        const subActive = pathname === sub.href || pathname.startsWith(sub.href + "/");
-                        return (
-                          <Link
-                            key={sub.href}
-                            href={sub.href}
-                            className={cn(
-                              "flex items-center rounded px-2 py-1 text-xs transition-colors",
-                              subActive
-                                ? "text-amber font-medium"
-                                : "text-text-muted hover:text-text-secondary",
-                            )}
-                          >
-                            {sub.label}
-                          </Link>
-                        );
-                      })}
-                    </div>
-                  </div>
-                )}
-              </div>
-            );
-          })}
-        </div>
-      </nav>
-
-      {/* User */}
-      <div className="border-t border-border p-3">
-        <div className="flex items-center gap-2 px-1">
-          <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-amber text-xs font-display font-bold text-bg-base">
-            {user?.email?.[0]?.toUpperCase() ?? "?"}
+      <aside
+        className={cn(
+          // Base layout
+          "flex h-screen w-60 shrink-0 flex-col border-r border-border bg-bg-surface",
+          // Mobile: fixed drawer, slides in/out
+          "fixed inset-y-0 left-0 z-50 transition-transform duration-200",
+          open ? "translate-x-0" : "-translate-x-full",
+          // Desktop: back in normal flow, always visible
+          "md:relative md:inset-auto md:z-auto md:translate-x-0 md:transition-none",
+        )}
+      >
+        {/* Logo */}
+        <div className="flex h-14 items-center gap-2 border-b border-border px-4">
+          <div className="flex h-7 w-7 items-center justify-center rounded bg-amber">
+            <Zap className="h-4 w-4 text-bg-base" />
           </div>
-          <div className="min-w-0 flex-1">
-            <p className="truncate text-xs font-medium text-text-primary">{user?.email ?? "—"}</p>
-            <p className="text-2xs font-mono text-text-muted uppercase">{user?.plan ?? "free"}</p>
-          </div>
+          <span className="font-display font-bold text-text-primary tracking-wide">{APP_NAME}</span>
+          <span className="ml-auto status-live" />
+          {/* Mobile close button */}
           <button
-            onClick={logout}
-            className="rounded p-1 text-text-muted transition-colors hover:text-danger"
-            title="Sign out"
+            onClick={onClose}
+            className="ml-1 rounded p-1 text-text-muted transition-colors hover:text-text-primary md:hidden"
+            aria-label="Close menu"
           >
-            <LogOut className="h-3.5 w-3.5" />
+            <X className="h-4 w-4" />
           </button>
         </div>
-      </div>
-    </aside>
+
+        {/* Nav */}
+        <nav className="flex-1 overflow-y-auto p-2">
+          <p className="mb-1.5 px-3 pt-2 text-2xs font-mono text-text-muted uppercase tracking-widest">
+            Workspace
+          </p>
+          <div className="space-y-0.5">
+            {NAV_ITEMS.map(({ href, label, icon: Icon, ...rest }) => {
+              const hasBadge = "pendingBadge" in rest;
+              const active = pathname.startsWith(href);
+              const isSettingsItem = href === "/settings";
+              const isIntegrationsItem = href === "/integrations";
+
+              return (
+                <div key={href} className={isIntegrationsItem ? "relative" : undefined}>
+                  <Link
+                    href={href}
+                    onClick={onClose}
+                    className={cn("nav-item", active && "active")}
+                  >
+                    <Icon className="h-4 w-4 shrink-0" />
+                    <span className="flex-1">{label}</span>
+                    {hasBadge && pendingCount > 0 && (
+                      <span className="ml-auto text-[10px] font-mono px-1.5 py-0.5 rounded-[3px] bg-amber-500/20 text-amber-400 min-w-[18px] text-center">
+                        {pendingCount > 99 ? "99+" : pendingCount}
+                      </span>
+                    )}
+                    {active && !hasBadge && (
+                      <ChevronRight className={cn(
+                        "h-3 w-3 text-amber transition-transform duration-150",
+                        isSettingsItem && onSettings && "rotate-90",
+                      )} />
+                    )}
+                  </Link>
+
+                  {isIntegrationsItem && hasIntegrationError && (
+                    <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full" />
+                  )}
+
+                  {/* Settings sub-nav */}
+                  {isSettingsItem && (
+                    <div
+                      className="overflow-hidden transition-all duration-150"
+                      style={{ maxHeight: onSettings ? "200px" : "0px" }}
+                    >
+                      <div className="ml-4 mt-0.5 space-y-0.5 border-l border-border pl-3 pb-1">
+                        {SETTINGS_SUB_NAV.map((sub) => {
+                          const subActive = pathname === sub.href || pathname.startsWith(sub.href + "/");
+                          return (
+                            <Link
+                              key={sub.href}
+                              href={sub.href}
+                              onClick={onClose}
+                              className={cn(
+                                "flex items-center rounded px-2 py-1 text-xs transition-colors",
+                                subActive
+                                  ? "text-amber font-medium"
+                                  : "text-text-muted hover:text-text-secondary",
+                              )}
+                            >
+                              {sub.label}
+                            </Link>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </nav>
+
+        {/* User */}
+        <div className="border-t border-border p-3">
+          <div className="flex items-center gap-2 px-1">
+            <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-amber text-xs font-display font-bold text-bg-base">
+              {user?.email?.[0]?.toUpperCase() ?? "?"}
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-xs font-medium text-text-primary">{user?.email ?? "—"}</p>
+              <p className="text-2xs font-mono text-text-muted uppercase">{user?.plan ?? "free"}</p>
+            </div>
+            <button
+              onClick={logout}
+              className="rounded p-1 text-text-muted transition-colors hover:text-danger"
+              title="Sign out"
+            >
+              <LogOut className="h-3.5 w-3.5" />
+            </button>
+          </div>
+        </div>
+      </aside>
+    </>
   );
 }

@@ -27,6 +27,8 @@ const dmMono = DM_Mono({
 export const metadata: Metadata = {
   title: APP_NAME,
   description: "AI-powered automation platform for social media, email, and CRM",
+  manifest: "/manifest.json",
+  themeColor: "#0A0B0F",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
