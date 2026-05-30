@@ -192,10 +192,11 @@ async def test_rate_limit_raises_before_claude(mock_claude: AsyncMock) -> None:
 
 
 @pytest.mark.asyncio
+@patch("app.workers.publish_worker.notify_pending_review")
 @patch("app.workers.publish_worker.publish_content")
 @patch("app.services.orchestration.call_claude_with_mcp", new_callable=AsyncMock)
 async def test_dlp_violation_forces_pending_approval(
-    mock_claude: AsyncMock, mock_publish: MagicMock
+    mock_claude: AsyncMock, mock_publish: MagicMock, mock_notify: MagicMock
 ) -> None:
     """
     When Claude output contains PII (here: an email address), the DLP scanner
