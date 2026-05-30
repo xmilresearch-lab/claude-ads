@@ -77,6 +77,7 @@ source = ["app"]
 omit = ["tests/*"]
 
 [tool.coverage.report]
+# Baseline 82.39% — gap in integrations.py + workers (V2 test debt)
 fail_under = 83
 exclude_lines = [
     "pragma: no cover",
