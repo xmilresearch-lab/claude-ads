@@ -113,6 +113,23 @@ async def test_register_raises_409_when_email_taken() -> None:
 
 
 @pytest.mark.asyncio
+async def test_login_success_returns_tokens() -> None:
+    """login returns token pair when credentials are correct and account is active."""
+    from app.api.auth import login
+    from app.schemas.auth import LoginRequest
+
+    user = _make_user()
+    db = _make_db(_scalar(user))
+    payload = LoginRequest(email="test@example.com", password="Test1234!")
+
+    response = await login(_make_request(), payload, db)
+
+    assert response.data.access_token is not None
+    assert response.data.refresh_token is not None
+    assert response.data.token_type == "bearer"
+
+
+@pytest.mark.asyncio
 async def test_login_raises_401_when_user_not_found() -> None:
     """login raises 401 when email is not in DB."""
     from app.api.auth import login
@@ -229,6 +246,22 @@ async def test_refresh_raises_401_for_invalid_token() -> None:
     assert exc_info.value.status_code == 401
 
 
+@pytest.mark.asyncio
+async def test_refresh_raises_401_when_token_has_no_sub() -> None:
+    """refresh raises 401 when decoded token claims contain no sub field."""
+    from app.api.auth import refresh
+    from app.schemas.auth import RefreshRequest
+
+    # Patch decode_token to return claims without a sub
+    with patch("app.api.auth.decode_token", return_value={"typ": "refresh"}):
+        payload = RefreshRequest(refresh_token="any.token.here")
+        with pytest.raises(HTTPException) as exc_info:
+            await refresh(_make_request(), payload, MagicMock())
+
+    assert exc_info.value.status_code == 401
+    assert exc_info.value.detail == "Invalid token"
+
+
 # ── me ─────────────────────────────────────────────────────────────────────────
 
 
@@ -279,6 +312,142 @@ async def test_change_password_wrong_current_password_returns_400() -> None:
     assert exc_info.value.status_code == 400
     assert exc_info.value.detail == "Current password is incorrect"
     db.commit.assert_not_awaited()
+
+
+# ── delete-account ─────────────────────────────────────────────────────────────
+
+
+def _scalars_result(items: list) -> MagicMock:
+    m = MagicMock()
+    inner = MagicMock()
+    inner.all.return_value = items
+    m.scalars.return_value = inner
+    m.scalar_one_or_none.return_value = None
+    return m
+
+
+def _make_workspace(user_id: uuid.UUID) -> MagicMock:
+    w = MagicMock()
+    w.id = uuid.uuid4()
+    w.user_id = user_id
+    return w
+
+
+@pytest.mark.asyncio
+async def test_delete_account_wrong_password_returns_400() -> None:
+    """delete_account raises 400 when password verification fails."""
+    from app.api.auth import delete_account
+    from app.schemas.auth import DeleteAccountRequest
+
+    user = _make_user()
+    db = MagicMock()
+    db.commit = AsyncMock()
+
+    payload = DeleteAccountRequest(password="WrongPassword!")
+
+    with pytest.raises(HTTPException) as exc_info:
+        await delete_account(_make_request(), payload, user, db)
+
+    assert exc_info.value.status_code == 400
+    assert exc_info.value.detail == "Password is incorrect"
+    db.commit.assert_not_awaited()
+
+
+@pytest.mark.asyncio
+async def test_delete_account_success_with_workspace() -> None:
+    """delete_account soft-deletes user and associated data when password is correct."""
+    from app.api.auth import delete_account
+    from app.schemas.auth import DeleteAccountRequest
+
+    user = _make_user()
+    workspace = _make_workspace(user.id)
+
+    automation = MagicMock()
+    automation.active = True
+    integration = MagicMock()
+    integration.status = "active"
+
+    db = _make_db(
+        _scalar(workspace),          # Workspace lookup
+        _scalars_result([automation]),  # Automations query
+        _scalars_result([integration]),  # Integrations query
+    )
+
+    payload = DeleteAccountRequest(password="Test1234!")
+    response = await delete_account(_make_request(), payload, user, db)
+
+    db.commit.assert_awaited_once()
+    assert automation.active is False
+    assert integration.status == "revoked"
+    assert user.is_active is False
+    assert "deleted_" in user.email
+    assert response.data["message"] == "Account deleted"
+
+
+@pytest.mark.asyncio
+async def test_delete_account_success_without_workspace() -> None:
+    """delete_account still deactivates the user when no workspace exists."""
+    from app.api.auth import delete_account
+    from app.schemas.auth import DeleteAccountRequest
+
+    user = _make_user()
+    db = _make_db(_scalar(None))  # No workspace
+
+    payload = DeleteAccountRequest(password="Test1234!")
+    response = await delete_account(_make_request(), payload, user, db)
+
+    db.commit.assert_awaited_once()
+    assert user.is_active is False
+    assert "deleted_" in user.email
+    assert response.data["message"] == "Account deleted"
+
+
+# ── me ─────────────────────────────────────────────────────────────────────────
+
+
+# ── schema validators ──────────────────────────────────────────────────────────
+
+
+def test_register_password_validation_rules() -> None:
+    """RegisterRequest rejects passwords missing required complexity."""
+    from app.schemas.auth import RegisterRequest
+    import pytest as _pytest
+
+    with _pytest.raises(Exception):
+        RegisterRequest(email="a@b.com", password="short", workspace_name="X")
+
+    with _pytest.raises(Exception):
+        RegisterRequest(email="a@b.com", password="alllowercase1!", workspace_name="X")
+
+    with _pytest.raises(Exception):
+        RegisterRequest(email="a@b.com", password="ALLUPPERCASE1!", workspace_name="X")
+
+    with _pytest.raises(Exception):
+        RegisterRequest(email="a@b.com", password="NoDigits!!", workspace_name="X")
+
+    with _pytest.raises(Exception):
+        RegisterRequest(email="a@b.com", password="NoSpecial123", workspace_name="X")
+
+
+def test_change_password_new_password_validation_rules() -> None:
+    """ChangePasswordRequest rejects new passwords missing required complexity."""
+    from app.schemas.auth import ChangePasswordRequest
+    import pytest as _pytest
+
+    with _pytest.raises(Exception):
+        ChangePasswordRequest(current_password="OldPass1!", new_password="short")
+
+    with _pytest.raises(Exception):
+        ChangePasswordRequest(current_password="OldPass1!", new_password="alllower1!")
+
+    with _pytest.raises(Exception):
+        ChangePasswordRequest(current_password="OldPass1!", new_password="ALLUPPER1!")
+
+    with _pytest.raises(Exception):
+        ChangePasswordRequest(current_password="OldPass1!", new_password="NoDigits!!")
+
+    with _pytest.raises(Exception):
+        ChangePasswordRequest(current_password="OldPass1!", new_password="NoSpecial123")
 
 
 # ── me ─────────────────────────────────────────────────────────────────────────

@@ -244,6 +244,22 @@ async def test_patch_settings_merges_with_existing() -> None:
 
 
 @pytest.mark.asyncio
+async def test_delete_brand_voice_sets_none_and_commits() -> None:
+    """delete_brand_voice clears brand_voice on the workspace."""
+    from app.api.workspaces import delete_brand_voice
+
+    workspace = _make_workspace()
+    workspace.brand_voice = {"tone": "Professional"}
+    db = MagicMock()
+    db.commit = AsyncMock()
+
+    await delete_brand_voice(_make_request(), workspace, db)
+
+    assert workspace.brand_voice is None
+    db.commit.assert_awaited_once()
+
+
+@pytest.mark.asyncio
 async def test_get_current_workspace_raises_404_when_not_found() -> None:
     """get_current_workspace raises 404 if the user owns no workspace."""
     from app.api.deps import get_current_workspace
@@ -260,3 +276,46 @@ async def test_get_current_workspace_raises_404_when_not_found() -> None:
     with pytest.raises(HTTPException) as exc_info:
         await get_current_workspace(user, db)
     assert exc_info.value.status_code == 404
+
+
+@pytest.mark.asyncio
+async def test_get_current_workspace_returns_workspace_when_found() -> None:
+    """get_current_workspace returns the workspace when it exists."""
+    from app.api.deps import get_current_workspace
+
+    user = MagicMock()
+    user.id = uuid.uuid4()
+    workspace = _make_workspace(user_id=user.id)
+
+    execute_result = MagicMock()
+    execute_result.scalar_one_or_none.return_value = workspace
+
+    db = MagicMock()
+    db.execute = AsyncMock(return_value=execute_result)
+
+    result = await get_current_workspace(user, db)
+    assert result is workspace
+
+
+@pytest.mark.asyncio
+async def test_patch_workspace_updates_settings() -> None:
+    """update_my_workspace applies settings when provided."""
+    from app.api.workspaces import update_my_workspace
+    from app.schemas.workspace import WorkspaceUpdate
+
+    workspace = _make_workspace()
+    workspace.settings = None
+    db = _count_db([0, 0, 0])
+
+    new_settings = {"require_approval_default": True}
+
+    async def _refresh(obj: MagicMock) -> None:
+        obj.settings = new_settings
+
+    db.refresh = _refresh
+
+    payload = WorkspaceUpdate(settings={"require_approval_default": True})
+    result = await update_my_workspace(_make_request(), payload, workspace, db)
+
+    db.commit.assert_awaited_once()
+    assert result.data is not None

@@ -73,6 +73,10 @@ class RefreshRequest(BaseModel):
     refresh_token: str
 
 
+class DeleteAccountRequest(BaseModel):
+    password: str
+
+
 class ChangePasswordRequest(BaseModel):
     model_config = {
         "json_schema_extra": {

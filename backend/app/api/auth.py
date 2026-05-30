@@ -15,10 +15,14 @@ from app.core.security import (
     verify_password,
 )
 from app.middleware.rate_limiter import LIMIT_AUTH, LIMIT_READ, limiter
+from app.models.audit_log import AuditLog
+from app.models.automation import Automation
+from app.models.integration import Integration
 from app.models.user import User
 from app.models.workspace import Workspace
 from app.schemas.auth import (
     ChangePasswordRequest,
+    DeleteAccountRequest,
     LoginRequest,
     RefreshRequest,
     RegisterRequest,
@@ -183,3 +187,63 @@ async def me(
     current_user: Annotated[User, Depends(get_current_user)],
 ) -> DataResponse[UserResponse]:
     return ok(UserResponse.model_validate(current_user), request)
+
+
+@router.delete(
+    "/account",
+    summary="Delete Account",
+    description=(
+        "Permanently delete the authenticated user's account and all associated data. "
+        "Requires the current password for confirmation. "
+        "The account is soft-deleted: email is anonymized, automations are deactivated, "
+        "and integrations are revoked. This action cannot be undone."
+    ),
+    response_description="Confirmation message",
+    responses={**COMMON_ERROR_RESPONSES, 400: {"description": "Password is incorrect"}},
+    response_model=DataResponse[dict[str, str]],
+)
+@limiter.limit(LIMIT_AUTH)
+async def delete_account(
+    request: Request,
+    payload: DeleteAccountRequest,
+    current_user: Annotated[User, Depends(get_current_user)],
+    db: Annotated[AsyncSession, Depends(get_db)],
+) -> DataResponse[dict[str, str]]:
+    if not verify_password(payload.password, current_user.hashed_password):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Password is incorrect",
+        )
+
+    result = await db.execute(select(Workspace).where(Workspace.user_id == current_user.id))
+    workspace = result.scalar_one_or_none()
+
+    if workspace:
+        # Audit log must be written before any data changes (FK must still be valid)
+        db.add(
+            AuditLog(
+                id=uuid.uuid4(),
+                workspace_id=workspace.id,
+                action="account.deleted",
+                actor=str(current_user.id),
+                log_metadata={"plan": current_user.plan},
+            )
+        )
+        await db.flush()
+
+        auto_result = await db.execute(
+            select(Automation).where(Automation.workspace_id == workspace.id)
+        )
+        for automation in auto_result.scalars().all():
+            automation.active = False
+
+        int_result = await db.execute(
+            select(Integration).where(Integration.workspace_id == workspace.id)
+        )
+        for integration in int_result.scalars().all():
+            integration.status = "revoked"
+
+    current_user.email = f"deleted_{current_user.id}@deleted.invalid"
+    current_user.is_active = False
+    await db.commit()
+    return ok({"message": "Account deleted"}, request)
