@@ -3,6 +3,10 @@
 ║        Generated: 2026-05-30                                     ║
 ╚══════════════════════════════════════════════════════════════════╝
 
+  CLIENT SETUP GUIDE: See CLIENT_SETUP_GUIDE.md for plain-English
+  step-by-step instructions on deploying, configuring OAuth apps,
+  and going live. Intended for non-technical clients.
+
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
  SECTION 1: WHAT WAS BUILT
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -375,6 +379,7 @@ CLIENT RECEIVES:
   [x] DEVELOPMENT.md   (docs/DEVELOPMENT.md — local setup guide)
   [x] .env.example     (all required variables documented)
   [x] This audit report (PROJECT_AUDIT_REPORT.md)
+  [x] Client setup guide (CLIENT_SETUP_GUIDE.md — plain-English, step-by-step)
   [ ] Admin login credentials for production
   [ ] List of OAuth apps to register + exact callback URLs
   [ ] Loom demo walkthrough video
