@@ -42,6 +42,11 @@ class Settings(BaseSettings):
             return [o.strip() for o in v.split(",") if o.strip()]
         return v  # type: ignore[no-any-return]
 
+    # Web Push / VAPID
+    VAPID_PUBLIC_KEY: str = ""
+    VAPID_PRIVATE_KEY: str = ""
+    VAPID_MAILTO: str = "mailto:support@yourplatform.com"
+
     # Webhooks
     WEBHOOK_SECRET: str = ""
 

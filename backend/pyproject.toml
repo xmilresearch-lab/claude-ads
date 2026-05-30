@@ -26,6 +26,7 @@ dependencies = [
     "slowapi>=0.1.9",
     "limits[redis]>=3.6",
     "secure>=0.3.0",
+    "pywebpush>=2.0",
 ]
 
 [project.optional-dependencies]

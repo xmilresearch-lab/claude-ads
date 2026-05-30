@@ -3,6 +3,7 @@ import { Syne, DM_Sans, DM_Mono } from "next/font/google";
 import { Toaster } from "sonner";
 import { QueryProvider } from "@/lib/providers/query-provider";
 import { AuthProvider } from "@/lib/providers/auth-provider";
+import { ServiceWorkerRegistrar } from "@/components/shared/service-worker-registrar";
 import { APP_NAME } from "@/lib/utils/constants";
 import { assertEnv } from "@/lib/env";
 import "./globals.css";
@@ -40,6 +41,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       >
         <QueryProvider>
           <AuthProvider>
+            <ServiceWorkerRegistrar />
             {children}
             <Toaster
               theme="dark"

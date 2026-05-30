@@ -20,6 +20,7 @@ from app.api.automations import router as automations_router
 from app.api.content_queue import router as content_queue_router
 from app.api.integrations import router as integrations_router
 from app.api.openapi_extras import add_openapi_extras
+from app.api.push import router as push_router
 from app.api.webhooks import router as webhooks_router
 from app.api.workspaces import router as workspace_router
 from app.core.config import settings
@@ -145,6 +146,10 @@ Paginated responses include `total_count`, `limit`, `offset`, and `has_more` ins
             "name": "Health",
             "description": "Liveness and readiness probes for orchestration and monitoring.",
         },
+        {
+            "name": "Push",
+            "description": "Web Push subscription management and VAPID public key endpoint.",
+        },
     ],
     docs_url="/docs",
     redoc_url="/redoc",
@@ -265,6 +270,7 @@ api_v1.include_router(audit_logs_router,    prefix="/audit",        tags=["Audit
 api_v1.include_router(workspace_router,     prefix="/workspaces",   tags=["Workspaces"])
 api_v1.include_router(integrations_router,  prefix="/integrations", tags=["Integrations"])
 api_v1.include_router(analytics_router,     prefix="/analytics",    tags=["Analytics"])
+api_v1.include_router(push_router,          prefix="/push",         tags=["Push"])
 
 app.include_router(api_v1)
 app.include_router(webhooks_router)  # webhooks stay at root — no /api/v1 prefix
