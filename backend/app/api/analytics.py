@@ -1,7 +1,7 @@
 import csv
 import io
 from collections import defaultdict
-from datetime import UTC, date, datetime, timedelta
+from datetime import date, datetime, timedelta
 from typing import Annotated, Any
 
 from fastapi import APIRouter, Depends, Query, Request, Response
@@ -89,7 +89,7 @@ async def get_overview(
     db: Annotated[AsyncSession, Depends(get_db)],
     days: int = Query(default=30, le=90, ge=1),
 ) -> DataResponse[AnalyticsOverview]:
-    start_date = datetime.now(tz=UTC) - timedelta(days=days)
+    start_date = datetime.utcnow() - timedelta(days=days)
 
     # 1. Run counts by status (scoped to workspace via Automation join)
     runs_res = await db.execute(
@@ -188,7 +188,7 @@ async def get_automations_breakdown(
     limit: int = Query(default=20, le=100, ge=1),
     offset: int = Query(default=0, ge=0),
 ) -> PaginatedResponse[AutomationBreakdown]:
-    start_date = datetime.now(tz=UTC) - timedelta(days=days)
+    start_date = datetime.utcnow() - timedelta(days=days)
 
     count_res = await db.execute(
         select(func.count(Automation.id)).where(Automation.workspace_id == workspace.id)
@@ -261,7 +261,7 @@ async def get_platform_stats(
     db: Annotated[AsyncSession, Depends(get_db)],
     days: int = Query(default=30, le=90, ge=1),
 ) -> DataResponse[list[PlatformStats]]:
-    start_date = datetime.now(tz=UTC) - timedelta(days=days)
+    start_date = datetime.utcnow() - timedelta(days=days)
 
     rows = (
         await db.execute(
@@ -317,7 +317,7 @@ async def get_token_series(
     db: Annotated[AsyncSession, Depends(get_db)],
     days: int = Query(default=30, le=90, ge=1),
 ) -> DataResponse[list[TokenUsageSeries]]:
-    start_date = datetime.now(tz=UTC) - timedelta(days=days)
+    start_date = datetime.utcnow() - timedelta(days=days)
 
     rows = (
         await db.execute(
@@ -335,8 +335,8 @@ async def get_token_series(
         )
     ).all()
 
-    end = datetime.now(tz=UTC).date()
-    start = (datetime.now(tz=UTC) - timedelta(days=days - 1)).date()
+    end = datetime.utcnow().date()
+    start = (datetime.utcnow() - timedelta(days=days - 1)).date()
     series = _fill_date_gaps([(r.day, r.total_tokens) for r in rows], start, end)
     return ok(series, request)
 
@@ -361,7 +361,7 @@ async def export_analytics(
     days: int = Query(default=30, le=90, ge=1),
     format: str = Query(default="json"),
 ) -> Response:
-    start_date = datetime.now(tz=UTC) - timedelta(days=days)
+    start_date = datetime.utcnow() - timedelta(days=days)
 
     # Overview queries (same as get_overview)
     runs_res = await db.execute(
@@ -428,8 +428,8 @@ async def export_analytics(
             .order_by("day")
         )
     ).all()
-    end = datetime.now(tz=UTC).date()
-    start_day = (datetime.now(tz=UTC) - timedelta(days=days - 1)).date()
+    end = datetime.utcnow().date()
+    start_day = (datetime.utcnow() - timedelta(days=days - 1)).date()
     series = _fill_date_gaps([(r.day, r.total_tokens) for r in series_rows], start_day, end)
 
     total_runs = sum(run_counts.values())
