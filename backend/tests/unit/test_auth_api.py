@@ -232,6 +232,58 @@ async def test_refresh_raises_401_for_invalid_token() -> None:
 # ── me ─────────────────────────────────────────────────────────────────────────
 
 
+# ── change-password ────────────────────────────────────────────────────────────
+
+
+@pytest.mark.asyncio
+async def test_change_password_success() -> None:
+    """change_password updates hashed_password and commits when current password is correct."""
+    from app.api.auth import change_password
+    from app.schemas.auth import ChangePasswordRequest
+
+    user = _make_user()
+    db = MagicMock()
+    db.commit = AsyncMock()
+
+    payload = ChangePasswordRequest(
+        current_password="Test1234!",
+        new_password="NewPass5678@",
+    )
+    response = await change_password(_make_request(), payload, user, db)
+
+    db.commit.assert_awaited_once()
+    assert response.data["message"] == "Password updated successfully"
+    # Password must have actually changed
+    from app.core.security import verify_password
+    assert verify_password("NewPass5678@", user.hashed_password)
+
+
+@pytest.mark.asyncio
+async def test_change_password_wrong_current_password_returns_400() -> None:
+    """change_password raises 400 when the supplied current_password does not match."""
+    from app.api.auth import change_password
+    from app.schemas.auth import ChangePasswordRequest
+
+    user = _make_user()
+    db = MagicMock()
+    db.commit = AsyncMock()
+
+    payload = ChangePasswordRequest(
+        current_password="WrongPassword1!",
+        new_password="NewPass5678@",
+    )
+
+    with pytest.raises(HTTPException) as exc_info:
+        await change_password(_make_request(), payload, user, db)
+
+    assert exc_info.value.status_code == 400
+    assert exc_info.value.detail == "Current password is incorrect"
+    db.commit.assert_not_awaited()
+
+
+# ── me ─────────────────────────────────────────────────────────────────────────
+
+
 @pytest.mark.asyncio
 async def test_me_returns_current_user_info() -> None:
     """GET /me returns the authenticated user's profile."""

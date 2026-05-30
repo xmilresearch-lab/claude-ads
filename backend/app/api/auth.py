@@ -18,6 +18,7 @@ from app.middleware.rate_limiter import LIMIT_AUTH, LIMIT_READ, limiter
 from app.models.user import User
 from app.models.workspace import Workspace
 from app.schemas.auth import (
+    ChangePasswordRequest,
     LoginRequest,
     RefreshRequest,
     RegisterRequest,
@@ -134,6 +135,35 @@ async def refresh(
     if not user or not user.is_active:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User not found")
     return ok(_tokens_for_user(user), request)
+
+
+@router.post(
+    "/change-password",
+    summary="Change Password",
+    description=(
+        "Change the authenticated user's password. "
+        "Requires the current password for verification. "
+        "New password must meet the same complexity rules as registration."
+    ),
+    response_description="Confirmation message",
+    responses={**COMMON_ERROR_RESPONSES, 400: {"description": "Current password is incorrect"}},
+    response_model=DataResponse[dict[str, str]],
+)
+@limiter.limit(LIMIT_AUTH)
+async def change_password(
+    request: Request,
+    payload: ChangePasswordRequest,
+    current_user: Annotated[User, Depends(get_current_user)],
+    db: Annotated[AsyncSession, Depends(get_db)],
+) -> DataResponse[dict[str, str]]:
+    if not verify_password(payload.current_password, current_user.hashed_password):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Current password is incorrect",
+        )
+    current_user.hashed_password = hash_password(payload.new_password)
+    await db.commit()
+    return ok({"message": "Password updated successfully"}, request)
 
 
 @router.get(
