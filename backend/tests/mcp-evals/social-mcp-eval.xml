@@ -1,0 +1,200 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Social MCP Server Evaluation Suite
+  Server  : social-mcp-server  (port 3001)
+  Protocol: MCP streamable-HTTP with Bearer auth
+
+  Rules
+  ─────
+  • Only read-only tools are exercised (readOnlyHint=true).
+    Excluded: twitter_create_tweet, linkedin_create_post, instagram_create_post
+  • Every expected_tools entry maps 1-to-1 with a tool the model MUST invoke.
+  • rubric criteria are evaluated by the runner against the raw tool-result JSON.
+  • Multi-tool evals (id *-10) require ALL listed tool calls to appear in order.
+-->
+<evals server="social-mcp-server" base_url="http://localhost:3001">
+
+  <!-- ── Twitter: twitter_list_tweets ─────────────────────────────────────── -->
+
+  <eval id="social-01" read_only="true">
+    <description>Basic tweet listing with explicit limit</description>
+    <system>You are a social media assistant. Use the available MCP tools to retrieve information. Do not post anything.</system>
+    <prompt>Show me my 10 most recent tweets.</prompt>
+    <expected_tools>
+      <tool name="twitter_list_tweets">
+        <arg name="limit" type="int">10</arg>
+        <arg name="offset" type="int">0</arg>
+      </tool>
+    </expected_tools>
+    <rubric>
+      <pass_if>tool_result JSON contains key "items"</pass_if>
+      <pass_if>tool_result JSON contains key "has_more"</pass_if>
+      <pass_if>tool_result JSON contains key "total_count"</pass_if>
+      <pass_if>tool_result JSON contains key "next_offset"</pass_if>
+    </rubric>
+  </eval>
+
+  <eval id="social-02" read_only="true">
+    <description>Tweet listing excluding retweets</description>
+    <system>You are a social media assistant. Use the available MCP tools to retrieve information. Do not post anything.</system>
+    <prompt>List my recent tweets but exclude any retweets.</prompt>
+    <expected_tools>
+      <tool name="twitter_list_tweets">
+        <arg name="exclude" type="array">["retweets"]</arg>
+      </tool>
+    </expected_tools>
+    <rubric>
+      <pass_if>tool_result JSON contains key "items"</pass_if>
+      <pass_if>tool_result JSON contains key "has_more"</pass_if>
+      <pass_if>tool called with exclude containing "retweets"</pass_if>
+    </rubric>
+  </eval>
+
+  <eval id="social-03" read_only="true">
+    <description>Tweet listing excluding both retweets and replies (original content only)</description>
+    <system>You are a social media assistant. Use the available MCP tools to retrieve information. Do not post anything.</system>
+    <prompt>I only want to see my original tweets — exclude all retweets and replies.</prompt>
+    <expected_tools>
+      <tool name="twitter_list_tweets">
+        <arg name="exclude" type="array">["retweets", "replies"]</arg>
+      </tool>
+    </expected_tools>
+    <rubric>
+      <pass_if>tool_result JSON contains key "items"</pass_if>
+      <pass_if>tool called with exclude containing both "retweets" and "replies"</pass_if>
+    </rubric>
+  </eval>
+
+  <eval id="social-04" read_only="true">
+    <description>Paginated tweet retrieval — second page (offset=20)</description>
+    <system>You are a social media assistant. Use the available MCP tools to retrieve information. Do not post anything.</system>
+    <prompt>Get the second page of my tweets using 20 tweets per page.</prompt>
+    <expected_tools>
+      <tool name="twitter_list_tweets">
+        <arg name="limit" type="int">20</arg>
+        <arg name="offset" type="int">20</arg>
+      </tool>
+    </expected_tools>
+    <rubric>
+      <pass_if>tool_result JSON contains key "items"</pass_if>
+      <pass_if>tool_result JSON contains key "next_offset"</pass_if>
+      <pass_if>tool called with offset >= 20</pass_if>
+    </rubric>
+  </eval>
+
+  <eval id="social-05" read_only="true">
+    <description>Small limit tweet listing — top 5 only</description>
+    <system>You are a social media assistant. Use the available MCP tools to retrieve information. Do not post anything.</system>
+    <prompt>Fetch just my last 5 tweets.</prompt>
+    <expected_tools>
+      <tool name="twitter_list_tweets">
+        <arg name="limit" type="int">5</arg>
+        <arg name="offset" type="int">0</arg>
+      </tool>
+    </expected_tools>
+    <rubric>
+      <pass_if>tool_result JSON contains key "items"</pass_if>
+      <pass_if>tool called with limit == 5</pass_if>
+    </rubric>
+  </eval>
+
+  <!-- ── LinkedIn: linkedin_list_posts ────────────────────────────────────── -->
+
+  <eval id="social-06" read_only="true">
+    <description>Basic LinkedIn post listing</description>
+    <system>You are a social media assistant. Use the available MCP tools to retrieve information. Do not post anything.</system>
+    <prompt>Show me my 5 most recent LinkedIn posts.</prompt>
+    <expected_tools>
+      <tool name="linkedin_list_posts">
+        <arg name="limit" type="int">5</arg>
+        <arg name="offset" type="int">0</arg>
+      </tool>
+    </expected_tools>
+    <rubric>
+      <pass_if>tool_result JSON contains key "items"</pass_if>
+      <pass_if>tool_result JSON contains key "has_more"</pass_if>
+      <pass_if>tool_result JSON contains key "total_count"</pass_if>
+      <pass_if>tool called with limit == 5</pass_if>
+    </rubric>
+  </eval>
+
+  <eval id="social-07" read_only="true">
+    <description>LinkedIn post listing — second page (offset=10, limit=10)</description>
+    <system>You are a social media assistant. Use the available MCP tools to retrieve information. Do not post anything.</system>
+    <prompt>Get the second page of my LinkedIn posts, showing 10 posts per page.</prompt>
+    <expected_tools>
+      <tool name="linkedin_list_posts">
+        <arg name="limit" type="int">10</arg>
+        <arg name="offset" type="int">10</arg>
+      </tool>
+    </expected_tools>
+    <rubric>
+      <pass_if>tool_result JSON contains key "items"</pass_if>
+      <pass_if>tool_result JSON contains key "next_offset"</pass_if>
+      <pass_if>tool called with offset >= 10</pass_if>
+    </rubric>
+  </eval>
+
+  <!-- ── Instagram: instagram_get_media ───────────────────────────────────── -->
+
+  <eval id="social-08" read_only="true">
+    <description>Instagram media listing with default fields</description>
+    <system>You are a social media assistant. Use the available MCP tools to retrieve information. Do not post anything.</system>
+    <prompt>List my recent Instagram posts with all available details.</prompt>
+    <expected_tools>
+      <tool name="instagram_get_media">
+        <arg name="limit" type="int">20</arg>
+        <arg name="offset" type="int">0</arg>
+      </tool>
+    </expected_tools>
+    <rubric>
+      <pass_if>tool_result JSON contains key "items"</pass_if>
+      <pass_if>tool_result JSON contains key "has_more"</pass_if>
+      <pass_if>tool_result JSON contains key "total_count"</pass_if>
+    </rubric>
+  </eval>
+
+  <eval id="social-09" read_only="true">
+    <description>Instagram media listing with restricted field selection</description>
+    <system>You are a social media assistant. Use the available MCP tools to retrieve information. Do not post anything.</system>
+    <prompt>Show me only the id, caption, and timestamp of my last 5 Instagram posts.</prompt>
+    <expected_tools>
+      <tool name="instagram_get_media">
+        <arg name="limit" type="int">5</arg>
+        <arg name="fields" type="string">id,caption,timestamp</arg>
+      </tool>
+    </expected_tools>
+    <rubric>
+      <pass_if>tool_result JSON contains key "items"</pass_if>
+      <pass_if>tool called with limit == 5</pass_if>
+      <pass_if>tool called with fields containing "id"</pass_if>
+      <pass_if>tool called with fields containing "caption"</pass_if>
+      <pass_if>tool called with fields containing "timestamp"</pass_if>
+    </rubric>
+  </eval>
+
+  <!-- ── Multi-tool: twitter + linkedin ───────────────────────────────────── -->
+
+  <eval id="social-10" read_only="true">
+    <description>Cross-platform summary: total tweet count and LinkedIn post overview</description>
+    <system>You are a social media assistant. Use the available MCP tools to retrieve information. Do not post anything.</system>
+    <prompt>Give me a summary: how many tweets do I have in total, and what do my most recent LinkedIn posts look like?</prompt>
+    <expected_tools>
+      <tool name="twitter_list_tweets">
+        <arg name="limit" type="int">1</arg>
+        <arg name="offset" type="int">0</arg>
+      </tool>
+      <tool name="linkedin_list_posts">
+        <arg name="limit" type="int">5</arg>
+        <arg name="offset" type="int">0</arg>
+      </tool>
+    </expected_tools>
+    <rubric>
+      <pass_if>twitter_list_tweets is called</pass_if>
+      <pass_if>linkedin_list_posts is called</pass_if>
+      <pass_if>twitter tool_result JSON contains key "total_count"</pass_if>
+      <pass_if>linkedin tool_result JSON contains key "items"</pass_if>
+    </rubric>
+  </eval>
+
+</evals>

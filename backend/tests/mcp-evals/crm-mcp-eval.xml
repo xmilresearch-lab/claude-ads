@@ -1,0 +1,199 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  CRM MCP Server Evaluation Suite
+  Server  : crm-mcp-server  (port 3003)
+  Protocol: MCP streamable-HTTP with Bearer auth
+
+  Rules
+  ─────
+  • Only read-only tools are exercised (readOnlyHint=true).
+    Excluded: hubspot_upsert_contact, hubspot_create_deal, hubspot_update_deal,
+              salesforce_create_record, salesforce_update_record
+  • Every expected_tools entry maps 1-to-1 with a tool the model MUST invoke.
+  • rubric criteria are evaluated by the runner against the raw tool-result JSON.
+  • Multi-tool eval (id crm-10) requires BOTH tool calls to appear in the response.
+-->
+<evals server="crm-mcp-server" base_url="http://localhost:3003">
+
+  <!-- ── HubSpot: hubspot_list_contacts ───────────────────────────────────── -->
+
+  <eval id="crm-01" read_only="true">
+    <description>List HubSpot contacts with default properties</description>
+    <system>You are a CRM assistant. Use the available MCP tools to retrieve CRM data. Do not create or modify any records.</system>
+    <prompt>Show me my HubSpot contacts.</prompt>
+    <expected_tools>
+      <tool name="hubspot_list_contacts">
+        <arg name="offset" type="int">0</arg>
+      </tool>
+    </expected_tools>
+    <rubric>
+      <pass_if>tool_result JSON contains key "items"</pass_if>
+      <pass_if>tool_result JSON contains key "has_more"</pass_if>
+      <pass_if>tool_result JSON contains key "total_count"</pass_if>
+      <pass_if>tool_result JSON contains key "next_offset"</pass_if>
+    </rubric>
+  </eval>
+
+  <eval id="crm-02" read_only="true">
+    <description>HubSpot contact listing with specific property selection</description>
+    <system>You are a CRM assistant. Use the available MCP tools to retrieve CRM data. Do not create or modify any records.</system>
+    <prompt>List HubSpot contacts showing only their email address, company name, and job title.</prompt>
+    <expected_tools>
+      <tool name="hubspot_list_contacts">
+        <arg name="properties" type="array">["email", "company", "jobtitle"]</arg>
+      </tool>
+    </expected_tools>
+    <rubric>
+      <pass_if>tool_result JSON contains key "items"</pass_if>
+      <pass_if>tool called with properties containing "email"</pass_if>
+      <pass_if>tool called with properties containing "company"</pass_if>
+      <pass_if>tool called with properties containing "jobtitle"</pass_if>
+    </rubric>
+  </eval>
+
+  <eval id="crm-03" read_only="true">
+    <description>HubSpot contact listing with small limit</description>
+    <system>You are a CRM assistant. Use the available MCP tools to retrieve CRM data. Do not create or modify any records.</system>
+    <prompt>Get my first 5 HubSpot contacts.</prompt>
+    <expected_tools>
+      <tool name="hubspot_list_contacts">
+        <arg name="limit" type="int">5</arg>
+        <arg name="offset" type="int">0</arg>
+      </tool>
+    </expected_tools>
+    <rubric>
+      <pass_if>tool_result JSON contains key "items"</pass_if>
+      <pass_if>tool called with limit == 5</pass_if>
+    </rubric>
+  </eval>
+
+  <eval id="crm-04" read_only="true">
+    <description>HubSpot contact listing — second page pagination</description>
+    <system>You are a CRM assistant. Use the available MCP tools to retrieve CRM data. Do not create or modify any records.</system>
+    <prompt>Get the second page of HubSpot contacts using 10 contacts per page.</prompt>
+    <expected_tools>
+      <tool name="hubspot_list_contacts">
+        <arg name="limit" type="int">10</arg>
+        <arg name="offset" type="int">10</arg>
+      </tool>
+    </expected_tools>
+    <rubric>
+      <pass_if>tool_result JSON contains key "items"</pass_if>
+      <pass_if>tool_result JSON contains key "next_offset"</pass_if>
+      <pass_if>tool called with offset >= 10</pass_if>
+      <pass_if>tool called with limit == 10</pass_if>
+    </rubric>
+  </eval>
+
+  <eval id="crm-05" read_only="true">
+    <description>HubSpot contact listing with extended property set including phone</description>
+    <system>You are a CRM assistant. Use the available MCP tools to retrieve CRM data. Do not create or modify any records.</system>
+    <prompt>List HubSpot contacts and include their phone numbers along with name, email, and company.</prompt>
+    <expected_tools>
+      <tool name="hubspot_list_contacts">
+        <arg name="properties" type="array">["email", "firstname", "lastname", "company", "phone"]</arg>
+      </tool>
+    </expected_tools>
+    <rubric>
+      <pass_if>tool_result JSON contains key "items"</pass_if>
+      <pass_if>tool called with properties containing "phone"</pass_if>
+      <pass_if>tool called with properties containing "email"</pass_if>
+    </rubric>
+  </eval>
+
+  <!-- ── Salesforce: salesforce_query_records ──────────────────────────────── -->
+
+  <eval id="crm-06" read_only="true">
+    <description>Basic Salesforce Contact SOQL query</description>
+    <system>You are a CRM assistant. Use the available MCP tools to retrieve CRM data. Do not create or modify any records.</system>
+    <prompt>Query all Contacts from Salesforce and show me their names and email addresses.</prompt>
+    <expected_tools>
+      <tool name="salesforce_query_records">
+        <arg name="soql" type="string">SELECT Id, Name, Email FROM Contact LIMIT 20</arg>
+      </tool>
+    </expected_tools>
+    <rubric>
+      <pass_if>tool_result JSON contains key "items"</pass_if>
+      <pass_if>tool_result JSON contains key "total_count"</pass_if>
+      <pass_if>tool called with soql containing "Contact"</pass_if>
+      <pass_if>tool called with soql starting with "SELECT"</pass_if>
+    </rubric>
+  </eval>
+
+  <eval id="crm-07" read_only="true">
+    <description>Salesforce Lead query with date filter</description>
+    <system>You are a CRM assistant. Use the available MCP tools to retrieve CRM data. Do not create or modify any records.</system>
+    <prompt>Find all Salesforce Leads created in the last 30 days.</prompt>
+    <expected_tools>
+      <tool name="salesforce_query_records">
+        <arg name="soql" type="string">SELECT Id, Name, Email, CreatedDate FROM Lead WHERE CreatedDate = LAST_N_DAYS:30</arg>
+      </tool>
+    </expected_tools>
+    <rubric>
+      <pass_if>tool_result JSON contains key "items"</pass_if>
+      <pass_if>tool called with soql containing "Lead"</pass_if>
+      <pass_if>tool called with soql containing "CreatedDate"</pass_if>
+    </rubric>
+  </eval>
+
+  <eval id="crm-08" read_only="true">
+    <description>Salesforce Opportunity query for open deals with amounts</description>
+    <system>You are a CRM assistant. Use the available MCP tools to retrieve CRM data. Do not create or modify any records.</system>
+    <prompt>Get all open Opportunities from Salesforce along with their deal amounts and current stage.</prompt>
+    <expected_tools>
+      <tool name="salesforce_query_records">
+        <arg name="soql" type="string">SELECT Id, Name, Amount, StageName FROM Opportunity WHERE IsClosed = false</arg>
+      </tool>
+    </expected_tools>
+    <rubric>
+      <pass_if>tool_result JSON contains key "items"</pass_if>
+      <pass_if>tool called with soql containing "Opportunity"</pass_if>
+      <pass_if>tool called with soql containing "Amount"</pass_if>
+      <pass_if>tool called with soql containing "IsClosed"</pass_if>
+    </rubric>
+  </eval>
+
+  <eval id="crm-09" read_only="true">
+    <description>Salesforce Account query with offset-based pagination</description>
+    <system>You are a CRM assistant. Use the available MCP tools to retrieve CRM data. Do not create or modify any records.</system>
+    <prompt>List Salesforce Accounts by industry — show me the second page using 20 records per page.</prompt>
+    <expected_tools>
+      <tool name="salesforce_query_records">
+        <arg name="soql" type="string">SELECT Id, Name, Industry FROM Account</arg>
+        <arg name="limit" type="int">20</arg>
+        <arg name="offset" type="int">20</arg>
+      </tool>
+    </expected_tools>
+    <rubric>
+      <pass_if>tool_result JSON contains key "items"</pass_if>
+      <pass_if>tool_result JSON contains key "next_offset"</pass_if>
+      <pass_if>tool called with soql containing "Account"</pass_if>
+      <pass_if>tool called with offset >= 20</pass_if>
+    </rubric>
+  </eval>
+
+  <!-- ── Multi-tool: hubspot_list_contacts + salesforce_query_records ─────── -->
+
+  <eval id="crm-10" read_only="true">
+    <description>Cross-system summary: HubSpot contact count and Salesforce Account overview</description>
+    <system>You are a CRM assistant. Use the available MCP tools to retrieve CRM data. Do not create or modify any records.</system>
+    <prompt>Give me a CRM overview: how many contacts are in HubSpot, and what Salesforce Accounts do we have?</prompt>
+    <expected_tools>
+      <tool name="hubspot_list_contacts">
+        <arg name="limit" type="int">1</arg>
+        <arg name="offset" type="int">0</arg>
+      </tool>
+      <tool name="salesforce_query_records">
+        <arg name="soql" type="string">SELECT Id, Name FROM Account</arg>
+      </tool>
+    </expected_tools>
+    <rubric>
+      <pass_if>hubspot_list_contacts is called</pass_if>
+      <pass_if>salesforce_query_records is called</pass_if>
+      <pass_if>hubspot tool_result JSON contains key "total_count"</pass_if>
+      <pass_if>salesforce tool_result JSON contains key "items"</pass_if>
+      <pass_if>salesforce tool called with soql containing "Account"</pass_if>
+    </rubric>
+  </eval>
+
+</evals>
