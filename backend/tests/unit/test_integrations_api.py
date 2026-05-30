@@ -3,6 +3,7 @@
 import json
 import uuid
 from datetime import datetime, timezone
+from urllib.parse import unquote
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -85,7 +86,7 @@ async def test_oauth_initiate_returns_authorization_url_with_state() -> None:
     assert "authorization_url" in result.data
     assert "state" in result.data
     state = result.data["state"]
-    assert state in result.data["authorization_url"]
+    assert state in unquote(result.data["authorization_url"])
     assert result.data["authorization_url"].startswith("https://twitter.com/i/oauth2/authorize")
     mock_redis.setex.assert_awaited_once()
     # Verify state was stored with 600s TTL
