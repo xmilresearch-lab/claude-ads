@@ -45,7 +45,7 @@ class Settings(BaseSettings):
     # Web Push / VAPID
     VAPID_PUBLIC_KEY: str = ""
     VAPID_PRIVATE_KEY: str = ""
-    VAPID_MAILTO: str = "mailto:XMiLResearch@gmail.com"
+    VAPID_MAILTO: str = "mailto:support@xmilresearch.com"
 
     # Webhooks
     WEBHOOK_SECRET: str = ""
