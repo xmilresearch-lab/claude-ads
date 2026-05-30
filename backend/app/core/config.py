@@ -69,6 +69,19 @@ class Settings(BaseSettings):
     TIKTOK_REDIRECT_URI: str = ""
     THREADS_REDIRECT_URI: str = ""
 
+    # SaaS — Stripe billing
+    STRIPE_SECRET_KEY: str = ""
+    STRIPE_WEBHOOK_SECRET: str = ""
+    STRIPE_PRICE_STARTER_MONTHLY: str = ""
+    STRIPE_PRICE_PRO_MONTHLY: str = ""
+
+    # SaaS — App URLs
+    APP_URL: str = "https://app.yoursaas.com"
+    MARKETING_URL: str = "https://yoursaas.com"
+
+    # SaaS — Cost monitoring (USD monthly budget alert threshold)
+    MONTHLY_BUDGET_THRESHOLD: float = 500.0
+
     @property
     def database_url_sync(self) -> str:
         return self.DATABASE_URL.replace("postgresql+asyncpg", "postgresql+psycopg2")
