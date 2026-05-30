@@ -65,7 +65,6 @@ const PLATFORM = {
   sendgrid:  { color: "#1A82E2", bg: "#1A82E215", sym: "S" },
 };
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
 function Badge({ status }) {
   const map = {
     active:           { bg: "#10B98122", color: "#10B981", label: "Active" },
@@ -91,7 +90,6 @@ function Toast({ msg, type, onDone }) {
   );
 }
 
-// ─── Sidebar ──────────────────────────────────────────────────────────────────
 const NAV = [
   { id: "automations", label: "Automations", icon: "⚡" },
   { id: "content",     label: "Content Queue", icon: "📋", hasBadge: true },
@@ -104,7 +102,6 @@ const NAV = [
 function Sidebar({ active, go, pending }) {
   return (
     <div style={{ width: 216, flexShrink: 0, background: c.surface, borderRight: `1px solid ${c.border}`, display: "flex", flexDirection: "column", height: "100vh" }}>
-      {/* Logo */}
       <div style={{ padding: "18px 16px 14px", borderBottom: `1px solid ${c.border}` }}>
         <div style={{ display: "flex", alignItems: "center", gap: 9 }}>
           <div style={{ width: 28, height: 28, background: c.amber, borderRadius: 6, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, fontWeight: 800, color: "#000" }}>A</div>
@@ -112,8 +109,6 @@ function Sidebar({ active, go, pending }) {
         </div>
         <div style={{ marginTop: 6, fontSize: 11, color: c.t3, fontFamily: "monospace" }}>XMiL Research Corp</div>
       </div>
-
-      {/* Nav items */}
       <nav style={{ flex: 1, padding: "10px 8px", display: "flex", flexDirection: "column", gap: 1 }}>
         {NAV.map(n => {
           const on = active === n.id;
@@ -127,8 +122,6 @@ function Sidebar({ active, go, pending }) {
           );
         })}
       </nav>
-
-      {/* User row */}
       <div style={{ padding: "10px 14px", borderTop: `1px solid ${c.border}`, display: "flex", alignItems: "center", gap: 9 }}>
         <div style={{ width: 28, height: 28, background: `${c.amber}25`, border: `1px solid ${c.amber}55`, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, color: c.amber, fontWeight: 700 }}>XM</div>
         <div>
@@ -140,7 +133,6 @@ function Sidebar({ active, go, pending }) {
   );
 }
 
-// ─── Top bar ──────────────────────────────────────────────────────────────────
 function TopBar({ page }) {
   const labels = { automations: "Automations", content: "Content Queue", analytics: "Analytics", integrations: "Integrations", audit: "Audit Log", settings: "Settings" };
   return (
@@ -157,28 +149,21 @@ function TopBar({ page }) {
   );
 }
 
-// ─── Automations page ─────────────────────────────────────────────────────────
 function AutomationsPage({ onRun }) {
   const [autos, setAutos] = useState(AUTOMATIONS);
   const [running, setRunning] = useState(null);
-
   const run = (a) => {
     if (a.status === "paused") return;
     setRunning(a.id);
     setTimeout(() => { setRunning(null); onRun(a); }, 1900);
   };
-
   const toggle = (id) => setAutos(p => p.map(a => a.id === id ? { ...a, status: a.status === "active" ? "paused" : "active" } : a));
-
   return (
     <div style={{ padding: 22 }}>
-      {/* Demo tip */}
       <div style={{ background: `${c.amber}10`, border: `1px solid ${c.amber}30`, borderRadius: 8, padding: "10px 14px", marginBottom: 20, fontSize: 12, color: c.amber, display: "flex", alignItems: "center", gap: 8 }}>
         <span>💡</span>
         <span>Click <strong>▶ Run</strong> on any automation to generate AI content and see the full workflow in action.</span>
       </div>
-
-      {/* KPIs */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 14, marginBottom: 22 }}>
         {[
           { label: "Total Automations", value: "5", sub: "4 active · 1 paused" },
@@ -192,8 +177,6 @@ function AutomationsPage({ onRun }) {
           </div>
         ))}
       </div>
-
-      {/* Cards */}
       <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
         {autos.map(a => {
           const p = PLATFORM[a.platform] || PLATFORM.twitter;
@@ -224,7 +207,6 @@ function AutomationsPage({ onRun }) {
   );
 }
 
-// ─── Content queue page ───────────────────────────────────────────────────────
 function ContentPage({ items, onApprove, onReject }) {
   const [tab, setTab] = useState("pending_approval");
   const tabs = [
@@ -233,10 +215,8 @@ function ContentPage({ items, onApprove, onReject }) {
     { id: "published", label: "Published", count: items.filter(i => i.status === "published").length },
   ];
   const visible = items.filter(i => i.status === tab);
-
   return (
     <div style={{ padding: 22 }}>
-      {/* Tabs */}
       <div style={{ display: "flex", gap: 3, marginBottom: 18, background: c.surface, border: `1px solid ${c.border}`, borderRadius: 8, padding: 3, width: "fit-content" }}>
         {tabs.map(t => (
           <button key={t.id} onClick={() => setTab(t.id)} style={{ padding: "5px 14px", borderRadius: 5, border: "none", cursor: "pointer", fontSize: 12, fontWeight: 500, background: tab === t.id ? c.elevated : "transparent", color: tab === t.id ? c.t1 : c.t3, display: "flex", alignItems: "center", gap: 5 }}>
@@ -245,7 +225,6 @@ function ContentPage({ items, onApprove, onReject }) {
           </button>
         ))}
       </div>
-
       {visible.length === 0 ? (
         <div style={{ textAlign: "center", padding: "60px 0", color: c.t3 }}>
           <div style={{ fontSize: 28, marginBottom: 10 }}>✓</div>
@@ -280,7 +259,6 @@ function ContentPage({ items, onApprove, onReject }) {
   );
 }
 
-// ─── Analytics page ───────────────────────────────────────────────────────────
 function AnalyticsPage() {
   const [range, setRange] = useState("7d");
   const bars = [
@@ -294,7 +272,6 @@ function AnalyticsPage() {
           <button key={r} onClick={() => setRange(r)} style={{ padding: "5px 14px", border: `1px solid ${c.border}`, cursor: "pointer", fontSize: 12, background: range === r ? c.elevated : "transparent", color: range === r ? c.t1 : c.t3, borderRadius: i === 0 ? "6px 0 0 6px" : i === 2 ? "0 6px 6px 0" : 0, borderLeft: i > 0 ? "none" : undefined }}>{r}</button>
         ))}
       </div>
-
       <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 12, marginBottom: 22 }}>
         {[
           { label: "Total Runs", value: "35", trend: "↑ 12%", tc: c.green },
@@ -309,7 +286,6 @@ function AnalyticsPage() {
           </div>
         ))}
       </div>
-
       <div style={{ background: c.surface, border: `1px solid ${c.border}`, borderRadius: 8, padding: 18 }}>
         <div style={{ fontSize: 13, color: c.t1, fontWeight: 600, marginBottom: 14 }}>Automation Runs — Last 7 Days</div>
         <div style={{ display: "flex", alignItems: "flex-end", gap: 10, height: 130 }}>
@@ -331,8 +307,6 @@ function AnalyticsPage() {
           ))}
         </div>
       </div>
-
-      {/* Platform breakdown */}
       <div style={{ background: c.surface, border: `1px solid ${c.border}`, borderRadius: 8, padding: 18, marginTop: 14 }}>
         <div style={{ fontSize: 13, color: c.t1, fontWeight: 600, marginBottom: 14 }}>Published by Platform</div>
         {[
@@ -362,7 +336,6 @@ function AnalyticsPage() {
   );
 }
 
-// ─── Integrations page ────────────────────────────────────────────────────────
 function IntegrationsPage() {
   const dotColor = { active: c.green, expiring: c.amber, error: c.red, inactive: c.t3 };
   const dotLabel = { active: "Connected", expiring: "Needs attention", error: "Error", inactive: "Not connected" };
@@ -397,7 +370,6 @@ function IntegrationsPage() {
   );
 }
 
-// ─── Placeholder ──────────────────────────────────────────────────────────────
 function Placeholder({ icon, label }) {
   return (
     <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "calc(100vh - 52px)", flexDirection: "column", gap: 10, color: c.t3 }}>
@@ -408,7 +380,6 @@ function Placeholder({ icon, label }) {
   );
 }
 
-// ─── Root ─────────────────────────────────────────────────────────────────────
 export default function App() {
   const [page, setPage] = useState("automations");
   const [content, setContent] = useState(INITIAL_CONTENT);
@@ -426,7 +397,7 @@ export default function App() {
       id: Date.now(),
       platform: auto.platform,
       status: "pending_approval",
-      text: GENERATED_POSTS[auto.platform] || "AI-generated content ready for your review. This post was crafted based on your brand voice and automation instructions.",
+      text: GENERATED_POSTS[auto.platform] || "AI-generated content ready for your review.",
       automation: auto.name,
       age: "Just now",
     };
@@ -456,9 +427,7 @@ export default function App() {
         button:hover:not(:disabled) { filter: brightness(1.12); }
         ::-webkit-scrollbar { width: 4px; } ::-webkit-scrollbar-track { background: transparent; } ::-webkit-scrollbar-thumb { background: #1E2330; border-radius: 4px; }
       `}</style>
-
       <Sidebar active={page} go={setPage} pending={pending} />
-
       <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
         <TopBar page={page} />
         <div style={{ flex: 1, overflowY: "auto" }}>
@@ -470,7 +439,6 @@ export default function App() {
           {page === "settings"     && <Placeholder icon="⚙" label="Settings" />}
         </div>
       </div>
-
       {toasts.map(t => <Toast key={t.id} msg={t.msg} type={t.type} onDone={() => setToasts(p => p.filter(x => x.id !== t.id))} />)}
     </div>
   );
