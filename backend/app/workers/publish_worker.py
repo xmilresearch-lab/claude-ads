@@ -12,6 +12,8 @@ from app.core.database import AsyncSessionLocal
 from app.models.audit_log import AuditLog
 from app.models.automation import Automation
 from app.models.content_queue import ContentQueue
+from app.models.push_subscription import PushSubscription
+from app.services.push_service import send_push_notification
 from app.workers.celery_app import celery_app
 
 logger = get_task_logger(__name__)
@@ -202,3 +204,76 @@ def publish_content(
     except Exception as exc:
         logger.error("publish_content failed for %s: %s", content_queue_id, exc)
         raise
+
+
+async def _notify_pending_review(
+    content_queue_id: uuid.UUID,
+    automation_name: str,
+    workspace_id: uuid.UUID,
+) -> int:
+    """Send push notifications to all subscribers of users in the workspace."""
+    async with AsyncSessionLocal() as db:
+        from app.models.workspace import Workspace
+
+        result = await db.execute(
+            select(Workspace).where(Workspace.id == workspace_id)
+        )
+        workspace = result.scalar_one_or_none()
+        if workspace is None:
+            return 0
+
+        subs_result = await db.execute(
+            select(PushSubscription).where(PushSubscription.user_id == workspace.user_id)
+        )
+        subscriptions = subs_result.scalars().all()
+
+    if not subscriptions:
+        return 0
+
+    vapid_claims = {
+        "sub": settings.VAPID_MAILTO,
+    }
+    message = f"New content needs your approval — {automation_name}"
+    sent = 0
+    for sub in subscriptions:
+        subscription_info = {
+            "endpoint": sub.endpoint,
+            "keys": {"p256dh": sub.p256dh, "auth": sub.auth},
+        }
+        if send_push_notification(
+            subscription_info=subscription_info,
+            message=message,
+            vapid_private_key=settings.VAPID_PRIVATE_KEY,
+            vapid_claims=vapid_claims,
+        ):
+            sent += 1
+
+    logger.info(
+        "push notifications sent for content %s: %d/%d",
+        content_queue_id,
+        sent,
+        len(subscriptions),
+    )
+    return sent
+
+
+@celery_app.task(
+    name="app.workers.publish_worker.notify_pending_review",
+    max_retries=1,
+    default_retry_delay=10,
+    queue="medium_priority",
+    ignore_result=True,
+)
+def notify_pending_review(
+    content_queue_id: str,
+    automation_name: str,
+    workspace_id: str,
+) -> None:
+    """Send push notifications when a content item enters pending_approval status."""
+    asyncio.run(
+        _notify_pending_review(
+            uuid.UUID(content_queue_id),
+            automation_name,
+            uuid.UUID(workspace_id),
+        )
+    )

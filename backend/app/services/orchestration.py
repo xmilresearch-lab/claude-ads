@@ -332,16 +332,28 @@ async def run_automation(
 
     await db.commit()
 
-    # 13. Auto-dispatch publish task for approved content (lazy import avoids
-    #     circular dependency at module load time; dispatch happens after commit
-    #     so the DB row is visible to the worker)
-    if content_entry is not None and content_entry.status == "approved":
-        from app.workers.publish_worker import publish_content  # noqa: PLC0415
+    # 13. Auto-dispatch publish task for approved content, or push notification
+    #     for pending_approval content. Lazy imports avoid circular dependency
+    #     at module load time; dispatch happens after commit so DB rows are
+    #     visible to workers.
+    if content_entry is not None:
+        if content_entry.status == "approved":
+            from app.workers.publish_worker import publish_content  # noqa: PLC0415
 
-        publish_content.delay(
-            content_queue_id=str(content_entry.id),
-            request_id=request_id,
-        )
+            publish_content.delay(
+                content_queue_id=str(content_entry.id),
+                request_id=request_id,
+            )
+        elif content_entry.status == "pending_approval":
+            from app.workers.publish_worker import (
+                notify_pending_review,  # noqa: PLC0415
+            )
+
+            notify_pending_review.delay(
+                content_queue_id=str(content_entry.id),
+                automation_name=automation.name,
+                workspace_id=str(workspace.id),
+            )
 
     # 14. Return AutomationRun
     return run

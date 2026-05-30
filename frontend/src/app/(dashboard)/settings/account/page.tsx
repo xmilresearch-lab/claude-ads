@@ -1,9 +1,11 @@
 "use client";
 
+import { useCallback, useEffect, useState } from "react";
 import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
+import { Bell, BellOff, Loader2 } from "lucide-react";
 import { PageHeader } from "@/components/layout/page-header";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -13,6 +15,12 @@ import { useAuth } from "@/lib/hooks/use-auth";
 import { useChangePassword } from "@/hooks/useAuth";
 import { ApiError } from "@/lib/api/client";
 import { cn } from "@/lib/utils/cn";
+import {
+  getNotificationPermission,
+  requestNotificationPermission,
+  subscribeToNotifications,
+  unsubscribeFromNotifications,
+} from "@/lib/push";
 
 const PLAN_VARIANT = {
   free:  "secondary",
@@ -95,6 +103,58 @@ export default function AccountPage() {
       },
     );
   };
+
+  // Push notifications state
+  const [pushPermission, setPushPermission] = useState<NotificationPermission | "unsupported">(
+    () => (typeof window !== "undefined" ? getNotificationPermission() : "default"),
+  );
+  const [isPushSubscribed, setIsPushSubscribed] = useState(false);
+  const [pushLoading, setPushLoading] = useState(false);
+
+  useEffect(() => {
+    if ("serviceWorker" in navigator && "PushManager" in window) {
+      navigator.serviceWorker.ready
+        .then((reg) => reg.pushManager.getSubscription())
+        .then((sub) => setIsPushSubscribed(!!sub))
+        .catch(() => {});
+    }
+  }, []);
+
+  const handlePushToggle = useCallback(async () => {
+    setPushLoading(true);
+    try {
+      if (isPushSubscribed) {
+        const ok = await unsubscribeFromNotifications();
+        if (ok) {
+          setIsPushSubscribed(false);
+          toast.success("Push notifications disabled");
+        } else {
+          toast.error("Failed to disable push notifications");
+        }
+      } else {
+        const permission = await requestNotificationPermission();
+        setPushPermission(permission);
+        if (permission !== "granted") {
+          toast.error("Notification permission denied. Enable it in your browser settings.");
+          return;
+        }
+        const vapidKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY ?? "";
+        if (!vapidKey) {
+          toast.error("Push notifications are not configured");
+          return;
+        }
+        const ok = await subscribeToNotifications(vapidKey);
+        if (ok) {
+          setIsPushSubscribed(true);
+          toast.success("Push notifications enabled");
+        } else {
+          toast.error("Failed to enable push notifications");
+        }
+      }
+    } finally {
+      setPushLoading(false);
+    }
+  }, [isPushSubscribed]);
 
   const plan = user?.plan ?? "free";
   const isAdmin = plan === "admin";
@@ -204,6 +264,52 @@ export default function AccountPage() {
             </div>
           </div>
         </form>
+
+        {/* Section C — Push Notifications */}
+        <div className="card-command p-6">
+          <h2 className="font-display text-sm font-semibold text-text-primary mb-1">
+            Push Notifications
+          </h2>
+          <p className="text-xs text-text-muted mb-5">
+            Receive browser alerts when content items need your approval.
+          </p>
+
+          {pushPermission === "unsupported" ? (
+            <p className="text-xs font-mono text-text-muted">
+              Push notifications are not supported in this browser.
+            </p>
+          ) : (
+            <div className="flex items-center justify-between max-w-md">
+              <div className="space-y-0.5">
+                <p className="text-xs text-text-primary font-medium">Content approval alerts</p>
+                <p className="text-2xs font-mono text-text-muted">
+                  {pushPermission === "denied"
+                    ? "Blocked — enable in browser settings"
+                    : isPushSubscribed
+                    ? "Active — you will receive approval alerts"
+                    : "Inactive — click Enable to subscribe"}
+                </p>
+              </div>
+              <Button
+                type="button"
+                size="sm"
+                variant={isPushSubscribed ? "secondary" : "default"}
+                disabled={pushLoading || pushPermission === "denied"}
+                onClick={handlePushToggle}
+                className="flex items-center gap-1.5 shrink-0"
+              >
+                {pushLoading ? (
+                  <Loader2 className="w-3 h-3 animate-spin" />
+                ) : isPushSubscribed ? (
+                  <BellOff className="w-3 h-3" />
+                ) : (
+                  <Bell className="w-3 h-3" />
+                )}
+                {isPushSubscribed ? "Disable" : "Enable"}
+              </Button>
+            </div>
+          )}
+        </div>
       </div>
     </>
   );
