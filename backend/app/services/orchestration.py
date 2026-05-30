@@ -1,0 +1,359 @@
+import json
+import uuid
+from datetime import datetime
+from typing import Any
+
+from anthropic import AsyncAnthropic
+from sqlalchemy import func, select
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.core.config import settings
+from app.middleware.dlp_scanner import DLPResult, scan_output
+from app.middleware.injection_scanner import SecurityError, require_clean
+from app.models.audit_log import AuditLog
+from app.models.automation import Automation
+from app.models.automation_run import AutomationRun
+from app.models.content_queue import ContentQueue
+from app.models.workspace import Workspace
+from app.services.mcp_registry import McpServerConfig, get_mcp_servers_for_automation
+from app.services.prompt_builder import build_system_prompt
+
+
+class OrchestrationError(Exception):
+    """Base class for orchestration errors."""
+
+
+class RateLimitError(OrchestrationError):
+    """Raised when a workspace has exceeded its daily automation run limit."""
+
+
+class AutomationNotFoundError(OrchestrationError):
+    """Raised when the requested automation does not exist."""
+
+
+class InactiveAutomationError(OrchestrationError):
+    """Raised when attempting to run an automation that is not active."""
+
+
+# LLM06: maps each MCP server name to the tool-name prefixes it is authorised to call.
+# Any tool call whose name doesn't start with a registered prefix is flagged and audited.
+_ALLOWED_TOOL_PREFIXES: dict[str, frozenset[str]] = {
+    "social-mcp-server": frozenset({"social_"}),
+    "email-mcp-server": frozenset({"email_", "support_"}),
+    "crm-mcp-server": frozenset({"crm_"}),
+}
+
+# LLM05: argument key fragments that must be redacted before writing to audit logs.
+_SENSITIVE_ARG_KEYS: frozenset[str] = frozenset(
+    {"token", "key", "secret", "password", "credential"}
+)
+
+
+def sanitize_tool_call_for_logging(tool_call: dict[str, Any]) -> dict[str, Any]:
+    """Redact sensitive argument keys before writing to audit log (LLM05)."""
+    safe_input = {
+        k: "[REDACTED]" if any(s in k.lower() for s in _SENSITIVE_ARG_KEYS) else v
+        for k, v in tool_call.get("input", {}).items()
+    }
+    return {"name": tool_call.get("name", "unknown"), "input": safe_input}
+
+
+DAILY_LIMITS: dict[str, int] = {
+    "social_post": 50,
+    "email_campaign": 1000,
+    "support_reply": 500,
+    "crm_update": 2000,
+}
+
+
+async def check_rate_limit(
+    workspace_id: uuid.UUID,
+    automation_type: str,
+    db: AsyncSession,
+) -> None:
+    """Raise RateLimitError if the workspace has reached its daily run cap."""
+    limit = DAILY_LIMITS.get(automation_type, 100)
+    now = datetime.utcnow()
+    today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
+    count_result = await db.execute(
+        select(func.count(AutomationRun.id))
+        .join(Automation, AutomationRun.automation_id == Automation.id)
+        .where(
+            Automation.workspace_id == workspace_id,
+            Automation.type == automation_type,
+            AutomationRun.created_at >= today_start,
+            AutomationRun.status != "blocked",
+        )
+    )
+    count: int = count_result.scalar_one()
+    if count >= limit:
+        raise RateLimitError(
+            f"Daily limit of {limit} runs reached for automation type '{automation_type}'"
+        )
+
+
+async def call_claude_with_mcp(
+    system_prompt: str,
+    user_message: str,
+    mcp_servers: list[McpServerConfig],
+) -> dict[str, Any]:
+    """Call the Claude API via the MCP client beta and return a structured result."""
+    client = AsyncAnthropic(api_key=settings.ANTHROPIC_API_KEY)
+    response = await client.beta.messages.create(
+        model=settings.CLAUDE_MODEL,
+        max_tokens=4096,
+        betas=["mcp-client-2025-11-20"],
+        mcp_servers=mcp_servers,
+        system=system_prompt,
+        messages=[{"role": "user", "content": user_message}],
+    )
+
+    text_parts: list[str] = []
+    mcp_tool_calls: list[dict[str, Any]] = []
+    for block in response.content:
+        block_type = getattr(block, "type", "")
+        if block_type == "text":
+            text_parts.append(block.text)
+        elif "tool_use" in block_type:
+            mcp_tool_calls.append(
+                {
+                    "name": getattr(block, "name", "unknown"),
+                    "input": getattr(block, "input", {}),
+                }
+            )
+
+    # LLM06: flag tool calls whose names don't match any registered prefix.
+    allowed_prefixes: set[str] = set()
+    for server in mcp_servers:
+        allowed_prefixes.update(_ALLOWED_TOOL_PREFIXES.get(server["name"], frozenset()))
+    unexpected_tools: list[str] = [
+        tc["name"]
+        for tc in mcp_tool_calls
+        if allowed_prefixes and not any(tc["name"].startswith(p) for p in allowed_prefixes)
+    ]
+
+    input_tokens: int = response.usage.input_tokens
+    output_tokens: int = response.usage.output_tokens
+    return {
+        "content": "\n".join(text_parts),
+        "input_tokens": input_tokens,
+        "output_tokens": output_tokens,
+        "total_tokens": input_tokens + output_tokens,
+        "stop_reason": response.stop_reason or "end_turn",
+        "mcp_tool_calls": mcp_tool_calls,
+        "unexpected_tools": unexpected_tools,
+    }
+
+
+async def queue_or_publish(
+    automation: Automation,
+    content: dict[str, Any],
+    dlp_result: DLPResult,
+    db: AsyncSession,
+) -> ContentQueue:
+    """Insert a ContentQueue row; status is determined by approval settings and DLP."""
+    require_approval = bool(automation.config.get("require_approval", False))
+    status = (
+        "pending_approval"
+        if (require_approval or dlp_result.has_violations)
+        else "approved"
+    )
+    platform = str(content.get("platform", automation.type))
+    entry = ContentQueue(
+        automation_id=automation.id,
+        platform=platform,
+        content=content,
+        status=status,
+    )
+    db.add(entry)
+    await db.flush()
+    return entry
+
+
+async def run_automation(
+    automation_id: uuid.UUID,
+    trigger_payload: dict[str, Any],
+    db: AsyncSession,
+    request_id: str | None = None,
+) -> AutomationRun:
+    """Execute the 13-step AI automation orchestration flow."""
+    # 1. Fetch automation + workspace
+    auto_result = await db.execute(
+        select(Automation).where(Automation.id == automation_id)
+    )
+    automation: Automation | None = auto_result.scalar_one_or_none()
+    if automation is None:
+        raise AutomationNotFoundError(f"Automation {automation_id} not found")
+
+    ws_result = await db.execute(
+        select(Workspace).where(Workspace.id == automation.workspace_id)
+    )
+    workspace: Workspace = ws_result.scalar_one()
+
+    # 2. Validate active
+    if not automation.active:
+        raise InactiveAutomationError(f"Automation {automation_id} is inactive")
+
+    # 3. Check rate limit
+    await check_rate_limit(workspace.id, automation.type, db)
+
+    # 4. Scan trigger payload for injection attempts
+    payload_str = json.dumps(trigger_payload)
+    try:
+        scanned_payload = require_clean(payload_str)
+    except SecurityError as exc:
+        blocked_run = AutomationRun(
+            automation_id=automation_id,
+            status="blocked",
+            error=str(exc),
+            started_at=datetime.utcnow(),
+            finished_at=datetime.utcnow(),
+        )
+        db.add(blocked_run)
+        await db.commit()
+        return blocked_run
+
+    # 5. Build system prompt with brand voice.
+    # LLM01: automation.config values are intentionally excluded from the prompt;
+    # they control behaviour (approval gates, max_length) but are never rendered
+    # into prompt text, preventing indirect prompt injection via stored config.
+    system_prompt = build_system_prompt(
+        automation.type,
+        workspace.brand_voice,
+        workspace.name,
+    )
+
+    # 6. Get MCP servers for this automation type
+    try:
+        mcp_servers = get_mcp_servers_for_automation(automation.type)
+    except ValueError:
+        mcp_servers = []
+
+    # 7. Insert AutomationRun with status="running"
+    run = AutomationRun(
+        automation_id=automation_id,
+        status="running",
+        started_at=datetime.utcnow(),
+    )
+    db.add(run)
+    await db.flush()
+
+    content_entry: ContentQueue | None = None
+    try:
+        # 8. Call Claude API with MCP servers
+        claude_result = await call_claude_with_mcp(
+            system_prompt=system_prompt,
+            user_message=scanned_payload,
+            mcp_servers=mcp_servers,
+        )
+
+        # LLM06: audit unexpected tool calls immediately after Claude responds.
+        if claude_result.get("unexpected_tools"):
+            db.add(
+                AuditLog(
+                    workspace_id=workspace.id,
+                    action="unexpected_tool_call",
+                    actor=str(automation_id),
+                    log_metadata={
+                        "run_id": str(run.id),
+                        "unexpected_tools": claude_result["unexpected_tools"],
+                        "automation_id": str(automation_id),
+                    },
+                )
+            )
+
+        # LLM10: alert when token usage spikes — may indicate prompt inflation attack.
+        if claude_result["total_tokens"] > 2000:
+            db.add(
+                AuditLog(
+                    workspace_id=workspace.id,
+                    action="high_token_usage",
+                    actor=str(automation_id),
+                    log_metadata={
+                        "run_id": str(run.id),
+                        "total_tokens": claude_result["total_tokens"],
+                        "automation_id": str(automation_id),
+                    },
+                )
+            )
+
+        # 9. Scan Claude output through DLP scanner
+        dlp_result = scan_output(claude_result["content"])
+
+        # 10. Write to content_queue
+        try:
+            content_dict: dict[str, Any] = json.loads(dlp_result.redacted_content)
+        except json.JSONDecodeError:
+            content_dict = {"raw": dlp_result.redacted_content}
+        content_entry = await queue_or_publish(automation, content_dict, dlp_result, db)
+
+        # 11. Update AutomationRun to success
+        run.status = "success"
+        run.result = {
+            "content": content_dict,
+            "tokens": {
+                "input": claude_result["input_tokens"],
+                "output": claude_result["output_tokens"],
+                "total": claude_result["total_tokens"],
+            },
+            "stop_reason": claude_result["stop_reason"],
+            "dlp_violations": [v.value for v in dlp_result.violations],
+        }
+        run.ai_tokens_used = claude_result["total_tokens"]
+        run.finished_at = datetime.utcnow()
+
+        # 12. Write audit log
+        audit_meta: dict[str, Any] = {
+            "automation_id": str(automation_id),
+            "tokens_used": claude_result["total_tokens"],
+            # LLM05: sanitize tool call args to redact any sensitive key values
+            "mcp_tools_called": [
+                sanitize_tool_call_for_logging(tc)
+                for tc in claude_result["mcp_tool_calls"]
+            ],
+            "dlp_violations": [v.value for v in dlp_result.violations],
+            "run_id": str(run.id),
+        }
+        if request_id:
+            audit_meta["request_id"] = request_id
+        db.add(
+            AuditLog(
+                workspace_id=workspace.id,
+                action="automation_run",
+                actor=str(automation_id),
+                log_metadata=audit_meta,
+            )
+        )
+
+    except Exception as exc:
+        run.status = "failed"
+        run.error = str(exc)
+        run.finished_at = datetime.utcnow()
+
+    await db.commit()
+
+    # 13. Auto-dispatch publish task for approved content, or push notification
+    #     for pending_approval content. Lazy imports avoid circular dependency
+    #     at module load time; dispatch happens after commit so DB rows are
+    #     visible to workers.
+    if content_entry is not None:
+        if content_entry.status == "approved":
+            from app.workers.publish_worker import publish_content  # noqa: PLC0415
+
+            publish_content.delay(
+                content_queue_id=str(content_entry.id),
+                request_id=request_id,
+            )
+        elif content_entry.status == "pending_approval":
+            from app.workers.publish_worker import (
+                notify_pending_review,  # noqa: PLC0415
+            )
+
+            notify_pending_review.delay(
+                content_queue_id=str(content_entry.id),
+                automation_name=automation.name,
+                workspace_id=str(workspace.id),
+            )
+
+    # 14. Return AutomationRun
+    return run

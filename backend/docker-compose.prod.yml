@@ -1,0 +1,254 @@
+# Production Docker Compose
+#
+# Differences from docker-compose.yml (dev):
+#   - Multi-stage Dockerfiles (Dockerfile.prod / Dockerfile.worker)
+#   - No volume mounts for hot reload — images are immutable
+#   - Resource limits on every service
+#   - Restart policy: unless-stopped on all services
+#   - Nginx reverse proxy with TLS termination
+#   - Redis persistence (AOF)
+#   - Three Celery worker tiers (high / medium / low priority queues)
+#   - No Flower (use a proper APM/observability tool instead)
+#   - All secrets passed via environment variables — never committed to repo
+#
+# Required environment variables (set in your deployment platform or shell):
+#   DATABASE_URL, REDIS_URL, ANTHROPIC_API_KEY, SECRET_KEY, ENCRYPTION_KEY,
+#   SOCIAL_MCP_URL, EMAIL_MCP_URL, CRM_MCP_URL, MCP_AUTH_TOKEN,
+#   ALLOWED_ORIGINS, WEBHOOK_SECRET,
+#   POSTGRES_DB, POSTGRES_USER, POSTGRES_PASSWORD
+
+services:
+
+  # ── Reverse proxy ────────────────────────────────────────────────────────────
+  nginx:
+    image: nginx:1.25-alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.prod.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/ssl:/etc/nginx/ssl:ro
+      - nginx_logs:/var/log/nginx
+    depends_on:
+      - api
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: "256M"
+
+  # ── API (2 replicas) ─────────────────────────────────────────────────────────
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile.prod
+    expose:
+      - "8000"
+    environment:
+      - DATABASE_URL
+      - REDIS_URL
+      - ANTHROPIC_API_KEY
+      - SECRET_KEY
+      - ENCRYPTION_KEY
+      - SOCIAL_MCP_URL
+      - EMAIL_MCP_URL
+      - CRM_MCP_URL
+      - MCP_AUTH_TOKEN
+      - ALLOWED_ORIGINS
+      - WEBHOOK_SECRET
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+    deploy:
+      replicas: 2
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: "512M"
+        reservations:
+          cpus: "0.5"
+          memory: "256M"
+
+  # ── Celery workers ────────────────────────────────────────────────────────────
+  celery_worker_high:
+    build:
+      context: .
+      dockerfile: Dockerfile.worker
+    command: >
+      celery -A app.workers.celery_app worker
+      --queues=high_priority
+      --concurrency=4
+      --loglevel=warning
+      --hostname=worker-high@%h
+      --without-gossip
+      --without-mingle
+    environment:
+      - DATABASE_URL
+      - REDIS_URL
+      - ANTHROPIC_API_KEY
+      - SECRET_KEY
+      - ENCRYPTION_KEY
+      - SOCIAL_MCP_URL
+      - EMAIL_MCP_URL
+      - CRM_MCP_URL
+      - MCP_AUTH_TOKEN
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: "512M"
+
+  celery_worker_medium:
+    build:
+      context: .
+      dockerfile: Dockerfile.worker
+    command: >
+      celery -A app.workers.celery_app worker
+      --queues=medium_priority
+      --concurrency=4
+      --loglevel=warning
+      --hostname=worker-medium@%h
+      --without-gossip
+      --without-mingle
+    environment:
+      - DATABASE_URL
+      - REDIS_URL
+      - ANTHROPIC_API_KEY
+      - SECRET_KEY
+      - ENCRYPTION_KEY
+      - SOCIAL_MCP_URL
+      - EMAIL_MCP_URL
+      - CRM_MCP_URL
+      - MCP_AUTH_TOKEN
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: "512M"
+
+  celery_worker_low:
+    build:
+      context: .
+      dockerfile: Dockerfile.worker
+    command: >
+      celery -A app.workers.celery_app worker
+      --queues=low_priority
+      --concurrency=2
+      --loglevel=warning
+      --hostname=worker-low@%h
+      --without-gossip
+      --without-mingle
+    environment:
+      - DATABASE_URL
+      - REDIS_URL
+      - ANTHROPIC_API_KEY
+      - SECRET_KEY
+      - ENCRYPTION_KEY
+      - SOCIAL_MCP_URL
+      - EMAIL_MCP_URL
+      - CRM_MCP_URL
+      - MCP_AUTH_TOKEN
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: "256M"
+
+  celery_beat:
+    build:
+      context: .
+      dockerfile: Dockerfile.worker
+    command: >
+      celery -A app.workers.celery_app beat
+      --scheduler celery.beat:PersistentScheduler
+      --loglevel=warning
+    environment:
+      - DATABASE_URL
+      - REDIS_URL
+      - SECRET_KEY
+      - ENCRYPTION_KEY
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: "0.25"
+          memory: "128M"
+
+  # ── Databases ─────────────────────────────────────────────────────────────────
+  postgres:
+    image: postgres:16-alpine
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./scripts/db/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    environment:
+      - POSTGRES_DB
+      - POSTGRES_USER
+      - POSTGRES_PASSWORD
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: "1G"
+
+  redis:
+    image: redis:7-alpine
+    command: >
+      redis-server
+      --appendonly yes
+      --maxmemory 256mb
+      --maxmemory-policy allkeys-lru
+      --save 900 1
+      --save 300 10
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+      start_period: 5s
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: "256M"
+
+volumes:
+  postgres_data:
+  redis_data:
+  nginx_logs:
