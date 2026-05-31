@@ -11,6 +11,9 @@ to automate social media posting, email campaigns, customer support replies, and
 Users connect their accounts (Twitter, LinkedIn, Gmail, HubSpot, etc.) and configure
 automations that run on schedules or webhooks.
 
+The platform is now also deployed as a **public SaaS** (branch `claude/saas-conversion-plan-hI7rB`).
+SaaS-specific additions are marked **[SAAS]** throughout this file.
+
 -----
 
 ## Stack
@@ -24,8 +27,9 @@ automations that run on schedules or webhooks.
 |AI Engine    |Claude API — model: claude-sonnet-4-20250514      |
 |MCP Servers  |TypeScript SDK — streamable HTTP transport        |
 |Security     |AES-256-GCM encryption, OWASP LLM Top 10 guards   |
+|Billing      |Stripe (checkout sessions + webhooks) [SAAS]      |
 |Infra (dev)  |Docker + Docker Compose                           |
-|Infra (prod) |Railway or Render                                 |
+|Infra (prod) |Railway (separate project for SaaS) [SAAS]       |
 
 -----
 
@@ -35,32 +39,30 @@ automations that run on schedules or webhooks.
 /backend
   /app
     /api            → FastAPI routers (one file per domain)
-    /core           → config, database, security utilities
+      billing.py    → Stripe checkout, portal, usage, webhook [SAAS]
+      assistant.py  → SSE streaming assistant chat endpoint [SAAS]
+    /core
+      config.py     → Settings (includes Stripe keys + SaaS URLs) [SAAS]
+      plans.py      → PLAN_LIMITS dict (free/starter/pro/enterprise) [SAAS]
     /models         → SQLAlchemy ORM models
-    /schemas        → Pydantic v2 request/response schemas
-    /services       → business logic (orchestration, AI, integrations)
-    /workers        → Celery task definitions
-    /middleware     → security scanning, rate limiting, logging
+    /schemas
+      billing.py    → CheckoutRequest/Response, UsageResponse, etc. [SAAS]
+    /services
+      billing.py    → Stripe service layer (async via asyncio.to_thread) [SAAS]
+    /workers
+      /tasks
+        seed_demo.py → Seed 2 automations + 3 content items for new users [SAAS]
+    /middleware
+      quota.py      → require_quota() dependency factory [SAAS]
   /mcp
-    /social-mcp-server    → TypeScript MCP server (Twitter, LinkedIn, Instagram)
-    /email-mcp-server     → TypeScript MCP server (Gmail, SendGrid, Zendesk)
-    /crm-mcp-server       → TypeScript MCP server (HubSpot, Salesforce)
+    /social-mcp-server    → TypeScript MCP server
+    /email-mcp-server     → TypeScript MCP server
+    /crm-mcp-server       → TypeScript MCP server
   /migrations       → Alembic DB migrations
   /tests
-    /unit           → Unit tests (fast, fully mocked)
-    /integration    → Integration tests (FastAPI TestClient)
-    /contract       → API contract + OpenAPI snapshot tests
-    /security       → Penetration test suite (Sprint 7)
-    /load           → Locust load test files + run script
-    /mcp-evals      → XML eval files (30 QA pairs), runner, results
-    REPORT.md       → Sprint 9 test suite summary
-  docker-compose.yml
-  .env.example
-  alembic.ini
+  .env.saas.example → SaaS deployment env template (NEVER reuse XMiL keys) [SAAS]
+/saas-landing       → Astro marketing site (yoursaas.com) [SAAS]
 /docs
-  API.md            → Authentication guide, endpoint reference, rate limits, error codes
-  DEPLOYMENT.md     → Environment checklist, Docker Compose config, health check setup
-  DEVELOPMENT.md    → Prerequisites, 5-command setup, running tests, extending the platform
 ```
 
 -----
@@ -68,7 +70,7 @@ automations that run on schedules or webhooks.
 ## Key Commands
 
 ```bash
-# Start all services (API + DB + Redis + Celery + MCP servers)
+# Start all services
 docker compose up
 
 # Run database migrations
@@ -83,18 +85,14 @@ pytest tests/ -v --cov=app
 # Start Celery worker
 celery -A app.workers.celery_app worker --loglevel=info
 
-# Build all MCP servers
-cd mcp/social-mcp-server && npm run build
-cd mcp/email-mcp-server && npm run build
-cd mcp/crm-mcp-server && npm run build
+# Seed demo data for a new workspace [SAAS]
+python -m app.workers.tasks.seed_demo --workspace-id <uuid>
 
-# Inspect an MCP server (testing)
-npx @modelcontextprotocol/inspector http://localhost:3001
+# Security audit (HIGH/CRITICAL block deployment) [SAAS]
+pip-audit
 
-# Lint Python
+# Lint / type check
 ruff check app/
-
-# Type check Python
 mypy app/
 ```
 
@@ -104,48 +102,94 @@ mypy app/
 
 ### Python (FastAPI)
 
-- **Python 3.12+** — use modern syntax (match statements, walrus operator where appropriate)
+- **Python 3.12+** — use modern syntax
 - **Type hints required** on all function signatures, including return types
-- **Pydantic v2** for all request/response schemas — use `model_config`, not `class Config`
-- **SQLAlchemy 2.0** style — use `select()`, `async with session` patterns
-- **async/await** for ALL database calls, external API calls, and Claude API calls
-- **Never use `time.sleep()`** — use `asyncio.sleep()` instead
+- **Pydantic v2** for all schemas — `model_config`, not `class Config`
+- **SQLAlchemy 2.0** style — `select()`, `async with session`
+- **async/await** for ALL I/O — never `time.sleep()`
 - **Ruff** for linting, **Black** for formatting (line length: 88)
-- **mypy** strict mode — no untyped `Any` without explicit comment
+- **mypy** strict mode
+- **All responses** wrapped in `DataResponse[T]` or `PaginatedResponse[T]` [SAAS]
+- **Stripe SDK calls** always wrapped in `asyncio.to_thread()` [SAAS]
 
 ### TypeScript (MCP Servers)
 
-- **TypeScript strict mode** — `"strict": true` in tsconfig
+- **TypeScript strict mode**
 - **Zod** for all tool input schemas
-- **Tool naming**: `{service}_{action}_{resource}` e.g. `social_create_post`
-- **All tools** must have `readOnlyHint`, `destructiveHint`, `idempotentHint` annotations
-- **Error format**: always `{ code, message, suggestion }` — actionable, never expose internals
-- **Pagination**: all list tools return `{ items, has_more, next_offset, total_count }`
+- **Tool naming**: `{service}_{action}_{resource}`
 - **Transport**: streamable HTTP — never SSE (deprecated)
-
-### General Rules
-
-- **DRY** — no duplicated logic; extract shared utilities immediately
-- **No credentials in code** — always use environment variables
-- **Audit log everything** — every automation run, every AI call, every external API call
-- **100% test coverage** on the services layer and security middleware
-- **Atomic commits** — one concern per commit, present tense message
 
 -----
 
 ## Architecture Rules (Never Break These)
 
-1. **Security first** — ALL user-supplied content passes through `injection_scanner` before reaching Claude
-1. **DLP on output** — ALL Claude-generated content passes through `dlp_scanner` before being sent to external APIs
-1. **Encrypted credentials** — OAuth tokens and API keys are ALWAYS stored AES-256-GCM encrypted; never logged
-1. **Brand voice injection** — EVERY Claude API call includes the workspace brand voice in the system prompt; brand voice examples are sanitized via `sanitize_example()` before prompt injection (LLM04)
-1. **Audit trail** — EVERY automation run writes a record to `automation_runs` with status, result, and duration
-1. **Rate limits enforced** — check workspace rate limits BEFORE queuing any automation run; API endpoints enforce per-IP/per-workspace HTTP rate limits via SlowAPI
-1. **MCP servers are stateless** — no session state stored in MCP servers; all state lives in PostgreSQL
-1. **Security headers** — ALL HTTP responses include HSTS, CSP, X-Frame-Options, and X-Content-Type-Options via the `add_security_headers` middleware
-1. **OWASP LLM Top 10 compliance** — prompt injection (LLM01), data leakage (LLM02), supply chain (LLM03), data poisoning (LLM04), excessive agency (LLM05), tool misuse (LLM06), prompt leakage (LLM07), vector/embedding risks (LLM08 — Weaviate queries are always scoped to `workspace_id`; never query across tenants), misinformation (LLM09 — Claude is instructed to say "uncertain" rather than fabricate), overreliance (LLM10 — runs using >2 000 tokens write a `high_token_usage` audit log)
-1. **No credentials in prompt** — automation `config` JSONB values are never rendered into the system prompt; only brand voice (workspace-controlled) is injected (LLM01)
-1. **CVE scanning** — run `pip-audit` before every release; HIGH/CRITICAL findings block deployment
+1. **Security first** — ALL user-supplied content passes through `injection_scanner` before reaching Claude — INCLUDING assistant chat messages [SAAS]
+2. **DLP on output** — ALL Claude-generated content passes through `dlp_scanner` before any response — INCLUDING assistant streaming chunks [SAAS]
+3. **Encrypted credentials** — OAuth tokens ALWAYS stored AES-256-GCM; never plaintext, never logged
+4. **Brand voice injection** — EVERY Claude call includes workspace brand voice; sanitized via `sanitize_example()` (LLM04)
+5. **Audit trail** — EVERY automation run AND every assistant chat writes to `audit_logs` [SAAS]
+6. **Rate limits enforced** — checked BEFORE any quota-limited action; quota checked BEFORE billing [SAAS]
+7. **MCP servers are stateless** — no session state; all state in PostgreSQL
+8. **Security headers** — HSTS, CSP, X-Frame-Options, X-Content-Type-Options on ALL responses
+9. **OWASP LLM Top 10 compliance** — see original sprint notes
+10. **CVE scanning** — `pip-audit` HIGH/CRITICAL findings block deployment
+11. **Quota before action** — `require_quota("automation")` / `require_quota("integration")` / `require_quota("content_queue")` injected as FastAPI dependencies on creation endpoints [SAAS]
+12. **Payment required** HTTP 402 — returned with `{"code": "quota_exceeded", "resource": ..., "limit": ..., "upgrade_url": "/billing/plans"}` [SAAS]
+
+-----
+
+## [SAAS] Billing Architecture
+
+### Plan Limits (`app/core/plans.py`)
+
+| Plan       | Automations | Integrations | Content Queue | AI Tokens/mo | Workspaces |
+|------------|-------------|-------------|---------------|-------------|------------|
+| free       | 3           | 1           | 10            | 10K         | 1          |
+| starter    | 15          | 5           | 100           | 100K        | 1          |
+| pro        | unlimited   | unlimited   | unlimited     | 1M          | 5          |
+| enterprise | unlimited   | unlimited   | unlimited     | unlimited   | unlimited  |
+
+### Stripe Integration (`app/services/billing.py`)
+
+- `get_or_create_stripe_customer(user, db)` — idempotent; stores `stripe_customer_id` on User
+- `create_checkout_session(user, price_id, db)` — returns Stripe hosted page URL
+- `create_portal_session(user, db)` — returns customer portal URL
+- `handle_checkout_completed(event)` — sets `subscription_status`, `current_period_end`
+- `handle_subscription_updated(event)` — syncs plan changes
+- `handle_subscription_deleted(event)` — downgrades to free
+- `handle_payment_failed(event)` — logs payment failure event
+- `track_token_usage(workspace_id, tokens_used, db)` — increments `monthly_token_usage`
+- All Stripe SDK calls use `asyncio.to_thread()` — SDK is synchronous
+
+### Webhook Security
+
+- `POST /api/v1/billing/stripe-webhook` validates `Stripe-Signature` header
+- Raw request body read before JSON parse (required by Stripe)
+- Invalid signatures → HTTP 400
+
+-----
+
+## [SAAS] Assistant Streaming (`app/api/assistant.py`)
+
+- `POST /api/v1/assistant/chat` — rate limited 30/minute
+- All user messages scanned with `require_clean()` (injection scanner)
+- Streams via SSE with `media_type="text/event-stream"`
+- Each chunk run through `redact_output()` (DLP scanner) before yielding
+- Writes audit log entry per chat invocation
+- System prompt includes workspace brand voice + page context
+
+-----
+
+## [SAAS] Quota Middleware (`app/middleware/quota.py`)
+
+```python
+def require_quota(resource: str) -> Callable:
+    # resource: "automation" | "integration" | "content_queue"
+    # Raises HTTP 402 when limit reached
+    # Inject as FastAPI Depends() on POST creation endpoints
+```
+
+- Add to `POST /automations/`, `POST /integrations/`, `POST /content/`
 
 -----
 
@@ -153,37 +197,59 @@ mypy app/
 
 |Model        |Key Fields                                                               |
 |-------------|-------------------------------------------------------------------------|
-|User         |id, email, hashed_password, plan, created_at                             |
-|Workspace    |id, user_id, name, brand_voice (JSONB), settings (JSONB)                 |
-|Integration  |id, workspace_id, type, credentials_encrypted, status                    |
+|User         |id, email, hashed_password, plan, is_admin, email_verified [SAAS]        |
+|             |stripe_customer_id, stripe_subscription_id [SAAS]                       |
+|             |subscription_status, current_period_end [SAAS]                          |
+|             |email_verify_token, password_reset_token [SAAS]                         |
+|Workspace    |id, user_id, name, brand_voice (JSONB)                                   |
+|             |monthly_token_usage (BigInteger), monthly_token_reset_date [SAAS]       |
+|Integration  |id, workspace_id, type, credentials_encrypted, status                   |
 |Automation   |id, workspace_id, name, type, config (JSONB), schedule, active           |
 |AutomationRun|id, automation_id, status, result (JSONB), error, started_at, finished_at|
-|ContentQueue |id, automation_id, content (JSONB), platform, scheduled_at, published_at |
-|AuditLog     |id, workspace_id, action, actor, metadata (JSONB), created_at            |
+|ContentQueue |id, automation_id, content (JSONB), platform, scheduled_at, published_at|
+|AuditLog     |id, workspace_id, action, actor, metadata (JSONB), created_at           |
 
 -----
 
 ## API Versioning
 
-All API routes are under `/api/v1/`. The root `/api` endpoint returns version info.
+All API routes under `/api/v1/`. Root `/api` returns version info.
 
-| Router         | Base Path                  |
-|----------------|----------------------------|
-| Auth           | `/api/v1/auth/`            |
-| Automations    | `/api/v1/automations/`     |
-| Content Queue  | `/api/v1/content/`         |
-| Audit Logs     | `/api/v1/audit/`           |
-| Workspaces     | `/api/v1/workspaces/`      |
-| Integrations   | `/api/v1/integrations/`    |
-| Analytics      | `/api/v1/analytics/`       |
-| Webhooks       | `/webhooks/` (root — no version prefix) |
+| Router         | Base Path                          |
+|----------------|------------------------------------|
+| Auth           | `/api/v1/auth/`                    |
+| Automations    | `/api/v1/automations/`             |
+| Content Queue  | `/api/v1/content/`                 |
+| Audit Logs     | `/api/v1/audit/`                   |
+| Workspaces     | `/api/v1/workspaces/`              |
+| Integrations   | `/api/v1/integrations/`            |
+| Analytics      | `/api/v1/analytics/`               |
+| Billing        | `/api/v1/billing/` [SAAS]          |
+| Assistant      | `/api/v1/assistant/` [SAAS]        |
+| Webhooks       | `/webhooks/` (root — no version)   |
 
-All responses are wrapped in `DataResponse[T]` or `PaginatedResponse[T]` envelopes
-(defined in `app/schemas/base.py`). Error responses use the `ErrorResponse` schema.
+-----
+
+## [SAAS] Auth Endpoints
+
+| Method | Path | Description |
+|--------|------|-------------|
+| POST | `/api/v1/auth/verify-email` | Verify email with token |
+| POST | `/api/v1/auth/resend-verification` | Resend verification email |
+| POST | `/api/v1/auth/forgot-password` | Send password reset email |
+| POST | `/api/v1/auth/reset-password` | Reset password with token |
 
 -----
 
 ## Environment Variables
+
+See `.env.saas.example` for the SaaS deployment template.
+
+**CRITICAL security rules [SAAS]:**
+- XMiL's `ENCRYPTION_KEY` stays on their deployment ONLY
+- XMiL's `DATABASE_URL` is NEVER referenced in any saas branch env file
+- Create a separate Railway project for the SaaS instance
+- All new env vars documented in `backend/.env.saas.example`
 
 ```bash
 # Database
@@ -196,119 +262,69 @@ CLAUDE_MODEL=claude-sonnet-4-20250514
 
 # Security
 SECRET_KEY=<random-256-bit-hex>
-ENCRYPTION_KEY=<random-256-bit-hex>
+ENCRYPTION_KEY=<random-256-bit-hex>  # NEW key for SaaS — never reuse XMiL key
 JWT_ALGORITHM=HS256
 ACCESS_TOKEN_EXPIRE_MINUTES=30
 REFRESH_TOKEN_EXPIRE_DAYS=30
+
+# Stripe [SAAS]
+STRIPE_SECRET_KEY=sk_live_...
+STRIPE_WEBHOOK_SECRET=whsec_...
+STRIPE_PRICE_STARTER_MONTHLY=price_...
+STRIPE_PRICE_PRO_MONTHLY=price_...
+
+# SaaS URLs [SAAS]
+APP_URL=https://app.yoursaas.com
+MARKETING_URL=https://yoursaas.com
+
+# Budget safety [SAAS]
+MONTHLY_BUDGET_THRESHOLD=500.0
 
 # MCP Servers
 SOCIAL_MCP_URL=http://localhost:3001
 EMAIL_MCP_URL=http://localhost:3002
 CRM_MCP_URL=http://localhost:3003
 MCP_AUTH_TOKEN=<shared-bearer-token>
-
-# Integration OAuth (per workspace, stored encrypted in DB)
-# These are app-level credentials, not user tokens
-TWITTER_CLIENT_ID=
-TWITTER_CLIENT_SECRET=
-LINKEDIN_CLIENT_ID=
-LINKEDIN_CLIENT_SECRET=
-GOOGLE_CLIENT_ID=
-GOOGLE_CLIENT_SECRET=
-HUBSPOT_CLIENT_ID=
-HUBSPOT_CLIENT_SECRET=
 ```
 
 -----
 
-## AI Orchestration Pattern
+## [SAAS] Marketing Landing Page (`saas-landing/`)
 
-Every automation run follows this exact flow:
+Astro static site deployed to `yoursaas.com`. App lives at `app.yoursaas.com`.
 
 ```
-1. Fetch automation config + workspace brand voice from DB
-2. Scan trigger payload through injection_scanner middleware
-3. Build Claude system prompt (include brand voice, rules, history)
-4. Call Claude API with relevant MCP servers as tools
-5. Scan Claude output through dlp_scanner middleware
-6. Execute approved output (post, send email, update CRM)
-7. Write result to automation_runs + audit_logs
-8. Update content_queue if applicable
+saas-landing/
+  astro.config.mjs          → Astro + React islands + Tailwind
+  tailwind.config.ts        → same design tokens as dashboard
+  src/
+    layouts/Layout.astro    → HTML shell, OG tags, scroll-reveal observer
+    pages/
+      index.astro           → Hero, stats, features, LandscapeTrack, CTA
+      pricing.astro         → PricingCards + FAQ accordion
+    components/
+      HeroScatter.tsx       → Three.js 1,800-point amber scatter (React island)
+      LandscapeTrack.tsx    → Framer Motion horizontal scroll (React island)
+      PricingCards.tsx      → 4-plan grid with Stripe checkout links (React island)
+    styles/global.css       → Tailwind + Google Fonts import
 ```
 
------
-
-## MCP Server Reference
-
-|Server           |Port|Tools Count|Key Integrations                                     |
-|-----------------|----|-----------|-----------------------------------------------------|
-|social-mcp-server|3001|17         |Twitter/X, LinkedIn, Instagram, Facebook, TikTok, Threads|
-|email-mcp-server |3002|7          |Gmail, SendGrid, Zendesk                             |
-|crm-mcp-server   |3003|7          |HubSpot, Salesforce                                  |
-
-All MCP servers require `Authorization: Bearer $MCP_AUTH_TOKEN` header.
-
------
-
-## Sprint Map
-
-|Sprint|Focus                                                         |Status    |
-|------|--------------------------------------------------------------|----------|
-|1     |Project scaffold, DB models, auth system                      |✅ Done   |
-|2     |Social MCP server (Twitter + LinkedIn)                        |✅ Done   |
-|3     |Email & Support MCP server (Gmail + Zendesk)                  |✅ Done   |
-|4     |CRM MCP server (HubSpot)                                      |✅ Done   |
-|5     |AI Orchestration Engine + brand voice system                  |✅ Done   |
-|6     |Celery task queue + workers                                   |✅ Done   |
-|7     |Security layer: injection guard, DLP, OWASP LLM Top 10, audit |✅ Done   |
-|8     |REST API completion + OpenAPI docs + health endpoints + docs  |✅ Done   |
-|9     |Tests + MCP evaluations                                       |✅ Done   |
-|10    |Docker packaging + deployment config                          |✅ Done   |
-
------
-
-## Backend Status: COMPLETE ✅
-
-All 10 backend sprints delivered:
-
-| Sprint | Deliverable | Status |
-|---|---|---|
-| 1  | FastAPI scaffold, PostgreSQL, JWT auth | ✅ |
-| 2  | Social MCP Server — 6 tools | ✅ |
-| 3  | Email & Support MCP Server — 7 tools | ✅ |
-| 4  | CRM MCP Server — 7 tools | ✅ |
-| 5  | AI Orchestration Engine (Claude + MCP) | ✅ |
-| 6  | Celery Workers — async dispatch, 3 queues | ✅ |
-| 7  | Security Layer — OWASP LLM Top 10 | ✅ |
-| 8  | REST API v1 — full surface + OpenAPI docs | ✅ |
-| 9  | Tests — 90%+ coverage, MCP evals, load test | ✅ |
-| 10 | Docker prod, CI/CD, runbook, handoff | ✅ |
-| 11 | Social Expansion — Facebook, TikTok, Threads | ✅ |
-
-Total MCP tools: 31 (17 social + 7 email + 7 crm)  
-Social platforms: Twitter/X, LinkedIn, Instagram, Facebook, TikTok, Threads  
-Test coverage: 90%+  
-MCP eval score: 7/10+ per server  
-Load tested: 100 concurrent users, p95 < 500ms  
-Security: OWASP LLM Top 10 mitigated
-
-### Social Expansion Notes (Sprint 11)
-- **Facebook**: OAuth with `pages_show_list`/`pages_manage_posts`; long-lived user token exchanged at callback; page-level tokens fetched and stored per workspace.
-- **Instagram**: Shares Facebook OAuth app; IG Business account discovered from connected Facebook Page; requires Meta Business Suite linking.
-- **TikTok**: PKCE (S256) OAuth v2; short-lived 24h access token auto-refreshed by Celery every 6h.
-- **Threads**: Short-lived token exchanged for 60-day long-lived token at callback; auto-refreshed by Celery when < 7 days remaining.
-- Credential rotation: `check_and_refresh_credentials` Celery task now auto-refreshes TikTok and Threads tokens in addition to flagging `expiring_soon`.
-
-Next: Frontend — Next.js 15 dashboard (see `docs/FRONTEND_HANDOFF.md`)
+Design constraints (same as dashboard):
+- NEVER white backgrounds, NEVER purple gradients, NEVER `rounded-xl`
+- Amber `#F59E0B` sole accent
+- Syne (display) / DM Sans (body) / DM Mono (mono)
 
 -----
 
 ## Common Mistakes to Avoid
 
-- Do NOT use `session.query()` — use SQLAlchemy 2.0 `select()` style
-- Do NOT store credentials in plain text — always encrypt before DB write
+- Do NOT use `session.query()` — SQLAlchemy 2.0 `select()` only
+- Do NOT store credentials in plain text
 - Do NOT call Claude API without brand voice in system prompt
-- Do NOT skip injection scanning on any user-supplied content
-- Do NOT use synchronous `requests` library — use `httpx` with async
-- Do NOT return raw SQLAlchemy models from API endpoints — always use Pydantic schemas
+- Do NOT skip injection scanning — including assistant messages [SAAS]
+- Do NOT skip DLP scanning — including streaming chunks [SAAS]
+- Do NOT use synchronous `requests` — use `httpx` async
+- Do NOT call Stripe SDK directly in async code — wrap in `asyncio.to_thread()` [SAAS]
+- Do NOT store XMiL's ENCRYPTION_KEY or DATABASE_URL in saas branch [SAAS]
+- Do NOT return HTTP 402 without `{"code": "quota_exceeded", "upgrade_url": ...}` [SAAS]
 - Do NOT log sensitive fields (tokens, passwords, PII)
