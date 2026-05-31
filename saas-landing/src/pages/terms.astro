@@ -1,0 +1,133 @@
+---
+import Layout from '@/layouts/Layout.astro';
+
+const EFFECTIVE_DATE = 'June 1, 2026';
+---
+
+<Layout
+  title="Terms of Service — AutoPilot"
+  description="Terms and conditions for using the AutoPilot AI automation platform."
+>
+  <header class="fixed top-0 inset-x-0 z-40 border-b border-surface-border bg-surface/80 backdrop-blur-md">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
+      <a href="/" class="font-display font-bold text-lg text-text-primary">
+        <span class="text-amber">⬡</span> AutoPilot
+      </a>
+      <a href="https://app.yoursaas.com/register" class="btn-primary text-sm py-2">Get started free</a>
+    </div>
+  </header>
+
+  <main id="main" class="pt-24 pb-24 max-w-3xl mx-auto px-4 sm:px-6">
+    <div data-reveal>
+      <p class="section-label mb-3">Legal</p>
+      <h1 class="font-display font-extrabold text-4xl text-text-primary mb-2">Terms of Service</h1>
+      <p class="text-sm text-text-muted font-mono mb-12">Effective date: {EFFECTIVE_DATE}</p>
+    </div>
+
+    <div class="space-y-10">
+
+      <section data-reveal>
+        <h2 class="font-display font-bold text-xl text-text-primary mb-3">1. Acceptance of terms</h2>
+        <p class="text-text-secondary font-body leading-relaxed">
+          By accessing or using AutoPilot (“the Service”), you agree to be bound by these Terms.
+          If you are using the Service on behalf of an organisation, you represent that you have
+          authority to bind that organisation.
+        </p>
+      </section>
+
+      <section data-reveal>
+        <h2 class="font-display font-bold text-xl text-text-primary mb-3">2. Permitted use</h2>
+        <p class="text-text-secondary font-body leading-relaxed">
+          You may use the Service only for lawful purposes. You must not use it to generate spam,
+          harass others, violate third-party platform terms of service, circumvent rate limits,
+          or attempt to access another user’s data. Automated testing of the platform’s security
+          without prior written permission is prohibited.
+        </p>
+      </section>
+
+      <section data-reveal>
+        <h2 class="font-display font-bold text-xl text-text-primary mb-3">3. Subscriptions and billing</h2>
+        <p class="text-text-secondary font-body leading-relaxed">
+          Paid plans are billed monthly in advance. You may cancel at any time;
+          cancellation takes effect at the end of the current billing period.
+          We do not offer refunds for partial months. Plan limits are enforced automatically—
+          exceeding your quota blocks new resource creation until you upgrade or free up capacity.
+        </p>
+      </section>
+
+      <section data-reveal>
+        <h2 class="font-display font-bold text-xl text-text-primary mb-3">4. AI-generated content</h2>
+        <p class="text-text-secondary font-body leading-relaxed">
+          The Service uses Anthropic’s Claude API to generate content. You are responsible for
+          reviewing all AI-generated content before publishing. We apply DLP scanning to redact
+          common sensitive patterns, but we do not guarantee that AI output is accurate,
+          complete, or free from errors. You own the output generated for your account.
+        </p>
+      </section>
+
+      <section data-reveal>
+        <h2 class="font-display font-bold text-xl text-text-primary mb-3">5. Intellectual property</h2>
+        <p class="text-text-secondary font-body leading-relaxed">
+          AutoPilot and its underlying software are proprietary. You retain ownership of content
+          you create using the Service. You grant us a limited licence to process your content
+          solely to provide the Service.
+        </p>
+      </section>
+
+      <section data-reveal>
+        <h2 class="font-display font-bold text-xl text-text-primary mb-3">6. Uptime and SLA</h2>
+        <p class="text-text-secondary font-body leading-relaxed">
+          We target 99.9% monthly uptime for paid plans. Scheduled maintenance windows are announced
+          at least 24 hours in advance. No SLA is provided for the Free plan.
+        </p>
+      </section>
+
+      <section data-reveal>
+        <h2 class="font-display font-bold text-xl text-text-primary mb-3">7. Limitation of liability</h2>
+        <p class="text-text-secondary font-body leading-relaxed">
+          To the maximum extent permitted by law, AutoPilot’s total liability to you for any
+          claim arising from these Terms or the Service shall not exceed the fees paid in the
+          12 months preceding the claim. We are not liable for indirect, incidental, or
+          consequential damages.
+        </p>
+      </section>
+
+      <section data-reveal>
+        <h2 class="font-display font-bold text-xl text-text-primary mb-3">8. Termination</h2>
+        <p class="text-text-secondary font-body leading-relaxed">
+          We may suspend or terminate your account for material breach of these Terms, non-payment,
+          or if required by law. You may close your account at any time from the Settings page.
+        </p>
+      </section>
+
+      <section data-reveal>
+        <h2 class="font-display font-bold text-xl text-text-primary mb-3">9. Governing law</h2>
+        <p class="text-text-secondary font-body leading-relaxed">
+          These Terms are governed by the laws of England and Wales. Any disputes shall be resolved
+          in the courts of England and Wales, unless you are a consumer in the EU (in which case
+          the courts of your country of residence may also apply).
+        </p>
+      </section>
+
+      <section data-reveal>
+        <h2 class="font-display font-bold text-xl text-text-primary mb-3">10. Contact</h2>
+        <p class="text-text-secondary font-body leading-relaxed">
+          Questions about these Terms? Email
+          <a href="mailto:legal@yoursaas.com" class="text-amber hover:underline">legal@yoursaas.com</a>.
+        </p>
+      </section>
+
+    </div>
+  </main>
+
+  <footer class="border-t border-surface-border py-12">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+      <span class="font-display font-bold text-text-primary"><span class="text-amber">⬡</span> AutoPilot</span>
+      <nav class="flex gap-6 text-sm text-text-muted">
+        <a href="/privacy" class="hover:text-text-primary transition-colors">Privacy</a>
+        <a href="/terms" class="text-text-primary">Terms</a>
+        <a href="/pricing" class="hover:text-text-primary transition-colors">Pricing</a>
+      </nav>
+    </div>
+  </footer>
+</Layout>

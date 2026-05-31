@@ -13,6 +13,7 @@ from fastapi.responses import JSONResponse
 from slowapi.errors import RateLimitExceeded
 from sqlalchemy import text
 
+from app.api.admin_saas import router as admin_saas_router
 from app.api.analytics import router as analytics_router
 from app.api.assistant import router as assistant_router
 from app.api.audit_logs import router as audit_logs_router
@@ -44,13 +45,11 @@ logger = logging.getLogger(__name__)
 
 @asynccontextmanager
 async def lifespan(application: FastAPI) -> AsyncIterator[None]:
-    # ── Startup ────────────────────────────────────────────────────────────────────────────
     await validate_startup_config()
     await validate_connectivity()
     await run_pending_migrations()
     logger.info("AI Automation Platform started")
     yield
-    # ── Shutdown ───────────────────────────────────────────────────────────────────────────
     logger.info("Shutting down gracefully")
 
 
@@ -123,6 +122,7 @@ Paginated responses include `total_count`, `limit`, `offset`, and `has_more` ins
         {"name": "Analytics", "description": "Run metrics, token usage, platform stats, and data export (CSV / JSON)."},
         {"name": "Billing", "description": "Stripe checkout, customer portal, plan usage, and subscription management."},
         {"name": "Assistant", "description": "Streaming Claude-powered in-app assistant with page context and brand voice."},
+        {"name": "Admin SaaS", "description": "Admin-only: MRR, growth stats, token spend, impersonation. Requires is_admin=true."},
         {"name": "Health", "description": "Liveness and readiness probes for orchestration and monitoring."},
         {"name": "Push", "description": "Web Push subscription management and VAPID public key endpoint."},
     ],
@@ -132,7 +132,7 @@ Paginated responses include `total_count`, `limit`, `offset`, and `has_more` ins
     lifespan=lifespan,
 )
 
-# ── Middleware stack (order matters) ─────────────────────────────────────────────────────────
+# ── Middleware stack ───────────────────────────────────────────────────────────
 
 app.middleware("http")(add_request_id)
 app.add_middleware(
@@ -148,7 +148,8 @@ app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, rate_limit_exceeded_handler)  # type: ignore[arg-type]
 
 
-# ── Exception handlers ─────────────────────────────────────────────────────────────────────────
+# ── Exception handlers ─────────────────────────────────────────────────────────
+
 
 def _meta(request: Request) -> Meta:
     return Meta(
@@ -213,7 +214,7 @@ async def unhandled_error_handler(request: Request, exc: Exception) -> JSONRespo
     return _json_error(500, "internal_error", "An internal error occurred", request)
 
 
-# ── Versioned API router ────────────────────────────────────────────────────────────────────────
+# ── Versioned API router ─────────────────────────────────────────────────────────
 
 api_v1 = APIRouter(prefix="/api/v1")
 
@@ -227,12 +228,14 @@ api_v1.include_router(analytics_router,     prefix="/analytics",   tags=["Analyt
 api_v1.include_router(push_router,          prefix="/push",        tags=["Push"])
 api_v1.include_router(billing_router,       prefix="/billing",     tags=["Billing"])
 api_v1.include_router(assistant_router,     prefix="/assistant",   tags=["Assistant"])
+api_v1.include_router(admin_saas_router,    prefix="/admin/saas",  tags=["Admin SaaS"])
 
 app.include_router(api_v1)
 app.include_router(webhooks_router)  # webhooks stay at root — no /api/v1 prefix
 
 
-# ── Health check helpers ───────────────────────────────────────────────────────────────────────────
+# ── Health endpoints ─────────────────────────────────────────────────────────────
+
 
 async def _check_postgres() -> tuple[bool, str]:
     try:
