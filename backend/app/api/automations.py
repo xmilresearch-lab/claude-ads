@@ -7,6 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_current_workspace
 from app.core.database import get_db
+from app.middleware.quota import require_quota
 from app.middleware.rate_limiter import (
     LIMIT_READ,
     LIMIT_TRIGGER,
@@ -48,7 +49,7 @@ _WITH_404 = {**COMMON_ERROR_RESPONSES, 404: {"description": "Automation not foun
         "The `name` field is scanned for injection patterns before saving."
     ),
     response_description="The newly created automation",
-    responses={**COMMON_ERROR_RESPONSES, 201: {"description": "Automation created"}},
+    responses={**COMMON_ERROR_RESPONSES, 201: {"description": "Automation created"}, 402: {"description": "Plan quota exceeded"}},
     response_model=DataResponse[AutomationResponse],
     status_code=status.HTTP_201_CREATED,
 )
@@ -58,6 +59,7 @@ async def create(
     payload: AutomationCreate,
     workspace: Annotated[Workspace, Depends(get_current_workspace)],
     db: Annotated[AsyncSession, Depends(get_db)],
+    _quota: Annotated[None, Depends(require_quota("automation"))],
 ) -> DataResponse[AutomationResponse]:
     automation = await automation_service.create_automation(
         workspace_id=workspace.id,

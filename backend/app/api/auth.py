@@ -1,7 +1,9 @@
+import secrets
 import uuid
+from datetime import UTC, datetime, timedelta
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, Request, status
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Request, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -23,13 +25,17 @@ from app.models.workspace import Workspace
 from app.schemas.auth import (
     ChangePasswordRequest,
     DeleteAccountRequest,
+    ForgotPasswordRequest,
     LoginRequest,
     RefreshRequest,
     RegisterRequest,
+    ResetPasswordRequest,
     TokenResponse,
+    VerifyEmailRequest,
 )
 from app.schemas.base import COMMON_ERROR_RESPONSES, DataResponse, ok
 from app.schemas.user import UserResponse
+from app.services.email import send_password_reset, send_verify_email
 
 router = APIRouter()
 
@@ -61,16 +67,20 @@ def _tokens_for_user(user: User) -> TokenResponse:
 async def register(
     request: Request,
     payload: RegisterRequest,
+    background_tasks: BackgroundTasks,
     db: Annotated[AsyncSession, Depends(get_db)],
 ) -> DataResponse[TokenResponse]:
     existing = await db.execute(select(User).where(User.email == payload.email))
     if existing.scalar_one_or_none():
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Email already registered")
 
+    verify_token = secrets.token_urlsafe(32)
     user = User(
         id=uuid.uuid4(),
         email=payload.email,
         hashed_password=hash_password(payload.password),
+        email_verify_token=verify_token,
+        email_verify_expires=datetime.now(UTC) + timedelta(hours=24),
     )
     db.add(user)
     await db.flush()
@@ -81,6 +91,9 @@ async def register(
         name=payload.workspace_name,
     )
     db.add(workspace)
+    await db.commit()
+
+    background_tasks.add_task(send_verify_email, payload.email, verify_token)
     return ok(_tokens_for_user(user), request)
 
 
@@ -219,7 +232,6 @@ async def delete_account(
     workspace = result.scalar_one_or_none()
 
     if workspace:
-        # Audit log must be written before any data changes (FK must still be valid)
         db.add(
             AuditLog(
                 id=uuid.uuid4(),
@@ -247,3 +259,134 @@ async def delete_account(
     current_user.is_active = False
     await db.commit()
     return ok({"message": "Account deleted"}, request)
+
+
+# ── SaaS: email verification ──────────────────────────────────────────────────
+
+
+@router.post(
+    "/verify-email",
+    summary="Verify Email Address",
+    description="Verify a user's email address using the token sent at registration.",
+    response_description="Confirmation message",
+    responses={**COMMON_ERROR_RESPONSES, 400: {"description": "Invalid or expired token"}},
+    response_model=DataResponse[dict[str, str]],
+)
+@limiter.limit(LIMIT_AUTH)
+async def verify_email(
+    request: Request,
+    payload: VerifyEmailRequest,
+    db: Annotated[AsyncSession, Depends(get_db)],
+) -> DataResponse[dict[str, str]]:
+    result = await db.execute(
+        select(User).where(User.email_verify_token == payload.token)
+    )
+    user = result.scalar_one_or_none()
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid verification token",
+        )
+    if user.email_verify_expires and user.email_verify_expires < datetime.now(UTC):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Verification token has expired",
+        )
+    user.email_verified = True
+    user.email_verify_token = None
+    user.email_verify_expires = None
+    await db.commit()
+    return ok({"message": "Email verified successfully"}, request)
+
+
+@router.post(
+    "/resend-verification",
+    summary="Resend Verification Email",
+    description="Resend the email verification link to the authenticated user.",
+    response_description="Confirmation message",
+    responses=COMMON_ERROR_RESPONSES,
+    response_model=DataResponse[dict[str, str]],
+)
+@limiter.limit(LIMIT_AUTH)
+async def resend_verification(
+    request: Request,
+    background_tasks: BackgroundTasks,
+    current_user: Annotated[User, Depends(get_current_user)],
+    db: Annotated[AsyncSession, Depends(get_db)],
+) -> DataResponse[dict[str, str]]:
+    if current_user.email_verified:
+        return ok({"message": "Email already verified"}, request)
+    verify_token = secrets.token_urlsafe(32)
+    current_user.email_verify_token = verify_token
+    current_user.email_verify_expires = datetime.now(UTC) + timedelta(hours=24)
+    await db.commit()
+    background_tasks.add_task(send_verify_email, current_user.email, verify_token)
+    return ok({"message": "Verification email sent"}, request)
+
+
+# ── SaaS: password reset ──────────────────────────────────────────────────────
+
+
+@router.post(
+    "/forgot-password",
+    summary="Request Password Reset",
+    description=(
+        "Send a password reset email. Always returns 200 to prevent email enumeration. "
+        "The reset link expires in 1 hour."
+    ),
+    response_description="Confirmation message (always 200)",
+    responses=COMMON_ERROR_RESPONSES,
+    response_model=DataResponse[dict[str, str]],
+)
+@limiter.limit(LIMIT_AUTH)
+async def forgot_password(
+    request: Request,
+    payload: ForgotPasswordRequest,
+    background_tasks: BackgroundTasks,
+    db: Annotated[AsyncSession, Depends(get_db)],
+) -> DataResponse[dict[str, str]]:
+    result = await db.execute(select(User).where(User.email == payload.email))
+    user = result.scalar_one_or_none()
+    # Always return 200 to prevent email enumeration
+    if user and user.is_active:
+        reset_token = secrets.token_urlsafe(32)
+        user.password_reset_token = reset_token
+        user.password_reset_expires = datetime.now(UTC) + timedelta(hours=1)
+        await db.commit()
+        background_tasks.add_task(send_password_reset, user.email, reset_token)
+    return ok({"message": "If that email exists, a reset link has been sent"}, request)
+
+
+@router.post(
+    "/reset-password",
+    summary="Reset Password",
+    description="Reset a user's password using the token from the reset email.",
+    response_description="Confirmation message",
+    responses={**COMMON_ERROR_RESPONSES, 400: {"description": "Invalid or expired token"}},
+    response_model=DataResponse[dict[str, str]],
+)
+@limiter.limit(LIMIT_AUTH)
+async def reset_password(
+    request: Request,
+    payload: ResetPasswordRequest,
+    db: Annotated[AsyncSession, Depends(get_db)],
+) -> DataResponse[dict[str, str]]:
+    result = await db.execute(
+        select(User).where(User.password_reset_token == payload.token)
+    )
+    user = result.scalar_one_or_none()
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid password reset token",
+        )
+    if user.password_reset_expires and user.password_reset_expires < datetime.now(UTC):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Password reset token has expired",
+        )
+    user.hashed_password = hash_password(payload.new_password)
+    user.password_reset_token = None
+    user.password_reset_expires = None
+    await db.commit()
+    return ok({"message": "Password reset successfully"}, request)
