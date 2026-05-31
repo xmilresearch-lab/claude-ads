@@ -1,0 +1,67 @@
+@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&family=DM+Mono:wght@400;500&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    color-scheme: dark;
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+
+  html {
+    scroll-behavior: smooth;
+    background-color: #0A0B0F;
+  }
+
+  body {
+    @apply bg-surface text-text-primary font-body antialiased;
+    min-height: 100dvh;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-display;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply inline-flex items-center gap-2 bg-amber text-surface font-body font-semibold
+           px-6 py-3 rounded text-sm transition-colors duration-150
+           hover:bg-amber-hover focus-visible:outline-none focus-visible:ring-2
+           focus-visible:ring-amber focus-visible:ring-offset-2 focus-visible:ring-offset-surface;
+  }
+
+  .btn-ghost {
+    @apply inline-flex items-center gap-2 text-text-secondary font-body font-medium
+           px-6 py-3 rounded text-sm border border-surface-border transition-colors duration-150
+           hover:border-amber hover:text-text-primary focus-visible:outline-none
+           focus-visible:ring-2 focus-visible:ring-amber focus-visible:ring-offset-2
+           focus-visible:ring-offset-surface;
+  }
+
+  .card {
+    @apply bg-surface-raised border border-surface-border rounded-md p-6;
+  }
+
+  .section-label {
+    @apply font-mono text-xs text-amber tracking-widest uppercase;
+  }
+
+  .gradient-amber {
+    background: radial-gradient(ellipse 60% 40% at 50% 0%, rgba(245,158,11,0.12) 0%, transparent 70%);
+  }
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: #0A0B0F; }
+::-webkit-scrollbar-thumb { background: #1E222C; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #F59E0B; }
+
+/* Selection */
+::selection { background: rgba(245,158,11,0.25); color: #F0F2F5; }

@@ -1,0 +1,190 @@
+---
+import Layout from '@/layouts/Layout.astro';
+import HeroScatter from '@/components/HeroScatter';
+import LandscapeTrack from '@/components/LandscapeTrack';
+
+const features = [
+  {
+    icon: '⚡',
+    title: 'Automation Workflows',
+    body: 'Chain AI actions into repeatable workflows. Schedule, trigger on events, or run on demand.',
+  },
+  {
+    icon: '📡',
+    title: 'Multi-Channel Publishing',
+    body: 'Queue content for Twitter/X, LinkedIn, Instagram, and YouTube from a single dashboard.',
+  },
+  {
+    icon: '🔗',
+    title: 'Native Integrations',
+    body: 'Connect OAuth apps in seconds. Google, HubSpot, Notion, Slack — no code required.',
+  },
+  {
+    icon: '🛡️',
+    title: 'Enterprise-Grade Security',
+    body: 'AES-256-GCM encrypted tokens, DLP scanning on every AI output, full audit logs.',
+  },
+  {
+    icon: '📊',
+    title: 'Real-Time Analytics',
+    body: 'Token usage, automation runs, engagement metrics — all in one clean dashboard.',
+  },
+  {
+    icon: '🤖',
+    title: 'AI Assistant',
+    body: 'Context-aware assistant on every page. Ask it to build automations, write content, debug flows.',
+  },
+];
+
+const stats = [
+  { value: '10M+', label: 'AI tokens processed' },
+  { value: '99.9%', label: 'Uptime SLA' },
+  { value: '< 200ms', label: 'Median latency' },
+  { value: 'SOC 2', label: 'In progress' },
+];
+---
+
+<Layout
+  title="AI Automation Platform — Build on Autopilot"
+  description="AI-powered automation platform. Build workflows, schedule content, and grow your brand — on autopilot."
+>
+  <!-- Nav -->
+  <header class="fixed top-0 inset-x-0 z-40 border-b border-surface-border bg-surface/80 backdrop-blur-md">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
+      <a href="/" class="font-display font-bold text-lg text-text-primary">
+        <span class="text-amber">⬡</span> AutoPilot
+      </a>
+      <nav class="hidden md:flex items-center gap-6 text-sm text-text-secondary">
+        <a href="/#features" class="hover:text-text-primary transition-colors">Features</a>
+        <a href="/#how-it-works" class="hover:text-text-primary transition-colors">How it works</a>
+        <a href="/pricing" class="hover:text-text-primary transition-colors">Pricing</a>
+        <a href="https://app.yoursaas.com/login" class="hover:text-text-primary transition-colors">Sign in</a>
+      </nav>
+      <a href="https://app.yoursaas.com/register" class="btn-primary text-sm py-2">
+        Get started free
+      </a>
+    </div>
+  </header>
+
+  <main id="main">
+    <!-- Hero -->
+    <section class="relative min-h-screen flex flex-col items-center justify-center pt-16 overflow-hidden">
+      <div class="gradient-amber absolute inset-0 pointer-events-none" aria-hidden="true"></div>
+
+      <!-- Three.js scatter canvas -->
+      <HeroScatter client:load />
+
+      <div class="relative z-10 max-w-4xl mx-auto px-4 sm:px-6 text-center">
+        <p class="section-label mb-6">AI Automation Platform</p>
+        <h1 class="font-display font-extrabold text-4xl sm:text-6xl md:text-7xl leading-[1.05] text-text-primary mb-6">
+          Build workflows.<br />
+          <span class="text-amber">Ship on autopilot.</span>
+        </h1>
+        <p class="text-lg sm:text-xl text-text-secondary max-w-2xl mx-auto mb-10 font-body">
+          Connect your tools, automate your content, and let AI handle the busywork —
+          while you focus on building what matters.
+        </p>
+        <div class="flex flex-col sm:flex-row gap-4 justify-center">
+          <a href="https://app.yoursaas.com/register" class="btn-primary">
+            Start for free
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+              <path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+            </svg>
+          </a>
+          <a href="/pricing" class="btn-ghost">View pricing</a>
+        </div>
+        <p class="mt-5 text-xs text-text-muted font-mono">Free plan · No credit card required</p>
+      </div>
+
+      <!-- Scroll indicator -->
+      <div class="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1 text-text-muted" aria-hidden="true">
+        <span class="text-xs font-mono">scroll</span>
+        <div class="w-px h-8 bg-gradient-to-b from-text-muted to-transparent"></div>
+      </div>
+    </section>
+
+    <!-- Stats -->
+    <section class="border-y border-surface-border bg-surface-raised" aria-label="Platform stats">
+      <div class="max-w-6xl mx-auto px-4 sm:px-6 py-12 grid grid-cols-2 md:grid-cols-4 gap-8">
+        {stats.map((s) => (
+          <div class="text-center" data-reveal>
+            <div class="font-display font-bold text-3xl text-amber">{s.value}</div>
+            <div class="text-sm text-text-muted font-body mt-1">{s.label}</div>
+          </div>
+        ))}
+      </div>
+    </section>
+
+    <!-- Features -->
+    <section id="features" class="py-24 max-w-6xl mx-auto px-4 sm:px-6">
+      <div class="text-center mb-16" data-reveal>
+        <p class="section-label mb-3">What you get</p>
+        <h2 class="font-display font-bold text-3xl sm:text-4xl text-text-primary">
+          Everything you need. Nothing you don't.
+        </h2>
+      </div>
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        {features.map((f, i) => (
+          <div class="card hover:border-amber/40 transition-colors duration-200" data-reveal data-reveal-delay={String((i % 3) + 1)}>
+            <div class="text-2xl mb-3">{f.icon}</div>
+            <h3 class="font-display font-semibold text-text-primary mb-2">{f.title}</h3>
+            <p class="text-sm text-text-secondary font-body leading-relaxed">{f.body}</p>
+          </div>
+        ))}
+      </div>
+    </section>
+
+    <!-- Horizontal scroll track -->
+    <section id="how-it-works" class="py-12 overflow-hidden border-t border-surface-border">
+      <div class="max-w-6xl mx-auto px-4 sm:px-6 mb-10" data-reveal>
+        <p class="section-label mb-3">How it works</p>
+        <h2 class="font-display font-bold text-3xl sm:text-4xl text-text-primary">
+          From idea to automation in minutes.
+        </h2>
+      </div>
+      <LandscapeTrack client:visible />
+    </section>
+
+    <!-- CTA -->
+    <section class="py-24 max-w-4xl mx-auto px-4 sm:px-6 text-center" data-reveal>
+      <div class="card border-amber/30 relative overflow-hidden">
+        <div class="gradient-amber absolute inset-0 pointer-events-none" aria-hidden="true"></div>
+        <div class="relative z-10">
+          <p class="section-label mb-4">Get started today</p>
+          <h2 class="font-display font-bold text-3xl sm:text-4xl text-text-primary mb-4">
+            Your first 3 automations are free.
+          </h2>
+          <p class="text-text-secondary font-body mb-8 max-w-lg mx-auto">
+            No credit card required. Upgrade when you're ready to scale.
+          </p>
+          <div class="flex flex-col sm:flex-row gap-4 justify-center">
+            <a href="https://app.yoursaas.com/register" class="btn-primary">
+              Create free account
+            </a>
+            <a href="/pricing" class="btn-ghost">Compare plans</a>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Footer -->
+  <footer class="border-t border-surface-border py-12">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6">
+      <div class="flex flex-col sm:flex-row items-center justify-between gap-4">
+        <span class="font-display font-bold text-text-primary">
+          <span class="text-amber">⬡</span> AutoPilot
+        </span>
+        <nav class="flex gap-6 text-sm text-text-muted">
+          <a href="/privacy" class="hover:text-text-primary transition-colors">Privacy</a>
+          <a href="/terms" class="hover:text-text-primary transition-colors">Terms</a>
+          <a href="/pricing" class="hover:text-text-primary transition-colors">Pricing</a>
+          <a href="mailto:hello@yoursaas.com" class="hover:text-text-primary transition-colors">Contact</a>
+        </nav>
+        <p class="text-xs font-mono text-text-muted">
+          &copy; {new Date().getFullYear()} AutoPilot. All rights reserved.
+        </p>
+      </div>
+    </div>
+  </footer>
+</Layout>

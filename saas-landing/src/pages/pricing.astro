@@ -1,0 +1,91 @@
+---
+import Layout from '@/layouts/Layout.astro';
+import PricingCards from '@/components/PricingCards';
+---
+
+<Layout
+  title="Pricing — AI Automation Platform"
+  description="Simple, transparent pricing. Start free, scale with Starter or Pro. No hidden fees."
+>
+  <!-- Nav (shared) -->
+  <header class="fixed top-0 inset-x-0 z-40 border-b border-surface-border bg-surface/80 backdrop-blur-md">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
+      <a href="/" class="font-display font-bold text-lg text-text-primary">
+        <span class="text-amber">⬡</span> AutoPilot
+      </a>
+      <nav class="hidden md:flex items-center gap-6 text-sm text-text-secondary">
+        <a href="/#features" class="hover:text-text-primary transition-colors">Features</a>
+        <a href="/#how-it-works" class="hover:text-text-primary transition-colors">How it works</a>
+        <a href="/pricing" class="text-text-primary">Pricing</a>
+        <a href="https://app.yoursaas.com/login" class="hover:text-text-primary transition-colors">Sign in</a>
+      </nav>
+      <a href="https://app.yoursaas.com/register" class="btn-primary text-sm py-2">
+        Get started free
+      </a>
+    </div>
+  </header>
+
+  <main id="main" class="pt-24 pb-24">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6">
+      <div class="text-center mb-16" data-reveal>
+        <p class="section-label mb-3">Pricing</p>
+        <h1 class="font-display font-extrabold text-4xl sm:text-5xl text-text-primary mb-4">
+          Simple, transparent pricing.
+        </h1>
+        <p class="text-lg text-text-secondary font-body max-w-xl mx-auto">
+          Start free. Scale when you're ready. Cancel any time.
+        </p>
+      </div>
+
+      <PricingCards client:load />
+
+      <!-- FAQ -->
+      <section class="mt-24 max-w-2xl mx-auto" data-reveal>
+        <h2 class="font-display font-bold text-2xl text-text-primary mb-8 text-center">Common questions</h2>
+        <dl class="space-y-4">
+          {[
+            {
+              q: 'Can I change plans later?',
+              a: 'Yes — upgrade or downgrade any time from your billing dashboard. Prorated credits apply.',
+            },
+            {
+              q: 'What happens when I hit my automation limit?',
+              a: 'New automations are blocked until you upgrade or delete existing ones. Running automations are never interrupted.',
+            },
+            {
+              q: 'Are AI token limits per workspace or per account?',
+              a: 'Per workspace. Pro plan allows up to 5 workspaces, each with its own 1M token monthly budget.',
+            },
+            {
+              q: 'Do you offer annual billing?',
+              a: 'Annual plans with a 20% discount are coming soon. Join the waitlist on the dashboard.',
+            },
+            {
+              q: 'Is there a free trial for paid plans?',
+              a: 'The Free plan is permanently free. Paid plans are billed from day one but you can cancel before your next invoice.',
+            },
+          ].map((item) => (
+            <details class="card group cursor-pointer">
+              <summary class="flex items-center justify-between list-none font-body font-medium text-text-primary">
+                {item.q}
+                <span class="text-amber group-open:rotate-45 transition-transform duration-200 text-xl leading-none">+</span>
+              </summary>
+              <p class="mt-3 text-sm text-text-secondary font-body leading-relaxed">{item.a}</p>
+            </details>
+          ))}
+        </dl>
+      </section>
+    </div>
+  </main>
+
+  <footer class="border-t border-surface-border py-12">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+      <span class="font-display font-bold text-text-primary"><span class="text-amber">⬡</span> AutoPilot</span>
+      <nav class="flex gap-6 text-sm text-text-muted">
+        <a href="/privacy" class="hover:text-text-primary transition-colors">Privacy</a>
+        <a href="/terms" class="hover:text-text-primary transition-colors">Terms</a>
+        <a href="mailto:hello@yoursaas.com" class="hover:text-text-primary transition-colors">Contact</a>
+      </nav>
+    </div>
+  </footer>
+</Layout>
