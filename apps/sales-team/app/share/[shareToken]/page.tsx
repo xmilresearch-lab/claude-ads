@@ -18,12 +18,24 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   if (!analysis) return { title: 'Analysis Not Found' }
 
+  const title = `${analysis.analysisType.charAt(0).toUpperCase() + analysis.analysisType.slice(1)} Analysis — $100M Sales Team`
+  const description = analysis.offerText.slice(0, 160)
+  const ogImageUrl = `${process.env.NEXTAUTH_URL ?? ''}/api/og/${shareToken}`
+
   return {
-    title: `${analysis.analysisType} Analysis — $100M Sales Team`,
-    description: analysis.offerText.slice(0, 160),
+    title,
+    description,
     openGraph: {
-      title: `${analysis.analysisType} Analysis — $100M Sales Team`,
-      description: analysis.offerText.slice(0, 160),
+      title,
+      description,
+      images: [{ url: ogImageUrl, width: 1200, height: 630, alt: title }],
+      type: 'article',
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title,
+      description,
+      images: [ogImageUrl],
     },
   }
 }
