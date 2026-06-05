@@ -2,35 +2,49 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+import { BarChart2, Clock, BookOpen, Settings } from 'lucide-react'
 
 const NAV_ITEMS = [
-  { href: '/dashboard/analyze', label: 'Analyze' },
-  { href: '/dashboard/history', label: 'History' },
-  { href: '/dashboard/playbooks', label: 'Playbooks' },
-  { href: '/dashboard/settings', label: 'Settings' },
+  { href: '/dashboard/analyze', label: 'Analyze', Icon: BarChart2 },
+  { href: '/dashboard/history', label: 'History', Icon: Clock },
+  { href: '/dashboard/playbooks', label: 'Playbooks', Icon: BookOpen },
+  { href: '/dashboard/settings', label: 'Settings', Icon: Settings },
 ]
+
+function haptic() {
+  if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
+    navigator.vibrate(10)
+  }
+}
 
 export default function BottomNav() {
   const pathname = usePathname()
 
   return (
     <nav
-      className="md:hidden fixed bottom-0 left-0 right-0 bg-gray-900 border-t border-gray-800 flex"
+      className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-gray-900/95 backdrop-blur-sm border-t border-gray-800 flex"
       style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
     >
-      {NAV_ITEMS.map((item) => (
-        <Link
-          key={item.href}
-          href={item.href}
-          className={`flex-1 py-3 text-center text-xs font-medium transition-colors ${
-            pathname === item.href
-              ? 'text-blue-400'
-              : 'text-gray-500 hover:text-gray-300'
-          }`}
-        >
-          {item.label}
-        </Link>
-      ))}
+      {NAV_ITEMS.map(({ href, label, Icon }) => {
+        const active = pathname.startsWith(href)
+        return (
+          <Link
+            key={href}
+            href={href}
+            onClick={haptic}
+            className={`flex-1 flex flex-col items-center gap-1 py-2.5 text-[10px] font-medium transition-colors ${
+              active ? 'text-blue-400' : 'text-gray-500 hover:text-gray-300'
+            }`}
+          >
+            <Icon
+              size={20}
+              strokeWidth={active ? 2.5 : 1.75}
+              className="transition-all"
+            />
+            {label}
+          </Link>
+        )
+      })}
     </nav>
   )
 }

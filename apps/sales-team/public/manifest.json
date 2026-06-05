@@ -1,0 +1,42 @@
+{
+  "name": "$100M AI Sales Team",
+  "short_name": "Sales Team",
+  "description": "Analyze any sales offer through 8 elite frameworks. Get an integrated strategy in under 60 seconds.",
+  "start_url": "/dashboard/analyze",
+  "display": "standalone",
+  "background_color": "#030712",
+  "theme_color": "#2563eb",
+  "orientation": "portrait-primary",
+  "categories": ["business", "productivity"],
+  "icons": [
+    {
+      "src": "/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "screenshots": [],
+  "shortcuts": [
+    {
+      "name": "Analyze",
+      "short_name": "Analyze",
+      "description": "Run a new analysis",
+      "url": "/dashboard/analyze",
+      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "History",
+      "short_name": "History",
+      "description": "View past analyses",
+      "url": "/dashboard/history",
+      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
+    }
+  ]
+}
