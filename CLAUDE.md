@@ -286,272 +286,385 @@ export const TIER_LIMITS = {
 
 ---
 
-## Execution Prompts (Run These in Order in Claude Code)
+## Prompt 1 — Master Initialization Prompt
 
-**Session 0 — Initialize CLAUDE.md**
+Run this once, in a fresh Claude Code session, inside the empty project directory.
+After this runs, `CLAUDE.md` carries all context permanently.
+
 ```
-Create the file CLAUDE.md at the project root using the content I'm about to paste.
-After creating it, confirm you've read it and summarize the 5 most critical security
-rules and the API route pattern I want used on every route.
-```
+You are about to build the $100M AI Sales Team — a production SaaS that analyzes
+any sales offer through 8 expert frameworks (Hormozi, GaryVee, Cardone, Belfort,
+Kennedy, Brunson, Godin, Robbins) and synthesizes an integrated strategy. This is
+a real product going to market. Build it like one.
 
-**Session 1 — Project Bootstrap**
-```
-Following the tech stack in CLAUDE.md, initialize this Next.js 14 App Router project.
-Install all dependencies listed. Create the folder structure exactly as specified in
-the File Structure section. Generate .env.local.example with all variables from the
-Environment Variables section. Create tsconfig.json with strict mode. Set up ESLint
-with the TypeScript plugin. Set up Vitest for unit testing. Create a basic
-middleware.ts that adds the security headers listed in the Security Non-Negotiables.
-Do not create any pages yet — just the shell.
-```
+────────────────────────────────────────
+STEP 1 — BOOTSTRAP THE PROJECT
+────────────────────────────────────────
+1. Run: npx create-next-app@latest . --typescript --tailwind --app --no-src-dir --import-alias "@/*"
 
-**Session 2 — Prisma Schema + Supabase RLS**
-```
-Using CLAUDE.md as context, create prisma/schema.prisma with all models: User,
-Analysis, Subscription, Team, AuditLog. Follow the naming conventions in CLAUDE.md.
-Include the Tier enum (FREE/SOLO/PRO/AGENCY/ENTERPRISE). After the schema, generate
-the SQL migration file and write Supabase RLS policies for each table ensuring
-users can only access their own rows. Write a test in tests/rls.test.ts that
-creates two users and confirms User A cannot read User B's analyses. Also create
-prisma/seed.ts with 3 test users (one per key tier) and sample analyses.
-```
+2. Install all dependencies in one command:
+npm install @anthropic-ai/sdk @prisma/client prisma next-auth @auth/prisma-adapter
+stripe @stripe/stripe-js @upstash/redis @upstash/ratelimit resend react-email
+@react-email/components next-pwa @sentry/nextjs posthog-js zod
+@vercel/og react-pdf lucide-react clsx tailwind-merge
 
-**Session 3 — Auth (NextAuth + Supabase + Google)**
-```
-Following the API route pattern in CLAUDE.md, implement authentication:
-1. NextAuth.js v5 with Supabase adapter in lib/auth.ts
-2. Providers: Google OAuth + Email magic link (Resend)
-3. Session strategy: JWT with user.tier and user.id in the session object
-4. middleware.ts: protect all /dashboard/* and /api/analyze /api/assistant routes
-5. app/(auth)/login/page.tsx: clean login form with Google button and magic link input
-6. app/(auth)/signup/page.tsx: email + name, creates Supabase user
-7. Write unit tests for the auth middleware redirect logic
-Confirm the ANTHROPIC_API_KEY is not referenced anywhere in this session's code.
-```
+npm install -D @types/node vitest @vitejs/plugin-react
 
-**Session 4 — AI Analysis Endpoint (Streaming)**
-```
-Using the API route pattern from CLAUDE.md, build the streaming AI analysis endpoint:
-File: app/api/analyze/route.ts
+3. Create tsconfig.json with strict: true, noUncheckedIndexedAccess: true,
+   exactOptionalPropertyTypes: true
 
-The route must follow this exact order from CLAUDE.md:
-1. Auth → 2. Rate limit (use TIER_LIMITS from lib/ratelimit.ts) → 3. Zod validate
-(offerText: string max 5000 chars, analysisType: enum) → 4. Anthropic streaming call
-(server-side only, claude-sonnet-4-20250514) → 5. Save completed analysis to DB →
-6. Write audit log
+4. Create .env.local.example with every variable from the Environment Variables
+   section of CLAUDE.md — values empty, comments explaining each one
 
-The system prompt should instruct Claude to analyze the offer through all 8 frameworks
-(Hormozi, GaryVee, Cardone, Belfort, Kennedy, Brunson, Godin, Robbins) and return
-structured JSON with frameworks array + synthesis object.
+5. Create .gitignore that includes .env.local
 
-Return a ReadableStream with Content-Type: text/event-stream.
+6. Create the complete folder structure from the Project Structure section of CLAUDE.md —
+   every directory and file listed, each file with a one-line comment describing its purpose
 
-Also create lib/ratelimit.ts with the TIER_LIMITS from CLAUDE.md and per-tier
-Upstash sliding window limiters.
+7. Create middleware.ts that:
+   - Protects all /dashboard/* routes (redirect to /login if no session)
+   - Protects /api/analyze, /api/assistant, /api/checkout, /api/billing/* routes
+   - Sets these security headers on every response:
+     X-Frame-Options: DENY
+     X-Content-Type-Options: nosniff
+     Referrer-Policy: strict-origin-when-cross-origin
+     Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-eval'
+     'unsafe-inline'; connect-src 'self' *.anthropic.com *.supabase.co *.stripe.com
 
-Write a unit test mocking the Anthropic client that confirms the auth and rate limit
-checks run before the AI call.
-```
+8. Create vitest.config.ts for unit testing
 
-**Session 5 — Stripe Billing + Webhooks**
-```
-Following CLAUDE.md security rules, implement complete Stripe billing:
+9. Create .eslintrc.json with TypeScript rules including no-explicit-any: error
 
-1. lib/stripe.ts: Stripe client (server-only, STRIPE_SECRET_KEY)
-2. app/api/checkout/route.ts: creates Stripe Checkout Session for a given price ID,
-   attaches user metadata, returns checkout URL. Follow API route pattern from CLAUDE.md.
-3. app/api/webhooks/stripe/route.ts: handles these events:
-   - checkout.session.completed → create Subscription record, update user.tier
-   - customer.subscription.updated → sync tier from Stripe price ID
-   - customer.subscription.deleted → downgrade user to FREE
-   - invoice.payment_failed → send email via Resend, flag in DB
-   Always use stripe.webhooks.constructEvent() with STRIPE_WEBHOOK_SECRET — this is
-   a hard requirement from CLAUDE.md.
-4. app/api/billing/portal/route.ts: returns Stripe Customer Portal session URL
-5. hooks/useSubscription.ts: client-side hook reading tier from NextAuth session
+10. Run npm run build — it must pass before we proceed to any other step
 
-Write a test confirming the webhook handler rejects requests without valid signatures.
-```
+When complete, confirm: CLAUDE.md exists, folder structure is in place,
+build passes, and tell me what you see when you grep for NEXT_PUBLIC_
+across all TypeScript files to confirm the API key pattern is safe.
 
-**Session 6 — AI Assistant (Context-Aware Coach)**
-```
-Build the in-app AI coaching assistant following CLAUDE.md patterns:
+────────────────────────────────────────
+STEP 2 — DATABASE SCHEMA
+────────────────────────────────────────
+Create prisma/schema.prisma with these exact models:
 
-1. app/api/assistant/route.ts: streaming chat endpoint
-   - Auth → rate limit → Zod (message: string max 500) → Anthropic stream
-   - Fetch user's last 5 analyses from DB and inject as system context
-   - System prompt: coach using whichever of the 8 frameworks fits the question,
-     reference the user's specific analyses by name, keep responses under 150 words
-     unless asked to elaborate, suggest upgrading when free user asks about Pro features
-   - Stream response back via SSE
+generator client {
+  provider = "prisma-client-js"
+}
 
-2. components/assistant/AssistantPanel.tsx:
-   - Slide-in drawer from right on desktop
-   - Bottom sheet on mobile (< 768px)
-   - Conversation stored in sessionStorage only (privacy)
-   - Shows "Upgrade to Pro" CTA when free user hits limit
-   - Streaming display: tokens appear as they arrive
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
 
-Confirm no API key is referenced in any client component.
-```
+enum Tier {
+  FREE
+  SOLO
+  PRO
+  AGENCY
+  ENTERPRISE
+}
 
-**Session 7 — Analysis Dashboard + StreamingResult**
-```
-Build the core dashboard UI following CLAUDE.md's Godin rule: the streaming
-experience is the remarkable moment — prioritize it above all other frontend work.
+enum SubscriptionStatus {
+  ACTIVE
+  PAST_DUE
+  CANCELED
+  TRIALING
+}
 
-1. app/(dashboard)/analyze/page.tsx:
-   - Analysis input (textarea + type selector)
-   - Calls /api/analyze and reads the SSE stream
-   - Renders StreamingResult as tokens arrive
+model User {
+  id               String         @id @default(cuid())
+  email            String         @unique
+  name             String?
+  image            String?
+  stripeCustomerId String?        @unique
+  tier             Tier           @default(FREE)
+  analysisCount    Int            @default(0)
+  referralCode     String         @unique @default(cuid())
+  referredById     String?
+  teamId           String?
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+  accounts         Account[]
+  sessions         Session[]
+  analyses         Analysis[]
+  subscription     Subscription?
+  team             Team?          @relation("TeamMembers", fields: [teamId], references: [id])
+  ownedTeam        Team?          @relation("TeamOwner")
+  auditLogs        AuditLog[]
+}
 
-2. components/analysis/StreamingResult.tsx:
-   - Shows 8 FrameworkCard components as JSON chunks parse in
-   - Each card: expert name, insight, 3 improvements, metric
-   - UpgradeModal appears after analysis completes (if user is FREE and has used 3/3)
-   - Following Kennedy rule: upgrade headline is "Unlock unlimited strategies"
+model Analysis {
+  id           String   @id @default(cuid())
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  offerText    String   @db.Text
+  analysisType String
+  result       Json
+  shared       Boolean  @default(false)
+  shareToken   String   @unique @default(cuid())
+  createdAt    DateTime @default(now())
+  @@index([userId, createdAt])
+}
 
-3. components/billing/UpgradeModal.tsx:
-   - Renders INSIDE StreamingResult (not on a separate pricing page — Brunson rule)
-   - Shows current analysis count vs limit
-   - CTA calls /api/checkout and redirects to Stripe
+model Subscription {
+  id                   String             @id @default(cuid())
+  userId               String             @unique
+  user                 User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  stripeSubscriptionId String             @unique
+  stripePriceId        String
+  status               SubscriptionStatus
+  tier                 Tier
+  currentPeriodEnd     DateTime
+  cancelAtPeriodEnd    Boolean            @default(false)
+  createdAt            DateTime           @default(now())
+  updatedAt            DateTime           @updatedAt
+}
 
-4. app/(dashboard)/history/page.tsx:
-   - Paginated list of past analyses
-   - Search by offer text
-   - Share button generates /share/[shareToken] link (GaryVee rule)
+model Team {
+  id           String   @id @default(cuid())
+  name         String
+  ownerId      String   @unique
+  owner        User     @relation("TeamOwner", fields: [ownerId], references: [id])
+  members      User[]   @relation("TeamMembers")
+  agencyDomain String?
+  logoUrl      String?
+  createdAt    DateTime @default(now())
+}
 
-Test: confirm UpgradeModal triggers at correct analysis count for FREE tier.
-```
+model AuditLog {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  action    String
+  metadata  Json     @default("{}")
+  ipAddress String?
+  createdAt DateTime @default(now())
+  @@index([userId, createdAt])
+}
 
-**Session 8 — Mobile PWA**
-```
-Following the Mobile section of CLAUDE.md, implement full PWA support:
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@unique([provider, providerAccountId])
+}
 
-1. Configure next-pwa in next.config.ts:
-   - Cache strategy: cache-first for static, network-first for /api,
-     stale-while-revalidate for /dashboard
-   - Offline fallback: show last 10 cached analyses
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
 
-2. public/manifest.json: name "$100M Sales Team", short_name "$100M",
-   theme_color "#EA580C", display "standalone", start_url "/dashboard/analyze"
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+  @@unique([identifier, token])
+}
 
-3. Generate PWA icons at 192px and 512px (maskable) — use the orange brand color
+After the schema, generate prisma/migrations/001_rls_policies.sql:
 
-4. components/mobile/BottomNav.tsx:
-   - Fixed bottom, 5 tabs: Analyze / History / Playbooks / Coach / Settings
-   - Visible ONLY below 768px (className="md:hidden")
-   - padding-bottom: env(safe-area-inset-bottom) for iPhone notch
-   - navigator.vibrate(10) on tab tap for haptic feedback
+-- Enable RLS on all tables
+ALTER TABLE "User" ENABLE ROW LEVEL SECURITY;
+ALTER TABLE "Analysis" ENABLE ROW LEVEL SECURITY;
+ALTER TABLE "Subscription" ENABLE ROW LEVEL SECURITY;
+ALTER TABLE "AuditLog" ENABLE ROW LEVEL SECURITY;
+ALTER TABLE "Team" ENABLE ROW LEVEL SECURITY;
 
-5. app/(dashboard)/layout.tsx:
-   - Import BottomNav, add pb-20 on mobile to avoid content hiding under nav
-   - Add viewport meta: width=device-width, initial-scale=1, viewport-fit=cover
+-- Users can only read/update their own row
+CREATE POLICY "user_self_access" ON "User"
+  USING (id::text = auth.uid()::text);
 
-Run Lighthouse on the app and confirm PWA score ≥ 90.
-```
+-- Users can only access their own analyses
+CREATE POLICY "analysis_owner_access" ON "Analysis"
+  USING (user_id::text = auth.uid()::text);
 
-**Session 9 — Shareable Analysis Cards (OG Images)**
-```
-Following the GaryVee rule in CLAUDE.md — shareability is a feature, not an
-afterthought — build the viral sharing system:
+-- Public read for shared analyses
+CREATE POLICY "analysis_public_shared" ON "Analysis"
+  FOR SELECT USING (shared = true);
 
-1. app/share/[shareToken]/page.tsx:
-   - Public page, no auth required
-   - Fetches analysis by shareToken from DB
-   - Shows read-only framework results
-   - "Analyze your own offer free →" CTA linking to /signup
+-- Users can only see their own subscription
+CREATE POLICY "subscription_owner_access" ON "Subscription"
+  USING (user_id::text = auth.uid()::text);
 
-2. app/api/og/[shareToken]/route.tsx:
-   - Uses @vercel/og to generate a 1200×630 OG image
-   - Shows: "$100M Sales Team analyzed [offerType]" + top 3 framework scores
-   - Brand colors: orange accent on dark background
-   - This image appears when users share the link on LinkedIn/Twitter
+Create lib/prisma.ts as a singleton Prisma client.
+Create prisma/seed.ts with 3 test users (FREE, PRO, AGENCY) each with 3 sample analyses.
+Run: npx prisma generate. Confirm schema is valid.
 
-3. In app/share/[shareToken]/page.tsx:
-   - Add <meta property="og:image" content="/api/og/[shareToken]" />
-   - Add <meta property="og:title" content="See what 8 expert frameworks revealed" />
+────────────────────────────────────────
+STEP 3 — AUTH
+────────────────────────────────────────
+Implement authentication:
 
-4. In components/analysis/ShareCard.tsx:
-   - Share button that copies the /share/[shareToken] URL to clipboard
-   - Appears in StreamingResult after analysis completes
-```
+1. lib/auth.ts — NextAuth config with:
+   - PrismaAdapter from @auth/prisma-adapter
+   - Providers: GoogleProvider + EmailProvider via Resend (magic links)
+     + CredentialsProvider for dev testing only
+   - Callbacks: session attaches user.id, user.tier, user.analysisCount;
+     jwt persists tier and analysisCount
+   - Pages: signIn: '/login', signOut: '/', error: '/login'
 
-**Session 10 — Email Automation (Soap Opera Sequence)**
-```
-Using Resend and React Email, build the 5-email Soap Opera Sequence triggered on signup:
+2. types/next-auth.d.ts — extend Session with user.id, user.tier (Tier),
+   user.analysisCount (number), user.stripeCustomerId (string | null)
 
-1. emails/ directory with React Email templates:
-   - welcome.tsx: "Your 8-expert AI board is ready" + CTA to first analysis
-   - story.tsx (Day 1): founder story + first framework breakdown (Hormozi on offers)
-   - proof.tsx (Day 3): case study format — "Offer analyzed, 3 blind spots found"
-   - objection.tsx (Day 5): "Already have a consultant?" objection destroy (Belfort)
-   - urgency.tsx (Day 7): "Founding Pro pricing: 48 hours left" hard CTA (Kennedy)
+3. app/(auth)/login/page.tsx — email + "Send Magic Link" + Google OAuth button,
+   success state, no password field
 
-2. lib/email.ts: Resend client + sendEmail() helper
+4. app/(auth)/signup/page.tsx — email + name, triggers Day 0 welcome email on creation
 
-3. app/api/webhooks/auth/route.ts (or use NextAuth callbacks):
-   Trigger Day 0 email on user creation. Schedule Days 1,3,5,7 via Upstash QStash.
+5. Update middleware.ts to use NextAuth's withAuth wrapper.
+   Public routes: /, /pricing, /share/[shareToken], /login, /signup
+   Protected: /dashboard/*, /api/* except /api/webhooks/*
 
-4. Email unsubscribe link on every email: /api/unsubscribe?token=[unsubToken]
-   Writes to a UserPreferences table, removes from future sends.
+6. app/(dashboard)/layout.tsx — server component, getServerSession, redirects to /login
+   if no session, renders sidebar (desktop) + BottomNav import (mobile)
 
-All email copy must follow Kennedy's rule from CLAUDE.md: lead with transformation,
-never features. Every subject line must pass the "So what?" test.
-```
+Write a unit test confirming middleware redirects /dashboard/analyze → /login
+when unauthenticated.
 
-**Session 11 — Security Audit + Launch Hardening**
-```
-Run a full security audit of the codebase against the Security Non-Negotiables in CLAUDE.md:
+────────────────────────────────────────
+STEP 4 — AI ANALYSIS ENGINE
+────────────────────────────────────────
+Build the core AI analysis system:
 
-1. Grep for ANTHROPIC_API_KEY across all files — confirm zero client-side references
-2. Verify every route in app/api/ follows the auth → rate limit → Zod → logic order
-3. Check all Stripe webhook handlers use constructEvent() with the signing secret
-4. Verify all Prisma queries in API routes confirm resource.userId === session.user.id
-5. Test RLS: query User B's analyses while authenticated as User A — must return empty
-6. Run `npm run build` and confirm zero TypeScript errors and zero ESLint warnings
-7. Add Cloudflare Turnstile to the signup form (bot protection)
-8. Verify Content-Security-Policy header blocks inline scripts
-9. Run Lighthouse security audit — fix any flagged issues
-10. Generate the production environment variable checklist and confirm all are set in Vercel
+1. lib/ai.ts:
+   - Client: new Anthropic() — ANTHROPIC_API_KEY server-side env, never NEXT_PUBLIC_
+   - ANALYSIS_SYSTEM_PROMPT: 8-framework analysis returning strict JSON:
+     { frameworks: [{name, focus, insight, improvements: string[], metric}],
+       synthesis: {overview, immediateActions: string[], executiveSummary} }
+   - ASSISTANT_SYSTEM_PROMPT: coaching mode, references user history,
+     under 150 words unless asked, suggests upgrades contextually
 
-Output a security report: each check, pass/fail, and any remediation applied.
-```
+2. lib/ratelimit.ts — Upstash sliding window limiters per tier (values from CLAUDE.md)
 
-**Session 12 — Growth Systems + Referral**
-```
-Build the referral and growth infrastructure:
+3. lib/schemas.ts:
+   - analyzeSchema: { offerText: z.string().min(10).max(5000).trim(),
+     analysisType: z.enum(['offer', 'problem', 'challenge']) }
+   - assistantSchema: { message: z.string().min(1).max(500).trim(),
+     conversationHistory: z.array(...).max(20) }
 
-1. Referral system:
-   - Add referralCode (cuid) to User model, generated on creation
-   - /r/[referralCode] redirect route that sets a cookie and redirects to /signup
-   - On paid subscription creation: credit referrer 30% of first 12 months via Stripe
-   - app/(dashboard)/settings/referral.tsx: shows unique link, earnings, count
+4. lib/audit.ts — writeAuditLog helper
 
-2. Weekly digest email (Resend + Upstash QStash cron):
-   - Every Monday 9am: send analysis summary to all active users
-   - Shows: analyses this week, top framework used, upgrade prompt for FREE users
-   - Schedule: QStash cron `0 9 * * 1`
+5. app/api/analyze/route.ts — follow the API route template from CLAUDE.md exactly:
+   - If FREE user at limit (analysisCount >= 3): return 402 before Anthropic call
+   - Stream via client.messages.stream(), Content-Type: text/event-stream
+   - On completion: parse JSON, save Analysis (shareToken auto-set), increment
+     user.analysisCount, write audit log
 
-3. Analysis count badges:
-   - Add analysisCount to User (increment on each analysis)
-   - Show "You've run 50 analyses" milestone toast → prompt to share on LinkedIn
+6. Unit tests:
+   - 401 when no session
+   - 429 when rate limit exceeded (mock Upstash)
+   - 402 when FREE user at limit
+   - Grep confirms ANTHROPIC_API_KEY absent from app/, components/, hooks/
 
-4. Affiliate dashboard in settings:
-   - Earnings to date, pending payouts, referral link
-   - Payout via Stripe Connect (optional Phase 2 — stub with "coming soon" if complex)
+────────────────────────────────────────
+STEP 5 — STRIPE BILLING
+────────────────────────────────────────
+Complete Stripe subscription infrastructure:
+
+1. lib/stripe.ts — Stripe client (server-only), price ID → Tier map,
+   getOrCreateStripeCustomer() helper
+
+2. app/api/checkout/route.ts — follows API route template:
+   Accepts { priceId }, creates Checkout Session (mode: subscription,
+   success_url: /dashboard/analyze?upgraded=true, metadata: { userId }),
+   returns { url }
+
+3. app/api/webhooks/stripe/route.ts — NO auth, NO rate limit, but MUST verify first:
+   const event = stripe.webhooks.constructEvent(await req.text(), sig, STRIPE_WEBHOOK_SECRET)
+   Handle: checkout.session.completed, customer.subscription.updated,
+   customer.subscription.deleted, invoice.payment_failed
+   Each handler writes to AuditLog.
+
+4. app/api/billing/portal/route.ts — Stripe Customer Portal session URL → { url }
+
+5. hooks/useSubscription.ts — reads tier, analysisCount from useSession(),
+   returns { tier, analysisCount, isAtLimit, canUseAPI, upgradeUrl }
+
+6. scripts/setup-stripe.ts — creates 4 Stripe products + prices, logs price IDs
+
+7. Test: webhook handler throws on invalid signature.
+
+After Step 5: run npm run build. If it passes, commit:
+"feat: core loop complete — auth, AI analysis, billing all working"
+
+────────────────────────────────────────
+REMAINING PHASES (execute in order, one session each)
+────────────────────────────────────────
+PHASE 6 — AI ASSISTANT:
+app/api/assistant/route.ts (streaming coach, last 5 analyses as context) +
+components/assistant/AssistantPanel.tsx (drawer desktop, bottom sheet mobile,
+sessionStorage, upgrade CTA for FREE).
+
+PHASE 7 — DASHBOARD + STREAMING UI:
+Analyze page with token-by-token streaming, 8 FrameworkCard accordions,
+UpgradeModal inside StreamingResult (Brunson rule — never on pricing page),
+history page with search and share button.
+
+PHASE 8 — MOBILE PWA:
+next-pwa config, manifest.json, BottomNav (md:hidden, safe-area-inset-bottom,
+haptic feedback), viewport-fit=cover, Lighthouse PWA ≥ 90.
+
+PHASE 9 — SHAREABLE ANALYSIS CARDS:
+/share/[shareToken] public page, /api/og/[shareToken] OG image (@vercel/og),
+share button copies URL to clipboard.
+
+PHASE 10 — EMAIL AUTOMATION:
+5-email Soap Opera Sequence via Resend + QStash (Day 0/1/3/5/7).
+All subject lines pass the "So what?" test.
+
+PHASE 11 — GROWTH + REFERRAL:
+/r/[code] → signup with cookie, 30% recurring commission via Stripe,
+referral dashboard, weekly digest cron via QStash.
+
+PHASE 12 — SECURITY AUDIT:
+Grep ANTHROPIC_API_KEY (zero client-side hits), verify all routes follow the
+6-step template, RLS second-user test, Cloudflare Turnstile on signup,
+npm run build with zero warnings.
+
+────────────────────────────────────────
+BEGIN NOW
+────────────────────────────────────────
+Start with STEP 1 and proceed through STEP 5 sequentially.
+Do not skip steps. Run npm run build after every step before continuing.
+Ask me nothing — you have everything you need in this prompt and in CLAUDE.md.
+Start executing.
 ```
 
 ---
 
-**Session start prompt — run this at the beginning of every new Claude Code session:**
-```
-Read CLAUDE.md at the project root. Confirm you understand:
-1. The security non-negotiables (especially API key placement and route order)
-2. The API route pattern I want on every endpoint
-3. The current phase we're working on
-4. Which framework rules apply to the feature we're building today
+## Prompt 2 — Daily Session Starter
 
-Then tell me what we're about to build and flag any risks before we start.
+Paste this at the top of every Claude Code session after the initial build.
+
+```
+Read CLAUDE.md now. Confirm you understand the security non-negotiables,
+the API route template, and the tier limits before doing anything else.
+
+Current build status: [WHERE YOU ARE — e.g. "Phase 5 complete,
+Stripe webhooks working, about to start Phase 6 — AI Assistant"]
+
+Today's session goal: [ONE THING — e.g. "Build the AI Assistant panel
+and its API route"]
+
+Before writing any code:
+1. State which CLAUDE.md security rules apply to today's work
+2. Identify the exact files you'll create or modify
+3. Flag any risks or decisions I should weigh in on
+
+Then execute. After each file is created or modified, run the relevant
+test or npm run build to confirm nothing is broken before moving to the
+next file. End the session with a git commit and tell me exactly what
+was completed and what the next session should start with.
 ```
