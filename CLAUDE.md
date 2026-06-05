@@ -42,50 +42,117 @@ Target: $150K MRR by Month 6. Tiny team build. Ship daily.
    5. Execute — run business logic / call Claude API
    6. Respond — return a typed `ApiResponse<T>` envelope; never leak stack traces
 
-3. **Stripe webhook handler is the only route that skips step 1 (auth)**
-   - It must verify `stripe.webhooks.constructEvent()` signature before any processing
-   - Raw body must be passed — never parse it as JSON before verification
+3. **Row-Level Security on every Supabase table**
+   - Never query Supabase without RLS enabled
+   - Always verify a user can only access their own rows
+   - Test RLS by querying as a second user in development
 
-4. **No secrets in `NEXT_PUBLIC_` env vars, git history, or logs**
+4. **Stripe webhook signature verification is mandatory**
+   - Always use `stripe.webhooks.constructEvent()` with `STRIPE_WEBHOOK_SECRET`
+   - Never trust webhook body without verifying the signature first
+
+5. **Never expose internal error messages to the client**
+   - Log full errors to Sentry server-side
+   - Return generic `{ error: 'Internal server error' }` to client
+
+6. **IDOR prevention: always verify resource ownership**
+   - Before any DB read/write: confirm `resource.userId === session.user.id`
+   - Do not rely solely on RLS — defense in depth
+
+7. **No secrets in `NEXT_PUBLIC_` env vars, git history, or logs**
    - Use `console.error(err.message)` — never log full error objects that may contain keys/tokens
 
 ---
 
-## Project Structure
+## Project File Structure
 
 ```
 app/
-  (auth)/            → sign-in, sign-up, forgot-password pages
-  (dashboard)/       → protected routes (App Router groups)
-    analyze/         → main analysis input form
-    results/[id]/    → analysis result detail page
-    history/         → past analyses list
-    settings/        → account, billing, brand config
+  (auth)/
+    sign-in/page.tsx          → Sign-in form (email + password)
+    sign-up/page.tsx          → Registration + plan selection
+    forgot-password/page.tsx  → Password reset request
+    reset-password/page.tsx   → Token-gated reset form
+  (dashboard)/
+    layout.tsx                → Auth guard + sidebar shell
+    analyze/
+      page.tsx                → Offer input form
+      loading.tsx             → Skeleton while analysis runs
+    results/
+      [id]/
+        page.tsx              → Full analysis result (server component)
+        loading.tsx
+    history/page.tsx          → Paginated past analyses
+    settings/
+      page.tsx                → Account + notification prefs
+      billing/page.tsx        → Plan, invoices, Customer Portal link
   api/
-    analyze/         → POST — submit offer for AI analysis
-    frameworks/      → GET — list available frameworks
+    analyze/route.ts          → POST — auth → rate-limit → validate → Claude
+    frameworks/route.ts       → GET — list available frameworks for user's tier
     webhooks/
-      stripe/        → POST — Stripe event handler
-    auth/            → NextAuth.js handler
+      stripe/route.ts         → POST — signature verify → handle event
+    auth/[...nextauth]/route.ts → NextAuth handler
+  layout.tsx                  → Root layout (fonts, Providers, Sentry)
+  page.tsx                    → Marketing landing page
+  error.tsx                   → Root error boundary
+  not-found.tsx
+
 components/
-  ui/                → shadcn/ui primitives (never edit directly)
-  analysis/          → AnalysisForm, FrameworkCard, StrategyPanel, etc.
-  billing/           → PlanBadge, UpgradeModal, UsageBar
-  layout/            → Navbar, Sidebar, Footer
+  ui/                         → shadcn/ui primitives — never edit directly
+  analysis/
+    AnalysisForm.tsx          → "use client" — offer textarea + framework picker
+    FrameworkCard.tsx         → Single framework result panel
+    StrategyPanel.tsx         → Synthesized cross-framework strategy
+    AnalysisSkeleton.tsx
+  billing/
+    PlanBadge.tsx             → Inline tier label
+    UpgradeModal.tsx          → "use client" — upgrade CTA with Stripe redirect
+    UsageBar.tsx              → Daily analyses used / limit
+  layout/
+    Navbar.tsx
+    Sidebar.tsx
+    Footer.tsx
+  providers/
+    index.tsx                 → SessionProvider + PostHogProvider + ThemeProvider
+
 lib/
-  anthropic.ts       → Claude client singleton + analyzeOffer()
-  prisma.ts          → Prisma client singleton
-  stripe.ts          → Stripe client singleton + helpers
-  ratelimit.ts       → Upstash rate-limit factory per tier
-  frameworks/        → One file per framework (hormozi.ts, garyvee.ts, …)
-  schemas/           → Zod schemas (offer.ts, analysis.ts, webhook.ts, …)
-  utils/             → cn(), formatCurrency(), truncate(), etc.
+  anthropic.ts                → Claude client singleton + analyzeOffer()
+  prisma.ts                   → Prisma client singleton (singleton pattern)
+  stripe.ts                   → Stripe client singleton + plan helpers
+  ratelimit.ts                → checkRateLimit(userId, tier) factory
+  auth.ts                     → NextAuth config (adapters, callbacks, providers)
+  frameworks/
+    index.ts                  → buildSystemPrompt(frameworks, offer)
+    hormozi.ts
+    garyvee.ts
+    cardone.ts
+    belfort.ts
+    kennedy.ts
+    brunson.ts
+    godin.ts
+    robbins.ts
+  schemas/
+    offer.ts                  → AnalyzeRequestSchema (Zod)
+    analysis.ts               → AnalysisResultSchema (Zod) — validates Claude output
+    webhook.ts                → StripeEventSchema (Zod)
+    user.ts                   → UserSchema, PlanEnum
+  utils/
+    cn.ts                     → clsx + tailwind-merge helper
+    format.ts                 → formatCurrency(), formatDate(), truncate()
+    errors.ts                 → toClientError() — strips internals before send
+
 prisma/
-  schema.prisma      → Single source of truth for DB schema
-  migrations/        → Never edit manually — use `prisma migrate dev`
+  schema.prisma               → Single source of truth for DB schema
+  migrations/                 → Never edit manually — use `prisma migrate dev`
+
 emails/
-  AnalysisReady.tsx  → React Email template
-  WelcomeEmail.tsx
+  AnalysisReady.tsx           → React Email — result ready notification
+  WelcomeEmail.tsx            → Onboarding email
+  UpgradeConfirmation.tsx
+
+middleware.ts                 → Next.js middleware — protect /dashboard/* routes
+next.config.ts                → next-pwa, security headers, image domains
+tailwind.config.ts
 ```
 
 ---
