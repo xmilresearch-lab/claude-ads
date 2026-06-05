@@ -1,314 +1,238 @@
-# AI Automation Platform — Backend
+# $100M AI Sales Team — Claude Code Project Context
 
-> Automate Everything: Social Media · Email & Support · CRM
+## What This Project Is
+A multi-tier SaaS that analyzes any sales offer or business challenge through
+8 elite frameworks (Hormozi, GaryVee, Cardone, Belfort, Kennedy, Brunson, Godin,
+Robbins) and synthesizes a complete strategy. The product is positioned as an
+"AI Strategy Board" — not another AI tool.
 
------
+Tiers: Free (3/day) → Solo $49 → Pro $149 → Agency $497 → Enterprise $2,497/mo
+Target: $150K MRR by Month 6. Tiny team build. Ship daily.
 
-## Project Overview
+---
 
-A multi-tenant AI automation platform that uses Claude as its AI engine and MCP servers
-to automate social media posting, email campaigns, customer support replies, and CRM updates.
-Users connect their accounts (Twitter, LinkedIn, Gmail, HubSpot, etc.) and configure
-automations that run on schedules or webhooks.
+## Tech Stack (exact versions)
+- **Framework:** Next.js 14.2+ (App Router only — no Pages Router)
+- **Language:** TypeScript 5 (strict mode, no `any`)
+- **Database:** Supabase (PostgreSQL) via Prisma ORM
+- **Auth:** NextAuth.js v5 + Supabase adapter
+- **Payments:** Stripe (subscriptions + webhooks + Customer Portal)
+- **AI:** @anthropic-ai/sdk — model: `claude-sonnet-4-20250514`
+- **Rate Limiting:** @upstash/ratelimit + @upstash/redis
+- **Email:** Resend + React Email
+- **Validation:** Zod (all API inputs, no exceptions)
+- **Styling:** Tailwind CSS
+- **PWA:** next-pwa
+- **Monitoring:** Sentry + PostHog
+- **Deployment:** Vercel
 
------
+---
 
-## Stack
+## ⚠️ SECURITY NON-NEGOTIABLES — Never Violate These
 
-|Layer        |Technology                                        |
-|-------------|--------------------------------------------------|
-|API Framework|Python FastAPI (async)                            |
-|Database     |PostgreSQL 16 (primary) + Weaviate (vector search)|
-|Task Queue   |Celery 5 + Redis 7                                |
-|Auth         |JWT (access + refresh) + OAuth2 per integration   |
-|AI Engine    |Claude API — model: claude-sonnet-4-20250514      |
-|MCP Servers  |TypeScript SDK — streamable HTTP transport        |
-|Security     |AES-256-GCM encryption, OWASP LLM Top 10 guards   |
-|Infra (dev)  |Docker + Docker Compose                           |
-|Infra (prod) |Railway or Render                                 |
+1. **ANTHROPIC_API_KEY is NEVER prefixed with NEXT_PUBLIC_**
+   - All Anthropic calls happen in `app/api/` routes or server actions only
+   - If you see this key used client-side: STOP and refactor
 
------
+2. **Every API route follows this exact order — no exceptions:**
+   1. Authenticate — verify session via `auth()` from NextAuth; return 401 if missing
+   2. Authorize — check the user's plan tier against the required tier for the operation
+   3. Rate-limit — call `checkRateLimit(userId, tier)` before any business logic; return 429 if exceeded
+   4. Validate — parse the request body with the route's Zod schema; return 400 on failure
+   5. Execute — run business logic / call Claude API
+   6. Respond — return a typed `ApiResponse<T>` envelope; never leak stack traces
+
+3. **Stripe webhook handler is the only route that skips step 1 (auth)**
+   - It must verify `stripe.webhooks.constructEvent()` signature before any processing
+   - Raw body must be passed — never parse it as JSON before verification
+
+4. **No secrets in `NEXT_PUBLIC_` env vars, git history, or logs**
+   - Use `console.error(err.message)` — never log full error objects that may contain keys/tokens
+
+---
 
 ## Project Structure
 
 ```
-/backend
-  /app
-    /api            → FastAPI routers (one file per domain)
-    /core           → config, database, security utilities
-    /models         → SQLAlchemy ORM models
-    /schemas        → Pydantic v2 request/response schemas
-    /services       → business logic (orchestration, AI, integrations)
-    /workers        → Celery task definitions
-    /middleware     → security scanning, rate limiting, logging
-  /mcp
-    /social-mcp-server    → TypeScript MCP server (Twitter, LinkedIn, Instagram)
-    /email-mcp-server     → TypeScript MCP server (Gmail, SendGrid, Zendesk)
-    /crm-mcp-server       → TypeScript MCP server (HubSpot, Salesforce)
-  /migrations       → Alembic DB migrations
-  /tests
-    /unit           → Unit tests (fast, fully mocked)
-    /integration    → Integration tests (FastAPI TestClient)
-    /contract       → API contract + OpenAPI snapshot tests
-    /security       → Penetration test suite (Sprint 7)
-    /load           → Locust load test files + run script
-    /mcp-evals      → XML eval files (30 QA pairs), runner, results
-    REPORT.md       → Sprint 9 test suite summary
-  docker-compose.yml
-  .env.example
-  alembic.ini
-/docs
-  API.md            → Authentication guide, endpoint reference, rate limits, error codes
-  DEPLOYMENT.md     → Environment checklist, Docker Compose config, health check setup
-  DEVELOPMENT.md    → Prerequisites, 5-command setup, running tests, extending the platform
+app/
+  (auth)/            → sign-in, sign-up, forgot-password pages
+  (dashboard)/       → protected routes (App Router groups)
+    analyze/         → main analysis input form
+    results/[id]/    → analysis result detail page
+    history/         → past analyses list
+    settings/        → account, billing, brand config
+  api/
+    analyze/         → POST — submit offer for AI analysis
+    frameworks/      → GET — list available frameworks
+    webhooks/
+      stripe/        → POST — Stripe event handler
+    auth/            → NextAuth.js handler
+components/
+  ui/                → shadcn/ui primitives (never edit directly)
+  analysis/          → AnalysisForm, FrameworkCard, StrategyPanel, etc.
+  billing/           → PlanBadge, UpgradeModal, UsageBar
+  layout/            → Navbar, Sidebar, Footer
+lib/
+  anthropic.ts       → Claude client singleton + analyzeOffer()
+  prisma.ts          → Prisma client singleton
+  stripe.ts          → Stripe client singleton + helpers
+  ratelimit.ts       → Upstash rate-limit factory per tier
+  frameworks/        → One file per framework (hormozi.ts, garyvee.ts, …)
+  schemas/           → Zod schemas (offer.ts, analysis.ts, webhook.ts, …)
+  utils/             → cn(), formatCurrency(), truncate(), etc.
+prisma/
+  schema.prisma      → Single source of truth for DB schema
+  migrations/        → Never edit manually — use `prisma migrate dev`
+emails/
+  AnalysisReady.tsx  → React Email template
+  WelcomeEmail.tsx
 ```
 
------
+---
+
+## Database Models (Quick Reference)
+
+| Model        | Key Fields                                                                    |
+|--------------|-------------------------------------------------------------------------------|
+| User         | id, email, name, plan, analysesUsed, analysesLimit, stripeCustomerId          |
+| Analysis     | id, userId, offerText, challenge, frameworks (String[]), result (Json), status |
+| Subscription | id, userId, stripeSubId, plan, status, currentPeriodEnd                       |
+| UsageLog     | id, userId, action, tokensUsed, createdAt                                     |
+
+---
+
+## Plan Tiers & Limits
+
+| Tier       | Price/mo | Analyses/day | Frameworks | Rate limit    |
+|------------|----------|--------------|------------|---------------|
+| free       | $0       | 3            | 3          | 3 req/day     |
+| solo       | $49      | 25           | 8          | 30 req/day    |
+| pro        | $149     | 100          | 8          | 150 req/day   |
+| agency     | $497     | 500          | 8          | 600 req/day   |
+| enterprise | $2,497   | unlimited    | 8          | 3,000 req/day |
+
+`checkRateLimit()` in `lib/ratelimit.ts` reads the user's plan and applies the correct limit.
+
+---
+
+## AI Analysis Pattern
+
+Every `/api/analyze` call follows this flow:
+
+```
+1. Auth + authorize + rate-limit + validate (see security section)
+2. Load enabled framework configs from lib/frameworks/
+3. Build system prompt: role + frameworks + output schema instructions
+4. Call Claude API (claude-sonnet-4-20250514) with streaming disabled
+5. Parse structured JSON response — validate with Zod before saving
+6. Persist Analysis record + UsageLog to DB via Prisma
+7. Return { analysisId, preview } — full result fetched at results/[id]
+```
+
+Claude must return **strict JSON only** — the system prompt ends with:
+> "Return ONLY valid JSON matching the AnalysisResult schema. No prose, no markdown fences."
+
+---
+
+## The 8 Frameworks
+
+| Key      | Expert          | Focus                                       |
+|----------|-----------------|---------------------------------------------|
+| hormozi  | Alex Hormozi    | Offer value stacking, GRAND SLAM offer      |
+| garyvee  | Gary Vaynerchuk | Attention arbitrage, platform-native content|
+| cardone  | Grant Cardone   | 10X thinking, pipeline volume               |
+| belfort  | Jordan Belfort  | Straight Line Persuasion, tonality, objections |
+| kennedy  | Dan Kennedy     | Direct response, copywriting, list hygiene  |
+| brunson  | Russell Brunson | Funnel architecture, hook/story/offer       |
+| godin    | Seth Godin      | Permission marketing, tribe building        |
+| robbins  | Tony Robbins    | State management, limiting beliefs, RPM     |
+
+Each framework file exports `buildFrameworkPrompt(offer: string): string`.
+
+---
 
 ## Key Commands
 
 ```bash
-# Start all services (API + DB + Redis + Celery + MCP servers)
-docker compose up
+# Install dependencies
+npm install
 
-# Run database migrations
-alembic upgrade head
+# Dev server
+npm run dev
 
-# Generate a new migration
-alembic revision --autogenerate -m "description"
+# Type check
+npx tsc --noEmit
 
-# Run Python test suite
-pytest tests/ -v --cov=app
+# Lint
+npm run lint
 
-# Start Celery worker
-celery -A app.workers.celery_app worker --loglevel=info
+# DB migrations
+npx prisma migrate dev --name <description>
+npx prisma generate          # regenerate client after schema change
+npx prisma studio            # visual DB browser
 
-# Build all MCP servers
-cd mcp/social-mcp-server && npm run build
-cd mcp/email-mcp-server && npm run build
-cd mcp/crm-mcp-server && npm run build
+# Run tests
+npm test
+npm run test:e2e
 
-# Inspect an MCP server (testing)
-npx @modelcontextprotocol/inspector http://localhost:3001
-
-# Lint Python
-ruff check app/
-
-# Type check Python
-mypy app/
+# Build
+npm run build
 ```
 
------
-
-## Coding Standards
-
-### Python (FastAPI)
-
-- **Python 3.12+** — use modern syntax (match statements, walrus operator where appropriate)
-- **Type hints required** on all function signatures, including return types
-- **Pydantic v2** for all request/response schemas — use `model_config`, not `class Config`
-- **SQLAlchemy 2.0** style — use `select()`, `async with session` patterns
-- **async/await** for ALL database calls, external API calls, and Claude API calls
-- **Never use `time.sleep()`** — use `asyncio.sleep()` instead
-- **Ruff** for linting, **Black** for formatting (line length: 88)
-- **mypy** strict mode — no untyped `Any` without explicit comment
-
-### TypeScript (MCP Servers)
-
-- **TypeScript strict mode** — `"strict": true` in tsconfig
-- **Zod** for all tool input schemas
-- **Tool naming**: `{service}_{action}_{resource}` e.g. `social_create_post`
-- **All tools** must have `readOnlyHint`, `destructiveHint`, `idempotentHint` annotations
-- **Error format**: always `{ code, message, suggestion }` — actionable, never expose internals
-- **Pagination**: all list tools return `{ items, has_more, next_offset, total_count }`
-- **Transport**: streamable HTTP — never SSE (deprecated)
-
-### General Rules
-
-- **DRY** — no duplicated logic; extract shared utilities immediately
-- **No credentials in code** — always use environment variables
-- **Audit log everything** — every automation run, every AI call, every external API call
-- **100% test coverage** on the services layer and security middleware
-- **Atomic commits** — one concern per commit, present tense message
-
------
-
-## Architecture Rules (Never Break These)
-
-1. **Security first** — ALL user-supplied content passes through `injection_scanner` before reaching Claude
-1. **DLP on output** — ALL Claude-generated content passes through `dlp_scanner` before being sent to external APIs
-1. **Encrypted credentials** — OAuth tokens and API keys are ALWAYS stored AES-256-GCM encrypted; never logged
-1. **Brand voice injection** — EVERY Claude API call includes the workspace brand voice in the system prompt; brand voice examples are sanitized via `sanitize_example()` before prompt injection (LLM04)
-1. **Audit trail** — EVERY automation run writes a record to `automation_runs` with status, result, and duration
-1. **Rate limits enforced** — check workspace rate limits BEFORE queuing any automation run; API endpoints enforce per-IP/per-workspace HTTP rate limits via SlowAPI
-1. **MCP servers are stateless** — no session state stored in MCP servers; all state lives in PostgreSQL
-1. **Security headers** — ALL HTTP responses include HSTS, CSP, X-Frame-Options, and X-Content-Type-Options via the `add_security_headers` middleware
-1. **OWASP LLM Top 10 compliance** — prompt injection (LLM01), data leakage (LLM02), supply chain (LLM03), data poisoning (LLM04), excessive agency (LLM05), tool misuse (LLM06), prompt leakage (LLM07), vector/embedding risks (LLM08 — Weaviate queries are always scoped to `workspace_id`; never query across tenants), misinformation (LLM09 — Claude is instructed to say "uncertain" rather than fabricate), overreliance (LLM10 — runs using >2 000 tokens write a `high_token_usage` audit log)
-1. **No credentials in prompt** — automation `config` JSONB values are never rendered into the system prompt; only brand voice (workspace-controlled) is injected (LLM01)
-1. **CVE scanning** — run `pip-audit` before every release; HIGH/CRITICAL findings block deployment
-
------
-
-## Database Models (Quick Reference)
-
-|Model        |Key Fields                                                               |
-|-------------|-------------------------------------------------------------------------|
-|User         |id, email, hashed_password, plan, created_at                             |
-|Workspace    |id, user_id, name, brand_voice (JSONB), settings (JSONB)                 |
-|Integration  |id, workspace_id, type, credentials_encrypted, status                    |
-|Automation   |id, workspace_id, name, type, config (JSONB), schedule, active           |
-|AutomationRun|id, automation_id, status, result (JSONB), error, started_at, finished_at|
-|ContentQueue |id, automation_id, content (JSONB), platform, scheduled_at, published_at |
-|AuditLog     |id, workspace_id, action, actor, metadata (JSONB), created_at            |
-
------
-
-## API Versioning
-
-All API routes are under `/api/v1/`. The root `/api` endpoint returns version info.
-
-| Router         | Base Path                  |
-|----------------|----------------------------|
-| Auth           | `/api/v1/auth/`            |
-| Automations    | `/api/v1/automations/`     |
-| Content Queue  | `/api/v1/content/`         |
-| Audit Logs     | `/api/v1/audit/`           |
-| Workspaces     | `/api/v1/workspaces/`      |
-| Integrations   | `/api/v1/integrations/`    |
-| Analytics      | `/api/v1/analytics/`       |
-| Webhooks       | `/webhooks/` (root — no version prefix) |
-
-All responses are wrapped in `DataResponse[T]` or `PaginatedResponse[T]` envelopes
-(defined in `app/schemas/base.py`). Error responses use the `ErrorResponse` schema.
-
------
+---
 
 ## Environment Variables
 
 ```bash
+# Auth
+NEXTAUTH_URL=http://localhost:3000
+NEXTAUTH_SECRET=<random-256-bit-hex>
+
 # Database
-DATABASE_URL=postgresql+asyncpg://user:pass@localhost:5432/automation_db
-REDIS_URL=redis://localhost:6379/0
+DATABASE_URL=postgresql://...
+DIRECT_URL=postgresql://...   # Supabase direct connection for migrations
 
-# Claude AI
-ANTHROPIC_API_KEY=sk-ant-...
-CLAUDE_MODEL=claude-sonnet-4-20250514
+# AI
+ANTHROPIC_API_KEY=sk-ant-...  # NEVER prefix with NEXT_PUBLIC_
 
-# Security
-SECRET_KEY=<random-256-bit-hex>
-ENCRYPTION_KEY=<random-256-bit-hex>
-JWT_ALGORITHM=HS256
-ACCESS_TOKEN_EXPIRE_MINUTES=30
-REFRESH_TOKEN_EXPIRE_DAYS=30
+# Payments
+STRIPE_SECRET_KEY=sk_...
+STRIPE_WEBHOOK_SECRET=whsec_...
+NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_...
 
-# MCP Servers
-SOCIAL_MCP_URL=http://localhost:3001
-EMAIL_MCP_URL=http://localhost:3002
-CRM_MCP_URL=http://localhost:3003
-MCP_AUTH_TOKEN=<shared-bearer-token>
+# Rate limiting
+UPSTASH_REDIS_REST_URL=
+UPSTASH_REDIS_REST_TOKEN=
 
-# Integration OAuth (per workspace, stored encrypted in DB)
-# These are app-level credentials, not user tokens
-TWITTER_CLIENT_ID=
-TWITTER_CLIENT_SECRET=
-LINKEDIN_CLIENT_ID=
-LINKEDIN_CLIENT_SECRET=
-GOOGLE_CLIENT_ID=
-GOOGLE_CLIENT_SECRET=
-HUBSPOT_CLIENT_ID=
-HUBSPOT_CLIENT_SECRET=
+# Email
+RESEND_API_KEY=re_...
+
+# Monitoring
+NEXT_PUBLIC_SENTRY_DSN=
+NEXT_PUBLIC_POSTHOG_KEY=
+NEXT_PUBLIC_POSTHOG_HOST=
 ```
 
------
+---
 
-## AI Orchestration Pattern
+## Coding Standards
 
-Every automation run follows this exact flow:
+- **No `any`** — use `unknown` and narrow, or define a proper type
+- **Zod first** — every external input (API body, env var, webhook payload) is parsed with Zod before use
+- **Server Components by default** — only add `"use client"` when you need interactivity or browser APIs
+- **`cn()` for class merging** — never concatenate Tailwind strings manually
+- **Prisma transactions** — any write that touches >1 table uses `prisma.$transaction()`
+- **Error boundaries** — every page group has an `error.tsx`; never let unhandled errors reach the user
+- **No `console.log` in committed code** — use Sentry for errors, PostHog for events
 
-```
-1. Fetch automation config + workspace brand voice from DB
-2. Scan trigger payload through injection_scanner middleware
-3. Build Claude system prompt (include brand voice, rules, history)
-4. Call Claude API with relevant MCP servers as tools
-5. Scan Claude output through dlp_scanner middleware
-6. Execute approved output (post, send email, update CRM)
-7. Write result to automation_runs + audit_logs
-8. Update content_queue if applicable
-```
-
------
-
-## MCP Server Reference
-
-|Server           |Port|Tools Count|Key Integrations                                     |
-|-----------------|----|-----------|-----------------------------------------------------|
-|social-mcp-server|3001|17         |Twitter/X, LinkedIn, Instagram, Facebook, TikTok, Threads|
-|email-mcp-server |3002|7          |Gmail, SendGrid, Zendesk                             |
-|crm-mcp-server   |3003|7          |HubSpot, Salesforce                                  |
-
-All MCP servers require `Authorization: Bearer $MCP_AUTH_TOKEN` header.
-
------
-
-## Sprint Map
-
-|Sprint|Focus                                                         |Status    |
-|------|--------------------------------------------------------------|----------|
-|1     |Project scaffold, DB models, auth system                      |✅ Done   |
-|2     |Social MCP server (Twitter + LinkedIn)                        |✅ Done   |
-|3     |Email & Support MCP server (Gmail + Zendesk)                  |✅ Done   |
-|4     |CRM MCP server (HubSpot)                                      |✅ Done   |
-|5     |AI Orchestration Engine + brand voice system                  |✅ Done   |
-|6     |Celery task queue + workers                                   |✅ Done   |
-|7     |Security layer: injection guard, DLP, OWASP LLM Top 10, audit |✅ Done   |
-|8     |REST API completion + OpenAPI docs + health endpoints + docs  |✅ Done   |
-|9     |Tests + MCP evaluations                                       |✅ Done   |
-|10    |Docker packaging + deployment config                          |✅ Done   |
-
------
-
-## Backend Status: COMPLETE ✅
-
-All 10 backend sprints delivered:
-
-| Sprint | Deliverable | Status |
-|---|---|---|
-| 1  | FastAPI scaffold, PostgreSQL, JWT auth | ✅ |
-| 2  | Social MCP Server — 6 tools | ✅ |
-| 3  | Email & Support MCP Server — 7 tools | ✅ |
-| 4  | CRM MCP Server — 7 tools | ✅ |
-| 5  | AI Orchestration Engine (Claude + MCP) | ✅ |
-| 6  | Celery Workers — async dispatch, 3 queues | ✅ |
-| 7  | Security Layer — OWASP LLM Top 10 | ✅ |
-| 8  | REST API v1 — full surface + OpenAPI docs | ✅ |
-| 9  | Tests — 90%+ coverage, MCP evals, load test | ✅ |
-| 10 | Docker prod, CI/CD, runbook, handoff | ✅ |
-| 11 | Social Expansion — Facebook, TikTok, Threads | ✅ |
-
-Total MCP tools: 31 (17 social + 7 email + 7 crm)  
-Social platforms: Twitter/X, LinkedIn, Instagram, Facebook, TikTok, Threads  
-Test coverage: 90%+  
-MCP eval score: 7/10+ per server  
-Load tested: 100 concurrent users, p95 < 500ms  
-Security: OWASP LLM Top 10 mitigated
-
-### Social Expansion Notes (Sprint 11)
-- **Facebook**: OAuth with `pages_show_list`/`pages_manage_posts`; long-lived user token exchanged at callback; page-level tokens fetched and stored per workspace.
-- **Instagram**: Shares Facebook OAuth app; IG Business account discovered from connected Facebook Page; requires Meta Business Suite linking.
-- **TikTok**: PKCE (S256) OAuth v2; short-lived 24h access token auto-refreshed by Celery every 6h.
-- **Threads**: Short-lived token exchanged for 60-day long-lived token at callback; auto-refreshed by Celery when < 7 days remaining.
-- Credential rotation: `check_and_refresh_credentials` Celery task now auto-refreshes TikTok and Threads tokens in addition to flagging `expiring_soon`.
-
-Next: Frontend — Next.js 15 dashboard (see `docs/FRONTEND_HANDOFF.md`)
-
------
+---
 
 ## Common Mistakes to Avoid
 
-- Do NOT use `session.query()` — use SQLAlchemy 2.0 `select()` style
-- Do NOT store credentials in plain text — always encrypt before DB write
-- Do NOT call Claude API without brand voice in system prompt
-- Do NOT skip injection scanning on any user-supplied content
-- Do NOT use synchronous `requests` library — use `httpx` with async
-- Do NOT return raw SQLAlchemy models from API endpoints — always use Pydantic schemas
-- Do NOT log sensitive fields (tokens, passwords, PII)
+- Do NOT expose `ANTHROPIC_API_KEY` — it stays server-side only
+- Do NOT call Claude from a Client Component — use a Server Action or API route
+- Do NOT skip Zod validation on any user-supplied field
+- Do NOT use `prisma.user.findUnique()` without `.select()` — never return `hashedPassword` in a response
+- Do NOT create Stripe customers manually — let the subscription webhook handle it
+- Do NOT use the Pages Router — this project is 100% App Router
+- Do NOT import from `lib/prisma` in Client Components — it will leak the DB URL
