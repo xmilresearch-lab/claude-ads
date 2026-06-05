@@ -14,48 +14,48 @@ export async function POST(req: NextRequest) {
     return Response.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  // Step 2: Rate limit
+  // Step 2: FREE tier hard cap — checked before rate limiter to give clearer UX
+  if (
+    session.user.tier === 'FREE' &&
+    session.user.analysisCount >= TIER_LIMITS.FREE.analysesPerDay
+  ) {
+    return Response.json(
+      {
+        error: 'limit_reached',
+        upgradeUrl: '/pricing',
+        analysisCount: session.user.analysisCount,
+      },
+      { status: 402 }
+    )
+  }
+
+  // Step 3: Rate limit (sliding window per tier)
   const limiter = getRatelimiter(session.user.tier)
   const { success } = await limiter.limit(`analyze:${session.user.id}`)
   if (!success) {
     return Response.json({ error: 'Rate limit exceeded' }, { status: 429 })
   }
 
-  // Step 3: Zod validation
+  // Step 4: Zod validation
   const body: unknown = await req.json()
   const parsed = analyzeSchema.safeParse(body)
   if (!parsed.success) {
     return Response.json({ error: parsed.error.flatten() }, { status: 400 })
   }
 
-  // Step 4: FREE tier daily limit check (before Anthropic call)
-  if (
-    session.user.tier === 'FREE' &&
-    session.user.analysisCount >= TIER_LIMITS.FREE.analysesPerDay
-  ) {
-    return Response.json(
-      { error: 'Daily analysis limit reached. Upgrade to continue.' },
-      { status: 402 }
-    )
-  }
-
   const { offerText, analysisType } = parsed.data
   const userId = session.user.id
 
-  // Step 5: Stream response
+  // Step 5: Stream Anthropic response
   const encoder = new TextEncoder()
   const stream = new ReadableStream({
     async start(controller) {
       try {
-        let fullText = ''
-
         const anthropicStream = getAnthropic().messages.stream({
           model: MODEL,
-          max_tokens: 4096,
+          max_tokens: 4000,
           system: ANALYSIS_SYSTEM_PROMPT,
-          messages: [
-            { role: 'user', content: `Analyze this ${analysisType}: ${offerText}` },
-          ],
+          messages: [{ role: 'user', content: `${analysisType.toUpperCase()}: ${offerText}` }],
         })
 
         for await (const chunk of anthropicStream) {
@@ -63,14 +63,18 @@ export async function POST(req: NextRequest) {
             chunk.type === 'content_block_delta' &&
             chunk.delta.type === 'text_delta'
           ) {
-            fullText += chunk.delta.text
             controller.enqueue(
               encoder.encode(`data: ${JSON.stringify({ text: chunk.delta.text })}\n\n`)
             )
           }
         }
 
-        // Parse, save, increment
+        // Step 7: Parse, save, and audit after stream completes
+        const finalMessage = await anthropicStream.finalMessage()
+        const fullText = finalMessage.content
+          .map(b => (b.type === 'text' ? b.text : ''))
+          .join('')
+
         const result = JSON.parse(fullText) as Prisma.InputJsonValue
         const analysis = await prisma.analysis.create({
           data: { userId, offerText, analysisType, result },
@@ -81,11 +85,14 @@ export async function POST(req: NextRequest) {
           data: { analysisCount: { increment: 1 } },
         })
 
-        // Step 6: Audit log
         await writeAuditLog({
           userId,
           action: 'ANALYSIS_CREATED',
-          metadata: { analysisId: analysis.id, analysisType },
+          metadata: {
+            analysisId: analysis.id,
+            analysisType,
+            offerTextLength: offerText.length,
+          },
         })
 
         controller.enqueue(
@@ -104,6 +111,7 @@ export async function POST(req: NextRequest) {
     },
   })
 
+  // Step 6: Return SSE stream
   return new Response(stream, {
     headers: {
       'Content-Type': 'text/event-stream',

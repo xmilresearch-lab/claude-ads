@@ -1,6 +1,6 @@
 import Stripe from 'stripe'
 import { prisma } from '@/lib/prisma'
-import type { Tier } from '@/lib/ratelimit'
+import type { Tier } from '@prisma/client'
 
 // SERVER-ONLY — never import this file from client components
 

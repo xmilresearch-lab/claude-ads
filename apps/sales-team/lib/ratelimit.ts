@@ -1,28 +1,30 @@
 import { Ratelimit } from '@upstash/ratelimit'
 import { Redis } from '@upstash/redis'
+import { Tier } from '@prisma/client'
 
-// Single source of truth — never duplicate these values elsewhere
+const redis = Redis.fromEnv()
+
 export const TIER_LIMITS = {
-  FREE:       { analysesPerDay: 3,     apiCallsPerMonth: 0     },
-  SOLO:       { analysesPerDay: 50,    apiCallsPerMonth: 0     },
-  PRO:        { analysesPerDay: 99999, apiCallsPerMonth: 500   },
-  AGENCY:     { analysesPerDay: 99999, apiCallsPerMonth: 5000  },
-  ENTERPRISE: { analysesPerDay: 99999, apiCallsPerMonth: 99999 },
+  FREE:       { analysesPerDay: 3,     label: '3 analyses per day' },
+  SOLO:       { analysesPerDay: 50,    label: '50 analyses per day' },
+  PRO:        { analysesPerDay: 99999, label: 'Unlimited' },
+  AGENCY:     { analysesPerDay: 99999, label: 'Unlimited' },
+  ENTERPRISE: { analysesPerDay: 99999, label: 'Unlimited' },
 } as const
 
-export type Tier = keyof typeof TIER_LIMITS
-
-const redis = new Redis({
-  url: process.env.UPSTASH_REDIS_REST_URL!,
-  token: process.env.UPSTASH_REDIS_REST_TOKEN!,
-})
+const limiters = new Map<Tier, Ratelimit>()
 
 export function getRatelimiter(tier: Tier): Ratelimit {
-  const limit = TIER_LIMITS[tier].analysesPerDay
-  return new Ratelimit({
+  const existing = limiters.get(tier)
+  if (existing) return existing
+
+  const { analysesPerDay } = TIER_LIMITS[tier]
+  const limiter = new Ratelimit({
     redis,
-    limiter: Ratelimit.slidingWindow(limit, '1 d'),
+    limiter: Ratelimit.slidingWindow(analysesPerDay, '1 d'),
     analytics: true,
-    prefix: `ratelimit:${tier.toLowerCase()}`,
+    prefix: `ratelimit:${tier}`,
   })
+  limiters.set(tier, limiter)
+  return limiter
 }

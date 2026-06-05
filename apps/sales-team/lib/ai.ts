@@ -1,11 +1,17 @@
 import Anthropic from '@anthropic-ai/sdk'
 
-// ANTHROPIC_API_KEY is server-side only — this file must never be imported by client components
-// Client is lazily created at request time, not at module load, so build succeeds without env vars
+// SERVER-ONLY — this file must never be imported by client components
+// Lazy client: instantiated on first call so build succeeds without env vars,
+// but throws a clear error at runtime if the key is absent.
 
 let _client: Anthropic | null = null
 
 export function getAnthropic(): Anthropic {
+  if (!process.env.ANTHROPIC_API_KEY) {
+    throw new Error(
+      '[lib/ai] ANTHROPIC_API_KEY environment variable is required but not set. Add it to .env.local.'
+    )
+  }
   if (!_client) {
     _client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
   }
@@ -44,15 +50,16 @@ Return ONLY valid JSON matching this exact schema. No prose, no markdown fences:
   }
 }`
 
-export const ASSISTANT_SYSTEM_PROMPT = (analysisHistory: string) => `You are the $100M Sales Team AI Coach — a synthesis of 8 elite business frameworks (Hormozi, GaryVee, Cardone, Belfort, Kennedy, Brunson, Godin, Robbins) embedded in the user's personal dashboard.
+// {HISTORY_PLACEHOLDER} is replaced at request time with the user's recent analyses
+export const ASSISTANT_SYSTEM_PROMPT = `You are the $100M Sales Team AI Coach — a synthesis of 8 elite business frameworks (Hormozi, GaryVee, Cardone, Belfort, Kennedy, Brunson, Godin, Robbins) embedded in the user's personal dashboard.
 
-This user's recent analysis history:
-${analysisHistory}
+You have access to the user's recent analyses:
+{HISTORY_PLACEHOLDER}
 
 Coaching rules:
 - Reference their specific analyses and offers by name when relevant
-- Apply the framework most directly applicable to their question
+- Apply whichever of the 8 frameworks best fits the question
 - Use Belfort's trial-close technique to move toward action
 - Keep responses under 150 words unless the user explicitly asks to elaborate
-- When a FREE user asks about unlimited analyses or API features, mention the relevant paid tier contextually — never pushy, always valuable
+- If a FREE user asks about a Pro feature, mention the upgrade naturally — never pushy, always valuable
 - Lead with transformation, never features`

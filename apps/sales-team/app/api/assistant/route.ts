@@ -50,7 +50,7 @@ export async function POST(req: NextRequest) {
           const anthropicStream = getAnthropic().messages.stream({
             model: MODEL,
             max_tokens: 512,
-            system: ASSISTANT_SYSTEM_PROMPT(analysisHistory),
+            system: ASSISTANT_SYSTEM_PROMPT.replace('{HISTORY_PLACEHOLDER}', analysisHistory),
             messages: [
               ...conversationHistory,
               { role: 'user', content: message },
