@@ -1,65 +1,44 @@
 # $100M AI Sales Team — Claude Code Project Context
 
 ## What This Project Is
-A multi-tier SaaS that analyzes any sales offer or business challenge through
-8 elite frameworks (Hormozi, GaryVee, Cardone, Belfort, Kennedy, Brunson, Godin,
-Robbins) and synthesizes a complete strategy. The product is positioned as an
-"AI Strategy Board" — not another AI tool.
+A multi-tier SaaS that analyzes any sales offer or business challenge through 8 elite
+frameworks and synthesizes a complete strategy. Positioned as an "AI Strategy Board."
 
-Tiers: Free (3/day) → Solo $49 → Pro $149 → Agency $497 → Enterprise $2,497/mo
-Target: $150K MRR by Month 6. Tiny team build. Ship daily.
+Tiers: Free (3/day) → Solo $49/mo → Pro $149/mo → Agency $497/mo → Enterprise $2,497/mo
+Target: $150K MRR by Month 6. Single developer build. Ship working code every day.
 
 ---
 
-## Tech Stack (exact versions)
-- **Framework:** Next.js 14.2+ (App Router only — no Pages Router)
-- **Language:** TypeScript 5 (strict mode, no `any`)
-- **Database:** Supabase (PostgreSQL) via Prisma ORM
-- **Auth:** NextAuth.js v5 + Supabase adapter
-- **Payments:** Stripe (subscriptions + webhooks + Customer Portal)
-- **AI:** @anthropic-ai/sdk — model: `claude-sonnet-4-20250514`
-- **Rate Limiting:** @upstash/ratelimit + @upstash/redis
-- **Email:** Resend + React Email
-- **Validation:** Zod (all API inputs, no exceptions)
-- **Styling:** Tailwind CSS
-- **PWA:** next-pwa
-- **Monitoring:** Sentry + PostHog
-- **Deployment:** Vercel
+## Tech Stack
+- Next.js 14.2+ (App Router ONLY — no Pages Router anywhere)
+- TypeScript 5 strict mode (zero `any` tolerance)
+- Supabase (PostgreSQL) + Prisma ORM
+- NextAuth.js v5 + Supabase adapter
+- Stripe (subscriptions + webhooks + Customer Portal)
+- Anthropic SDK — model: `claude-sonnet-4-20250514`
+- Upstash Redis + @upstash/ratelimit
+- Resend + React Email
+- Tailwind CSS
+- next-pwa
+- Sentry + PostHog
+- Vercel deployment
 
 ---
 
-## ⚠️ SECURITY NON-NEGOTIABLES — Never Violate These
+## SECURITY NON-NEGOTIABLES — Violating these is a build failure
 
-1. **ANTHROPIC_API_KEY is NEVER prefixed with NEXT_PUBLIC_**
-   - All Anthropic calls happen in `app/api/` routes or server actions only
-   - If you see this key used client-side: STOP and refactor
-
-2. **Every API route follows this exact order — no exceptions:**
-   ```
-   1. Auth check (getServerSession) → 401 if missing
-   2. Rate limit check (Upstash) → 429 if exceeded
-   3. Zod input validation → 400 if invalid
-   4. Business logic / DB query
-   5. Audit log write
-   6. Return response
-   ```
-
-3. **Row-Level Security on every Supabase table**
-   - Never query Supabase without RLS enabled
-   - Always verify a user can only access their own rows
-   - Test RLS by querying as a second user in development
-
-4. **Stripe webhook signature verification is mandatory**
-   - Always use `stripe.webhooks.constructEvent()` with `STRIPE_WEBHOOK_SECRET`
-   - Never trust webhook body without verifying the signature first
-
-5. **Never expose internal error messages to the client**
-   - Log full errors to Sentry server-side
-   - Return generic `{ error: 'Internal server error' }` to client
-
-6. **IDOR prevention: always verify resource ownership**
-   - Before any DB read/write: confirm `resource.userId === session.user.id`
-   - Do not rely solely on RLS — defense in depth
+1. `ANTHROPIC_API_KEY` is **NEVER** prefixed with `NEXT_PUBLIC_` — server-side only, always
+2. Every API route must follow this exact order with zero exceptions:
+   - Step 1: Auth check (`getServerSession`) → 401 if no session
+   - Step 2: Rate limit check (Upstash per-tier) → 429 if exceeded
+   - Step 3: Zod input validation → 400 if invalid
+   - Step 4: Business logic / DB operation
+   - Step 5: Audit log write
+   - Step 6: Return response
+3. Row-Level Security enabled on every Supabase table — no exceptions
+4. Stripe webhooks always verified with `stripe.webhooks.constructEvent()`
+5. Never return internal error details to the client — log to Sentry, return generic message
+6. IDOR prevention: always verify `resource.userId === session.user.id` before any data access
 
 ---
 
@@ -138,42 +117,33 @@ Core models: User, Analysis, Subscription, Team, AuditLog
 
 ---
 
-## API Route Pattern (copy this every time)
+## API Route Template (use this pattern on every route)
 ```typescript
-// app/api/[resource]/route.ts
 import { NextRequest } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { getRatelimiter } from '@/lib/ratelimit'
-import { resourceSchema } from '@/lib/schemas'
+import { yourSchema } from '@/lib/schemas'
 import { writeAuditLog } from '@/lib/audit'
 import { prisma } from '@/lib/prisma'
 
 export async function POST(req: NextRequest) {
-  // 1. Auth
   const session = await getServerSession(authOptions)
   if (!session?.user) return Response.json({ error: 'Unauthorized' }, { status: 401 })
 
-  // 2. Rate limit
   const limiter = getRatelimiter(session.user.tier)
-  const { success } = await limiter.limit(`resource:${session.user.id}`)
+  const { success } = await limiter.limit(`action:${session.user.id}`)
   if (!success) return Response.json({ error: 'Rate limit exceeded' }, { status: 429 })
 
-  // 3. Validate
-  const parsed = resourceSchema.safeParse(await req.json())
+  const parsed = yourSchema.safeParse(await req.json())
   if (!parsed.success) return Response.json({ error: parsed.error.flatten() }, { status: 400 })
 
   try {
-    // 4. Business logic
     const result = await prisma.resource.create({ ... })
-
-    // 5. Audit log
-    await writeAuditLog({ userId: session.user.id, action: 'RESOURCE_CREATED', metadata: {} })
-
+    await writeAuditLog({ userId: session.user.id, action: 'ACTION_NAME', metadata: {} })
     return Response.json(result)
   } catch (error) {
-    // Never expose internals — Sentry captures full error server-side
-    console.error('[resource] error:', error)
+    console.error('[route] error:', error)
     return Response.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
