@@ -1,11 +1,15 @@
 import type { NextRequest } from 'next/server'
+import { createHash } from 'crypto'
 import { Prisma } from '@prisma/client'
 import { auth } from '@/lib/auth'
 import { getRatelimiter, TIER_LIMITS } from '@/lib/ratelimit'
 import { analyzeSchema } from '@/lib/schemas'
 import { writeAuditLog } from '@/lib/audit'
 import { prisma } from '@/lib/prisma'
-import { getAnthropic, MODEL, ANALYSIS_SYSTEM_PROMPT } from '@/lib/ai'
+import { getAnthropic, MODEL } from '@/lib/ai'
+import { sanitizeInput, validateOutput, AISecurityError } from '@/lib/aiSecurity'
+import { checkTokenBudget, recordTokenUsage, estimateTokens } from '@/lib/tokenBudget'
+import { buildHardenedAnalysisPrompt } from '@/lib/promptHardening'
 
 export async function POST(req: NextRequest) {
   // Step 1: Auth
@@ -46,16 +50,71 @@ export async function POST(req: NextRequest) {
   const { offerText, analysisType } = parsed.data
   const userId = session.user.id
 
-  // Step 5: Stream Anthropic response
+  // Step 3.5: Token budget check (placed after Zod since it needs parsed offerText)
+  const estimated = estimateTokens(offerText)
+  const budget = await checkTokenBudget(userId, session.user.tier, estimated)
+  if (!budget.allowed) {
+    return Response.json(
+      {
+        error: 'daily_token_limit_reached',
+        resetAt: budget.resetAt,
+        message: 'Daily analysis budget reached. Resets at midnight UTC.',
+      },
+      { status: 429 }
+    )
+  }
+
+  // Step 4.5: Input security guard
+  let sanitizedOffer: string
+  try {
+    const { sanitized, threats } = sanitizeInput(offerText)
+    sanitizedOffer = sanitized
+    if (threats.length > 0) {
+      await writeAuditLog({
+        userId,
+        action: 'INPUT_THREAT_DETECTED',
+        metadata: { threats, inputLength: offerText.length },
+      })
+    }
+  } catch (error) {
+    if (error instanceof AISecurityError) {
+      await writeAuditLog({
+        userId,
+        action: 'SECURITY_EVENT',
+        metadata: {
+          threatType: error.threatType,
+          // Never log raw input — hash only
+          inputHash: createHash('sha256').update(offerText).digest('hex'),
+          inputLength: offerText.length,
+        },
+      })
+      return Response.json(
+        {
+          error: 'content_policy_violation',
+          message:
+            'Your input could not be processed. Please describe your offer or challenge directly.',
+        },
+        { status: 400 }
+      )
+    }
+    throw error
+  }
+
+  const hardenedSystemPrompt = buildHardenedAnalysisPrompt()
   const encoder = new TextEncoder()
+
   const stream = new ReadableStream({
     async start(controller) {
       try {
+        // Step 5: Hardened Anthropic call using sanitized input
         const anthropicStream = getAnthropic().messages.stream({
           model: MODEL,
           max_tokens: 4000,
-          system: ANALYSIS_SYSTEM_PROMPT,
-          messages: [{ role: 'user', content: `${analysisType.toUpperCase()}: ${offerText}` }],
+          system: hardenedSystemPrompt,
+          stop_sequences: ['IGNORE ALL', 'ignore all', 'New instructions:', 'SYSTEM OVERRIDE'],
+          messages: [
+            { role: 'user', content: `${analysisType.toUpperCase()}: ${sanitizedOffer}` },
+          ],
         })
 
         for await (const chunk of anthropicStream) {
@@ -69,15 +128,76 @@ export async function POST(req: NextRequest) {
           }
         }
 
-        // Step 7: Parse, save, and audit after stream completes
         const finalMessage = await anthropicStream.finalMessage()
-        const fullText = finalMessage.content
+
+        // Step 5.5: Record token usage — fire-and-forget, never throws
+        void recordTokenUsage(
+          userId,
+          finalMessage.usage.input_tokens,
+          finalMessage.usage.output_tokens
+        )
+
+        const rawText = finalMessage.content
           .map(b => (b.type === 'text' ? b.text : ''))
           .join('')
 
-        const result = JSON.parse(fullText) as Prisma.InputJsonValue
+        // Step 6: Output security guard
+        let analysisResult: Prisma.InputJsonValue
+        const { valid, sanitized: sanitizedOutput, violations } = validateOutput(rawText, 'analysis')
+
+        if (!valid) {
+          // One retry with a clarifying prompt
+          const retryStream = getAnthropic().messages.stream({
+            model: MODEL,
+            max_tokens: 4000,
+            system: hardenedSystemPrompt,
+            messages: [
+              { role: 'user', content: `${analysisType.toUpperCase()}: ${sanitizedOffer}` },
+              { role: 'assistant', content: rawText },
+              {
+                role: 'user',
+                content:
+                  'Please provide your response as valid JSON only, matching the exact schema specified. No other text.',
+              },
+            ],
+          })
+          const retryFinal = await retryStream.finalMessage()
+          const retryText = retryFinal.content
+            .map(b => (b.type === 'text' ? b.text : ''))
+            .join('')
+          const retryValidation = validateOutput(retryText, 'analysis')
+
+          if (!retryValidation.valid) {
+            await writeAuditLog({
+              userId,
+              action: 'OUTPUT_VALIDATION_FAILED',
+              metadata: { violations },
+            })
+            controller.enqueue(
+              encoder.encode(
+                `data: ${JSON.stringify({
+                  error: 'analysis_failed',
+                  message: 'Analysis could not be completed. Please try again.',
+                })}\n\n`
+              )
+            )
+            controller.close()
+            return
+          }
+          analysisResult = JSON.parse(retryValidation.sanitized) as Prisma.InputJsonValue
+        } else {
+          analysisResult = JSON.parse(sanitizedOutput) as Prisma.InputJsonValue
+        }
+
+        // Step 7: Save sanitized offer (PII already stripped) to DB
         const analysis = await prisma.analysis.create({
-          data: { userId, offerText, analysisType, result, shared: true },
+          data: {
+            userId,
+            offerText: sanitizedOffer,
+            analysisType,
+            result: analysisResult,
+            shared: true,
+          },
         })
 
         await prisma.user.update({
@@ -85,33 +205,53 @@ export async function POST(req: NextRequest) {
           data: { analysisCount: { increment: 1 } },
         })
 
+        // Step 8: Audit log
         await writeAuditLog({
           userId,
           action: 'ANALYSIS_CREATED',
           metadata: {
             analysisId: analysis.id,
             analysisType,
-            offerTextLength: offerText.length,
+            offerTextLength: sanitizedOffer.length,
           },
         })
 
         controller.enqueue(
           encoder.encode(
-            `data: ${JSON.stringify({ done: true, analysisId: analysis.id, shareToken: analysis.shareToken })}\n\n`
+            `data: ${JSON.stringify({
+              done: true,
+              analysisId: analysis.id,
+              shareToken: analysis.shareToken,
+            })}\n\n`
           )
         )
         controller.close()
       } catch (error) {
-        console.error('[analyze] stream error:', error)
-        controller.enqueue(
-          encoder.encode(`data: ${JSON.stringify({ error: 'Analysis failed' })}\n\n`)
-        )
+        if (error instanceof AISecurityError) {
+          await writeAuditLog({
+            userId,
+            action: 'SECURITY_EVENT',
+            metadata: { threatType: error.threatType },
+          }).catch(() => {})
+          controller.enqueue(
+            encoder.encode(
+              `data: ${JSON.stringify({
+                error: 'content_policy_violation',
+                message: 'Analysis could not be completed.',
+              })}\n\n`
+            )
+          )
+        } else {
+          console.error('[analyze] stream error:', error)
+          controller.enqueue(
+            encoder.encode(`data: ${JSON.stringify({ error: 'Analysis failed' })}\n\n`)
+          )
+        }
         controller.close()
       }
     },
   })
 
-  // Step 6: Return SSE stream
   return new Response(stream, {
     headers: {
       'Content-Type': 'text/event-stream',
