@@ -1,16 +1,23 @@
 'use client'
 
 import { useState } from 'react'
-import { X } from 'lucide-react'
+import Link from 'next/link'
+import { useSubscription } from '@/hooks/useSubscription'
 
-interface UpgradeModalProps {
-  onClose: () => void
-}
-
-export default function UpgradeModal({ onClose }: UpgradeModalProps) {
+// Inline upgrade banner — lives inside StreamingResult, never on the pricing page.
+// Only shown to FREE users who have exhausted their 3 free analyses.
+export default function UpgradeModal() {
+  const { isAtLimit, tier } = useSubscription()
   const [loading, setLoading] = useState(false)
 
-  async function handleUpgrade(priceId: string) {
+  if (tier !== 'FREE' || !isAtLimit) return null
+
+  async function handleUpgrade() {
+    const priceId = process.env.NEXT_PUBLIC_STRIPE_PRICE_PRO
+    if (!priceId) {
+      window.location.href = '/pricing'
+      return
+    }
     setLoading(true)
     try {
       const res = await fetch('/api/checkout', {
@@ -26,44 +33,33 @@ export default function UpgradeModal({ onClose }: UpgradeModalProps) {
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
-      <div className="bg-gray-900 border border-gray-700 rounded-2xl w-full max-w-md p-6 relative">
+    <div className="border-l-4 border-orange-500 bg-orange-950/30 rounded-r-xl p-5">
+      <p className="text-xs font-semibold text-orange-400 uppercase tracking-wider mb-1">
+        Analysis limit reached
+      </p>
+      <h3 className="text-lg font-bold text-white mb-1">Unlock unlimited strategies</h3>
+      <p className="text-sm text-gray-400 mb-4">
+        You&apos;ve used all 3 free analyses. Pro members run unlimited analyses and save every
+        strategy.
+      </p>
+
+      <div className="flex flex-col sm:flex-row gap-3">
         <button
-          onClick={onClose}
-          className="absolute top-4 right-4 text-gray-500 hover:text-gray-300 transition-colors"
+          onClick={handleUpgrade}
+          disabled={loading}
+          className="flex-1 bg-orange-600 hover:bg-orange-700 disabled:opacity-60 disabled:cursor-not-allowed text-white font-semibold text-sm py-2.5 px-5 rounded-xl transition-colors"
         >
-          <X className="w-5 h-5" />
+          {loading ? 'Redirecting...' : 'Upgrade to Pro — $149/mo →'}
         </button>
-
-        <div className="text-center mb-6">
-          <p className="text-xs font-semibold text-blue-400 uppercase tracking-wider mb-2">
-            You&apos;ve used your 3 free analyses
-          </p>
-          <h2 className="text-xl font-bold text-white">Unlock unlimited strategies</h2>
-          <p className="text-gray-400 text-sm mt-2">
-            Get unlimited analyses, AI coaching, and playbook export — starting at $49/mo.
-          </p>
-        </div>
-
-        <div className="space-y-3">
-          <button
-            onClick={() => handleUpgrade(process.env.NEXT_PUBLIC_STRIPE_SOLO_PRICE_ID ?? '')}
-            disabled={loading}
-            className="w-full bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white font-semibold py-3 px-4 rounded-xl transition-colors text-sm"
-          >
-            Solo — $49/mo · 50 analyses/day
-          </button>
-          <button
-            onClick={() => handleUpgrade(process.env.NEXT_PUBLIC_STRIPE_PRO_PRICE_ID ?? '')}
-            disabled={loading}
-            className="w-full bg-gray-800 hover:bg-gray-700 disabled:opacity-50 text-white font-semibold py-3 px-4 rounded-xl transition-colors text-sm border border-gray-700"
-          >
-            Pro — $149/mo · Unlimited + API access
-          </button>
-        </div>
-
-        <p className="text-center text-xs text-gray-600 mt-4">Cancel anytime. 7-day money-back guarantee.</p>
+        <Link
+          href="/pricing"
+          className="text-center text-sm text-gray-400 hover:text-white py-2.5 px-5 rounded-xl border border-gray-700 hover:border-gray-600 transition-colors"
+        >
+          See all plans →
+        </Link>
       </div>
+
+      <p className="text-xs text-gray-600 mt-3">Cancel anytime · 7-day money-back guarantee</p>
     </div>
   )
 }

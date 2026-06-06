@@ -5,6 +5,17 @@ import FrameworkCard from '@/components/analysis/FrameworkCard'
 import Link from 'next/link'
 import type { Metadata } from 'next'
 
+const EXPERT_COLORS: Record<string, string> = {
+  Hormozi: '#4F46E5',
+  GaryVee: '#9333EA',
+  Cardone: '#DC2626',
+  Belfort: '#D97706',
+  Kennedy: '#0891B2',
+  Brunson: '#059669',
+  Godin:   '#DB2777',
+  Robbins: '#EA580C',
+}
+
 interface Props {
   params: Promise<{ shareToken: string }>
 }
@@ -116,8 +127,16 @@ export default async function SharePage({ params }: Props) {
             Expert Framework Breakdown
           </h3>
           <div className="space-y-2">
-            {frameworks.map((framework, i) => (
-              <FrameworkCard key={framework.name} framework={framework} index={i} />
+            {frameworks.map((framework) => (
+              <FrameworkCard
+                key={framework.name}
+                name={framework.name}
+                focus={framework.focus}
+                insight={framework.insight}
+                improvements={framework.improvements}
+                metric={framework.metric}
+                color={EXPERT_COLORS[framework.name] ?? '#6B7280'}
+              />
             ))}
           </div>
         </div>
