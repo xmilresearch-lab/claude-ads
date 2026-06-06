@@ -1,13 +1,14 @@
 /**
  * POST /api/email/send
  * QStash callback endpoint — sends one email in the sequence.
- * Verified via QStash signature at request time + internal secret header.
+ * Verified via QStash signature + internal secret header.
  */
 
 import { NextRequest } from 'next/server'
 import { z } from 'zod'
 import { prisma } from '@/lib/prisma'
 import { sendSequenceEmail, type EmailStep } from '@/lib/email'
+import { writeAuditLog } from '@/lib/audit'
 
 const schema = z.object({
   userId: z.string().min(1),
@@ -17,11 +18,9 @@ const schema = z.object({
 })
 
 export async function POST(req: NextRequest): Promise<Response> {
-  // Step 1: Verify QStash signature lazily (reads env vars at request time)
   const { verifySignatureAppRouter } = await import('@upstash/qstash/nextjs')
 
   const verifiedHandler = verifySignatureAppRouter(async (inner: NextRequest) => {
-    // Belt-and-suspenders: internal secret
     const secret = inner.headers.get('x-internal-secret')
     if (secret !== process.env.INTERNAL_API_SECRET) {
       return Response.json({ error: 'Forbidden' }, { status: 403 })
@@ -35,22 +34,30 @@ export async function POST(req: NextRequest): Promise<Response> {
 
     const { userId, email, name, step } = parsed.data
 
-    // For step 5 (upgrade nudge), fetch live analysisCount
-    let analysisCount = 0
-    if (step === 5) {
-      const user = await prisma.user.findUnique({
-        where: { id: userId },
-        select: { analysisCount: true },
-      })
-      analysisCount = user?.analysisCount ?? 0
+    // Fetch user for marketingOptOut check, analysisCount, and unsubscribeToken
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { marketingOptOut: true, analysisCount: true, unsubscribeToken: true },
+    })
+
+    // Respect opt-out for all email steps
+    if (!user || user.marketingOptOut) {
+      return Response.json({ ok: true, skipped: true })
     }
 
     await sendSequenceEmail({
       userId,
       email,
       ...(name !== undefined ? { name } : {}),
-      analysisCount,
+      analysisCount: user.analysisCount,
       step: step as EmailStep,
+      unsubscribeToken: user.unsubscribeToken,
+    })
+
+    await writeAuditLog({
+      userId,
+      action: 'EMAIL_SEQUENCE_SENT',
+      metadata: { step, email },
     })
 
     return Response.json({ ok: true })
