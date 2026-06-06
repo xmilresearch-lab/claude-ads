@@ -52,6 +52,27 @@ export async function POST(req: NextRequest) {
 
   const { message, conversationHistory } = parsed.data
 
+  // Technique 5: scan conversation history for multi-turn injection attacks
+  const safeHistory = [] as typeof conversationHistory
+  let historyPoisonCount = 0
+  for (const item of conversationHistory) {
+    try {
+      const { sanitized } = sanitizeInput(item.content)
+      safeHistory.push({ role: item.role, content: sanitized })
+    } catch {
+      historyPoisonCount++
+    }
+  }
+  if (historyPoisonCount > 0) {
+    void recordSecurityViolation(userId)
+    await writeAuditLog({
+      userId,
+      action: 'SECURITY_EVENT',
+      metadata: { threatType: 'POISONED_HISTORY_DETECTED', removedItems: historyPoisonCount },
+      ipAddress,
+    })
+  }
+
   // Step 3.5: Input security guard
   let sanitizedMessage: string
   try {
@@ -114,7 +135,7 @@ export async function POST(req: NextRequest) {
             max_tokens: 512,
             system: hardenedSystemPrompt,
             messages: [
-              ...conversationHistory,
+              ...safeHistory,
               { role: 'user', content: sanitizedMessage },
             ],
           })

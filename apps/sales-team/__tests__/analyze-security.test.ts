@@ -34,6 +34,7 @@ vi.mock('@/lib/ai', () => ({
   getAnthropic: vi.fn(),
   MODEL: 'test-model',
   ANALYSIS_SYSTEM_PROMPT: 'test system prompt',
+  CANARY: 'mock-canary-not-in-any-response',
 }))
 
 vi.mock('@/lib/tokenBudget', () => ({

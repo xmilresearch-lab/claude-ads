@@ -39,6 +39,7 @@ vi.mock('@/lib/ai', () => ({
   getAnthropic: vi.fn(),
   MODEL: 'claude-sonnet-4-20250514',
   ANALYSIS_SYSTEM_PROMPT: 'test system prompt',
+  CANARY: 'mock-canary-not-in-any-response',
 }))
 
 vi.mock('@/lib/anomalyDetection', () => ({

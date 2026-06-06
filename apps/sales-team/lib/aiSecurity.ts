@@ -1,6 +1,6 @@
 // SERVER-ONLY — never import from client components
 import { analysisResultSchema } from '@/lib/schemas'
-import { ANALYSIS_SYSTEM_PROMPT } from '@/lib/ai'
+import { ANALYSIS_SYSTEM_PROMPT, CANARY } from '@/lib/ai'
 
 // ── Enums ────────────────────────────────────────────────────────────────────
 
@@ -247,8 +247,12 @@ export function validateOutput(
   const violations: OutputViolation[] = []
   let sanitized = rawOutput
 
-  // SYSTEM_PROMPT_LEAKED — strip and flag
-  if (detectSystemPromptLeak(rawOutput)) {
+  // SYSTEM_PROMPT_LEAKED — canary check first (O(1)), then sliding-window (O(n))
+  if (CANARY && rawOutput.includes(CANARY)) {
+    console.error('[aiSecurity] SECURITY_EVENT: canary token detected in output — system prompt leaked')
+    violations.push(OutputViolation.SYSTEM_PROMPT_LEAKED)
+    sanitized = sanitized.replaceAll(CANARY, '[REDACTED]')
+  } else if (detectSystemPromptLeak(rawOutput)) {
     console.error('[aiSecurity] SECURITY_EVENT: system prompt content detected in output')
     violations.push(OutputViolation.SYSTEM_PROMPT_LEAKED)
     sanitized = stripSystemPromptLeaks(rawOutput)
