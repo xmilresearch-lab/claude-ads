@@ -12,7 +12,9 @@
     "audit:prompts": "npx tsx lib/systemPromptAudit.ts",
     "audit:ai-security": "npx tsx scripts/aiSecurityAudit.ts",
     "scan:setup": "bash security/scanner/setup.sh",
-    "scan:static": "security/scanner/venv/bin/python security/scanner/static/run_static.py"
+    "scan:static": "security/scanner/venv/bin/python security/scanner/static/run_static.py",
+    "scan:adversarial": "vitest run security/scanner/adversarial/",
+    "scan:adversarial:watch": "vitest security/scanner/adversarial/"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.100.1",

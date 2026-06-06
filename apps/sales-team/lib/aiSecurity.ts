@@ -42,8 +42,8 @@ export class AISecurityError extends Error {
 // ── Input detection patterns ─────────────────────────────────────────────────
 
 const INJECTION_PATTERNS: RegExp[] = [
-  /ignore\s+(all\s+)?(previous|above|prior)\s+(instructions|prompts|commands)/i,
-  /disregard\s+(your\s+|all\s+)?(previous|prior)\s+(instructions|training)/i,
+  /ignore\s+(all\s+)?(previous|above|prior)\s+(instructions?|prompts?|commands?|context|content)/i,
+  /disregard\s+(your\s+|all\s+)?(previous|prior)\s+(instructions?|training|context)/i,
   /forget\s+(everything|all\s+instructions|your\s+instructions)/i,
   /new\s+instructions\s*:/i,
   /revised\s+instructions\s*:/i,
@@ -54,25 +54,46 @@ const INJECTION_PATTERNS: RegExp[] = [
   /\[SYSTEM\]/i,
   /<system>/i,
   /<<SYS>>/i,
+  /<\|im_start\|>/,
+  /actual\s+instructions\s+(were|are)/i,
 ]
 
 const PROBE_PATTERNS: RegExp[] = [
-  /what\s+(is|are)\s+(your|the)\s+(system\s+|original\s+)?(prompt|instructions|training)/i,
+  /what\s+(is|are)\s+(your|the)\s+(system\s+|original\s+|exact\s+)?(prompt|instructions?|training|configuration)/i,
   /repeat\s+(your\s+|the\s+)?(system\s+|original\s+)?prompt/i,
-  /show\s+me\s+(your|the)\s+(instructions|prompt|configuration)/i,
+  /show\s+me\s+(your|the)\s+(instructions?|prompt|configuration)/i,
   /what\s+were\s+you\s+told/i,
   /what\s+is\s+your\s+purpose/i,
   /reveal\s+(your\s+|the\s+)?(system\s+|original\s+)?prompt/i,
+  /print\s+(your\s+|the\s+)?(configuration|prompt|instructions?|system\s+prompt)/i,
+  /display\s+(your\s+|the\s+)?(system\s+)?(prompt|instructions?|configuration)/i,
+  /(what\s+text|what\s+prompt)\s+(was\s+)?used\s+to\s+initialize/i,
+  /output\s+everything\s+(before|prior)/i,
+  /translate\s+your\s+(instructions?|prompt)/i,
+  /summarize\s+(the\s+)?(prompt|instructions?)\s+you\s+were/i,
+  // Data exfiltration probes
+  /list\s+all\s+(users?|user\s+emails?|emails?|admin)\b/i,
+  /show\s+(me\s+)?the\s+database/i,
+  /what\s+api\s+keys?\s+(are|is)\s+(configured|set|available)/i,
+  /export\s+(all\s+)?(analysis|user|customer|database)\s+(records?|data)/i,
+  /what\s+is\s+the\s+\w+\s+(webhook\s+)?secret/i,
+  /show\s+(me\s+)?all\s+(rows?|records?)\s+in\s+(the\s+)?\w+\s+table/i,
+  /what\s+environment\s+variables?\s+(are|is)/i,
+  /what\s+is\s+the\s+(current\s+)?value\s+of\s+/i,
+  /show\s+(me\s+)?all\s+(analyses?|records?|data)\s+from\s+(other|all)\s+users?/i,
 ]
 
 const ROLE_PATTERNS: RegExp[] = [
   /pretend\s+(you\s+are|to\s+be)/i,
-  /act\s+as\s+(a|an)\s+/i,
+  /act\s+as\s+(a|an|my|the)\s+/i,
   /you\s+are\s+now\s+/i,
+  /you\s+are\s+no\s+longer\s+/i,
+  /you\s+are\s+(a|an)\s+\w+\s+(ai|assistant|bot|model)\b/i,
   /roleplay\s+as/i,
   /simulate\s+being/i,
-  /from\s+now\s+on\s+you\s+(are|will\s+be|must)/i,
+  /from\s+now\s+on\s+you\s+(are|will|must)/i,
   /your\s+new\s+(role|identity|persona|name)\s+is/i,
+  /all\s+questions\s+are\s+valid/i,
 ]
 
 const JAILBREAK_PATTERNS: RegExp[] = [
@@ -84,8 +105,15 @@ const JAILBREAK_PATTERNS: RegExp[] = [
   /no\s+restrictions/i,
   /without\s+restrictions/i,
   /ignore\s+your\s+(safety|content)\s+(guidelines|policy|filter)/i,
+  /ignore\s+your\s+training\b/i,
   /do\s+anything\s+now/i,
   /evil\s+(mode|version)/i,
+  /no\s+(ethical|content)\s+guidelines/i,
+  /no\s+safety\s+(training|filters?|constraints?)/i,
+  /override\s+(all\s+)?(safety|content)\s+protocols?/i,
+  /sudo\s+mode/i,
+  /play\s+a\s+character\s+who/i,
+  /in\s+this\s+hypothetical\s+(scenario|situation)/i,
 ]
 
 const COMPETITOR_PATTERNS: RegExp[] = [

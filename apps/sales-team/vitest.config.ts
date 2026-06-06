@@ -8,6 +8,7 @@ export default defineConfig({
     environment: 'node',
     globals: true,
     setupFiles: [],
+    include: ['__tests__/**/*.test.ts', 'security/scanner/adversarial/**/*.test.ts'],
   },
   resolve: {
     alias: {
