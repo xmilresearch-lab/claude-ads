@@ -41,6 +41,22 @@ vi.mock('@/lib/ai', () => ({
   ANALYSIS_SYSTEM_PROMPT: 'test system prompt',
 }))
 
+vi.mock('@/lib/anomalyDetection', () => ({
+  isUserBlocked:          vi.fn().mockResolvedValue(false),
+  checkAnomalySignals:    vi.fn().mockResolvedValue({ flagged: false, signals: [] }),
+  recordSecurityViolation: vi.fn().mockResolvedValue(undefined),
+}))
+
+vi.mock('@/lib/tokenBudget', () => ({
+  checkTokenBudget: vi.fn().mockResolvedValue({ allowed: true, remaining: 999_000, resetAt: new Date() }),
+  recordTokenUsage: vi.fn().mockResolvedValue(undefined),
+  estimateTokens:   vi.fn().mockReturnValue(100),
+}))
+
+vi.mock('@/lib/promptHardening', () => ({
+  buildHardenedAnalysisPrompt: vi.fn().mockReturnValue('hardened prompt'),
+}))
+
 import { POST } from '@/app/api/analyze/route'
 import { auth } from '@/lib/auth'
 import { getRatelimiter } from '@/lib/ratelimit'

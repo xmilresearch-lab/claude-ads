@@ -46,6 +46,12 @@ vi.mock('@/lib/promptHardening', () => ({
   buildHardenedAnalysisPrompt: vi.fn().mockReturnValue('hardened prompt'),
 }))
 
+vi.mock('@/lib/anomalyDetection', () => ({
+  isUserBlocked:           vi.fn().mockResolvedValue(false),
+  checkAnomalySignals:     vi.fn().mockResolvedValue({ flagged: false, signals: [] }),
+  recordSecurityViolation: vi.fn().mockResolvedValue(undefined),
+}))
+
 // ─── Imports after mocks ───────────────────────────────────────────────────────
 
 import { POST } from '@/app/api/analyze/route'

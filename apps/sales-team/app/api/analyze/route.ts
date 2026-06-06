@@ -10,6 +10,7 @@ import { getAnthropic, MODEL } from '@/lib/ai'
 import { sanitizeInput, validateOutput, AISecurityError } from '@/lib/aiSecurity'
 import { checkTokenBudget, recordTokenUsage, estimateTokens } from '@/lib/tokenBudget'
 import { buildHardenedAnalysisPrompt } from '@/lib/promptHardening'
+import { checkAnomalySignals, isUserBlocked, recordSecurityViolation } from '@/lib/anomalyDetection'
 
 export async function POST(req: NextRequest) {
   // Step 1: Auth
@@ -18,7 +19,26 @@ export async function POST(req: NextRequest) {
     return Response.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  // Step 2: FREE tier hard cap — checked before rate limiter to give clearer UX
+  const userId = session.user.id
+  const ipAddress = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? 'unknown'
+
+  // Step 1.5: Anomaly detection
+  const blocked = await isUserBlocked(userId)
+  if (blocked) {
+    return Response.json(
+      {
+        error: 'temporarily_limited',
+        message: 'Your account has been temporarily limited due to unusual activity. Please try again in 15 minutes.',
+      },
+      { status: 429 }
+    )
+  }
+  const { flagged } = await checkAnomalySignals(userId, ipAddress)
+  if (flagged) {
+    await new Promise(resolve => setTimeout(resolve, 2000))
+  }
+
+  // Step 2: FREE tier hard cap
   if (
     session.user.tier === 'FREE' &&
     session.user.analysisCount >= TIER_LIMITS.FREE.analysesPerDay
@@ -35,7 +55,7 @@ export async function POST(req: NextRequest) {
 
   // Step 3: Rate limit (sliding window per tier)
   const limiter = getRatelimiter(session.user.tier)
-  const { success } = await limiter.limit(`analyze:${session.user.id}`)
+  const { success } = await limiter.limit(`analyze:${userId}`)
   if (!success) {
     return Response.json({ error: 'Rate limit exceeded' }, { status: 429 })
   }
@@ -48,9 +68,8 @@ export async function POST(req: NextRequest) {
   }
 
   const { offerText, analysisType } = parsed.data
-  const userId = session.user.id
 
-  // Step 3.5: Token budget check (placed after Zod since it needs parsed offerText)
+  // Step 3.5: Token budget check (after Zod — needs parsed offerText)
   const estimated = estimateTokens(offerText)
   const budget = await checkTokenBudget(userId, session.user.tier, estimated)
   if (!budget.allowed) {
@@ -74,19 +93,21 @@ export async function POST(req: NextRequest) {
         userId,
         action: 'INPUT_THREAT_DETECTED',
         metadata: { threats, inputLength: offerText.length },
+        ipAddress,
       })
     }
   } catch (error) {
     if (error instanceof AISecurityError) {
+      void recordSecurityViolation(userId)
       await writeAuditLog({
         userId,
         action: 'SECURITY_EVENT',
         metadata: {
           threatType: error.threatType,
-          // Never log raw input — hash only
           inputHash: createHash('sha256').update(offerText).digest('hex'),
           inputLength: offerText.length,
         },
+        ipAddress,
       })
       return Response.json(
         {
@@ -130,7 +151,7 @@ export async function POST(req: NextRequest) {
 
         const finalMessage = await anthropicStream.finalMessage()
 
-        // Step 5.5: Record token usage — fire-and-forget, never throws
+        // Step 5.5: Record token usage — fire-and-forget
         void recordTokenUsage(
           userId,
           finalMessage.usage.input_tokens,
@@ -172,6 +193,7 @@ export async function POST(req: NextRequest) {
               userId,
               action: 'OUTPUT_VALIDATION_FAILED',
               metadata: { violations },
+              ipAddress,
             })
             controller.enqueue(
               encoder.encode(
@@ -189,7 +211,7 @@ export async function POST(req: NextRequest) {
           analysisResult = JSON.parse(sanitizedOutput) as Prisma.InputJsonValue
         }
 
-        // Step 7: Save sanitized offer (PII already stripped) to DB
+        // Step 7: Save sanitized offer (PII stripped) to DB
         const analysis = await prisma.analysis.create({
           data: {
             userId,
@@ -214,6 +236,7 @@ export async function POST(req: NextRequest) {
             analysisType,
             offerTextLength: sanitizedOffer.length,
           },
+          ipAddress,
         })
 
         controller.enqueue(
@@ -228,10 +251,12 @@ export async function POST(req: NextRequest) {
         controller.close()
       } catch (error) {
         if (error instanceof AISecurityError) {
+          void recordSecurityViolation(userId)
           await writeAuditLog({
             userId,
             action: 'SECURITY_EVENT',
             metadata: { threatType: error.threatType },
+            ipAddress,
           }).catch(() => {})
           controller.enqueue(
             encoder.encode(

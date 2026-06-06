@@ -8,6 +8,7 @@ import { prisma } from '@/lib/prisma'
 import { getAnthropic, MODEL } from '@/lib/ai'
 import { sanitizeInput, validateOutput, AISecurityError } from '@/lib/aiSecurity'
 import { buildHardenedAssistantPrompt } from '@/lib/promptHardening'
+import { checkAnomalySignals, isUserBlocked, recordSecurityViolation } from '@/lib/anomalyDetection'
 
 export async function POST(req: NextRequest) {
   // Step 1: Auth
@@ -16,9 +17,28 @@ export async function POST(req: NextRequest) {
     return Response.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
+  const userId = session.user.id
+  const ipAddress = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? 'unknown'
+
+  // Step 1.5: Anomaly detection
+  const blocked = await isUserBlocked(userId)
+  if (blocked) {
+    return Response.json(
+      {
+        error: 'temporarily_limited',
+        message: 'Your account has been temporarily limited due to unusual activity. Please try again in 15 minutes.',
+      },
+      { status: 429 }
+    )
+  }
+  const { flagged } = await checkAnomalySignals(userId, ipAddress)
+  if (flagged) {
+    await new Promise(resolve => setTimeout(resolve, 2000))
+  }
+
   // Step 2: Rate limit
   const limiter = getRatelimiter(session.user.tier)
-  const { success } = await limiter.limit(`assistant:${session.user.id}`)
+  const { success } = await limiter.limit(`assistant:${userId}`)
   if (!success) {
     return Response.json({ error: 'Rate limit exceeded' }, { status: 429 })
   }
@@ -31,7 +51,6 @@ export async function POST(req: NextRequest) {
   }
 
   const { message, conversationHistory } = parsed.data
-  const userId = session.user.id
 
   // Step 3.5: Input security guard
   let sanitizedMessage: string
@@ -43,10 +62,12 @@ export async function POST(req: NextRequest) {
         userId,
         action: 'INPUT_THREAT_DETECTED',
         metadata: { threats, inputLength: message.length },
+        ipAddress,
       })
     }
   } catch (error) {
     if (error instanceof AISecurityError) {
+      void recordSecurityViolation(userId)
       await writeAuditLog({
         userId,
         action: 'SECURITY_EVENT',
@@ -55,6 +76,7 @@ export async function POST(req: NextRequest) {
           inputHash: createHash('sha256').update(message).digest('hex'),
           inputLength: message.length,
         },
+        ipAddress,
       })
       return Response.json(
         {
@@ -120,18 +142,21 @@ export async function POST(req: NextRequest) {
               userId,
               action: 'OUTPUT_THREAT_DETECTED',
               metadata: { violations },
+              ipAddress,
             }).catch(() => {})
           }
 
-          await writeAuditLog({ userId, action: 'ASSISTANT_QUERY', metadata: {} })
+          await writeAuditLog({ userId, action: 'ASSISTANT_QUERY', metadata: {}, ipAddress })
           controller.enqueue(encoder.encode(`data: ${JSON.stringify({ done: true })}\n\n`))
           controller.close()
         } catch (error) {
           if (error instanceof AISecurityError) {
+            void recordSecurityViolation(userId)
             await writeAuditLog({
               userId,
               action: 'SECURITY_EVENT',
               metadata: { threatType: error.threatType },
+              ipAddress,
             }).catch(() => {})
             controller.enqueue(
               encoder.encode(

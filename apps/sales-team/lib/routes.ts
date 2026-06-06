@@ -25,6 +25,8 @@ export function isProtectedRoute(pathname: string): boolean {
     pathname.startsWith('/api/billing') ||
     pathname.startsWith('/api/referral') ||
     pathname.startsWith('/api/analyses') ||
-    pathname.startsWith('/api/export')
+    pathname.startsWith('/api/export') ||
+    pathname.startsWith('/api/security') ||
+    pathname.startsWith('/admin')
   )
 }
