@@ -1,7 +1,8 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { signIn } from 'next-auth/react'
+import Script from 'next/script'
 
 const ERROR_MESSAGES: Record<string, string> = {
   OAuthAccountNotLinked: 'This email is linked to a different sign-in method. Use the same method you signed up with.',
@@ -9,6 +10,17 @@ const ERROR_MESSAGES: Record<string, string> = {
   CredentialsSignin: 'Invalid credentials.',
   SessionRequired: 'Sign in to access this page.',
   Default: 'Something went wrong. Please try again.',
+}
+
+const SITE_KEY = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY ?? ''
+
+declare global {
+  interface Window {
+    turnstile?: {
+      render: (container: string | HTMLElement, options: Record<string, unknown>) => string
+      reset: (widgetId: string) => void
+    }
+  }
 }
 
 function GoogleIcon() {
@@ -33,13 +45,64 @@ export default function AuthForm({ mode, error, callbackUrl }: Props) {
   const [loading, setLoading] = useState(false)
   const [googleLoading, setGoogleLoading] = useState(false)
   const [sent, setSent] = useState(false)
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null)
+  const [turnstileError, setTurnstileError] = useState<string | null>(null)
+  const widgetIdRef = useRef<string | null>(null)
+  const containerRef = useRef<HTMLDivElement | null>(null)
 
   const redirect = callbackUrl ?? '/dashboard/analyze'
-  const errorMessage = error !== null ? (ERROR_MESSAGES[error] ?? ERROR_MESSAGES['Default']) : null
+  const errorMessage = error !== null ? (ERROR_MESSAGES[error] ?? ERROR_MESSAGES['Default']!) : null
+  const hasTurnstile = SITE_KEY !== ''
+
+  useEffect(() => {
+    if (!hasTurnstile || !containerRef.current || !window.turnstile) return
+    if (widgetIdRef.current) return
+
+    widgetIdRef.current = window.turnstile.render(containerRef.current, {
+      sitekey: SITE_KEY,
+      callback: (token: string) => setTurnstileToken(token),
+      'expired-callback': () => setTurnstileToken(null),
+      'error-callback': () => setTurnstileToken(null),
+      theme: 'dark',
+      size: 'flexible',
+    })
+  }, [hasTurnstile])
+
+  async function verifyTurnstile(token: string): Promise<boolean> {
+    const res = await fetch('/api/auth/verify-turnstile', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ token }),
+    })
+    const data = (await res.json()) as { success: boolean }
+    return data.success
+  }
 
   async function handleMagicLink(e: React.FormEvent) {
     e.preventDefault()
+    setTurnstileError(null)
+
+    if (hasTurnstile && !turnstileToken) {
+      setTurnstileError('Please complete the security challenge.')
+      return
+    }
+
     setLoading(true)
+
+    if (hasTurnstile && turnstileToken) {
+      const ok = await verifyTurnstile(turnstileToken)
+      if (!ok) {
+        setTurnstileError('Security check failed. Please try again.')
+        // Reset the widget
+        if (widgetIdRef.current && window.turnstile) {
+          window.turnstile.reset(widgetIdRef.current)
+        }
+        setTurnstileToken(null)
+        setLoading(false)
+        return
+      }
+    }
+
     await signIn('resend', { email, redirect: false })
     setSent(true)
     setLoading(false)
@@ -76,6 +139,24 @@ export default function AuthForm({ mode, error, callbackUrl }: Props) {
 
   return (
     <>
+      {hasTurnstile && (
+        <Script
+          src="https://challenges.cloudflare.com/turnstile/v0/api.js"
+          strategy="lazyOnload"
+          onLoad={() => {
+            if (!containerRef.current || !window.turnstile || widgetIdRef.current) return
+            widgetIdRef.current = window.turnstile.render(containerRef.current, {
+              sitekey: SITE_KEY,
+              callback: (token: string) => setTurnstileToken(token),
+              'expired-callback': () => setTurnstileToken(null),
+              'error-callback': () => setTurnstileToken(null),
+              theme: 'dark',
+              size: 'flexible',
+            })
+          }}
+        />
+      )}
+
       {/* Error banner */}
       {errorMessage && (
         <div className="mb-5 px-4 py-3 bg-red-950/60 border border-red-800 rounded-lg text-red-300 text-sm">
@@ -114,12 +195,22 @@ export default function AuthForm({ mode, error, callbackUrl }: Props) {
           autoComplete="email"
           className="w-full px-4 py-3 bg-gray-900 border border-gray-700 rounded-lg text-white placeholder-gray-600 text-sm focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500/30 transition-colors"
         />
+
+        {/* Turnstile widget */}
+        {hasTurnstile && (
+          <div ref={containerRef} className="mt-2" />
+        )}
+
+        {turnstileError && (
+          <p className="text-red-400 text-xs">{turnstileError}</p>
+        )}
+
         <button
           type="submit"
-          disabled={loading || googleLoading}
+          disabled={loading || googleLoading || (hasTurnstile && !turnstileToken)}
           className="w-full py-3 bg-orange-600 hover:bg-orange-500 disabled:opacity-60 text-white font-semibold rounded-lg transition-colors text-sm"
         >
-          {loading ? 'Sending…' : 'Send Magic Link'}
+          {loading ? 'Sending…' : mode === 'signup' ? 'Send Magic Link' : 'Send Sign-in Link'}
         </button>
       </form>
     </>

@@ -2,6 +2,8 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { readFileSync, readdirSync, statSync } from 'fs'
 import { join, resolve } from 'path'
 import { NextRequest } from 'next/server'
+import type { Session } from 'next-auth'
+import type { Ratelimit } from '@upstash/ratelimit'
 
 // ─── Module mocks ─────────────────────────────────────────────────────────────
 
@@ -43,7 +45,10 @@ import { POST } from '@/app/api/analyze/route'
 import { auth } from '@/lib/auth'
 import { getRatelimiter } from '@/lib/ratelimit'
 
-const mockAuth = vi.mocked(auth)
+// auth has multiple overloads in NextAuth v5 (middleware + server component).
+// Cast to the server-component overload so mockResolvedValue accepts Session | null.
+type ServerAuth = () => Promise<Session | null>
+const mockAuth = vi.mocked(auth as unknown as ServerAuth)
 const mockGetRatelimiter = vi.mocked(getRatelimiter)
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -78,7 +83,7 @@ describe('POST /api/analyze', () => {
     // Default: rate limit passes
     mockGetRatelimiter.mockReturnValue({
       limit: vi.fn().mockResolvedValue({ success: true }),
-    } as ReturnType<typeof getRatelimiter>)
+    } as unknown as Ratelimit)
   })
 
   it('returns 401 when no session', async () => {
@@ -92,7 +97,7 @@ describe('POST /api/analyze', () => {
   })
 
   it('returns 402 when FREE user analysisCount >= 3', async () => {
-    mockAuth.mockResolvedValue(sessionWith({ tier: 'FREE', analysisCount: 3 }))
+    mockAuth.mockResolvedValue(sessionWith({ tier: 'FREE', analysisCount: 3 }) as Session)
 
     const res = await POST(makeRequest({ offerText: 'valid offer text here', analysisType: 'offer' }))
 
@@ -104,10 +109,10 @@ describe('POST /api/analyze', () => {
   })
 
   it('returns 429 when rate limit exceeded', async () => {
-    mockAuth.mockResolvedValue(sessionWith({ tier: 'FREE', analysisCount: 0 }))
+    mockAuth.mockResolvedValue(sessionWith({ tier: 'FREE', analysisCount: 0 }) as Session)
     mockGetRatelimiter.mockReturnValue({
       limit: vi.fn().mockResolvedValue({ success: false }),
-    } as ReturnType<typeof getRatelimiter>)
+    } as unknown as Ratelimit)
 
     const res = await POST(makeRequest({ offerText: 'valid offer text here', analysisType: 'offer' }))
 
@@ -117,7 +122,7 @@ describe('POST /api/analyze', () => {
   })
 
   it('returns 400 when offerText is empty', async () => {
-    mockAuth.mockResolvedValue(sessionWith())
+    mockAuth.mockResolvedValue(sessionWith() as Session)
 
     const res = await POST(makeRequest({ offerText: '', analysisType: 'offer' }))
 
@@ -125,7 +130,7 @@ describe('POST /api/analyze', () => {
   })
 
   it('returns 400 when offerText exceeds 5000 characters', async () => {
-    mockAuth.mockResolvedValue(sessionWith())
+    mockAuth.mockResolvedValue(sessionWith() as Session)
 
     const res = await POST(makeRequest({ offerText: 'x'.repeat(5001), analysisType: 'offer' }))
 
@@ -133,7 +138,7 @@ describe('POST /api/analyze', () => {
   })
 
   it('returns 400 when analysisType is not a valid enum value', async () => {
-    mockAuth.mockResolvedValue(sessionWith())
+    mockAuth.mockResolvedValue(sessionWith() as Session)
 
     const res = await POST(makeRequest({ offerText: 'valid offer text here', analysisType: 'invalid' }))
 
