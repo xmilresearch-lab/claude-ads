@@ -2,18 +2,19 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { Copy, Check, ExternalLink } from 'lucide-react'
+import { Copy, Check, ExternalLink, Globe, Lock } from 'lucide-react'
 
 export interface HistoryItem {
   id: string
   offerText: string
   analysisType: string
   shareToken: string
+  shared: boolean
   createdAt: string
   executiveSummary: string
 }
 
-function CopyButton({ shareToken }: { shareToken: string }) {
+function CopyButton({ shareToken, disabled }: { shareToken: string; disabled: boolean }) {
   const [copied, setCopied] = useState(false)
 
   async function handleCopy() {
@@ -35,7 +36,9 @@ function CopyButton({ shareToken }: { shareToken: string }) {
   return (
     <button
       onClick={handleCopy}
-      className="flex items-center gap-1.5 text-xs text-gray-500 hover:text-white transition-colors px-2.5 py-2.5 rounded-lg hover:bg-gray-800 min-h-[44px]"
+      disabled={disabled}
+      title={disabled ? 'Make public to share' : 'Copy share link'}
+      className="flex items-center gap-1.5 text-xs text-gray-500 hover:text-white transition-colors px-2.5 py-2.5 rounded-lg hover:bg-gray-800 min-h-[44px] disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:text-gray-500"
     >
       {copied ? (
         <>
@@ -57,10 +60,7 @@ function SkeletonCards() {
   return (
     <div className="space-y-3">
       {Array.from({ length: 5 }).map((_, i) => (
-        <div
-          key={i}
-          className="bg-gray-900 border border-gray-800 rounded-xl p-4 animate-pulse"
-        >
+        <div key={i} className="bg-gray-900 border border-gray-800 rounded-xl p-4 animate-pulse">
           <div className="flex items-center gap-2 mb-2">
             <div className="h-3 bg-gray-800 rounded-full w-16" />
             <div className="h-3 bg-gray-800 rounded w-20" />
@@ -76,6 +76,93 @@ function SkeletonCards() {
 interface HistoryListProps {
   analyses: HistoryItem[]
   searchQuery: string
+}
+
+function AnalysisCard({ analysis }: { analysis: HistoryItem }) {
+  const [isShared, setIsShared] = useState(analysis.shared)
+  const [privacyLoading, setPrivacyLoading] = useState(false)
+
+  async function handlePrivacyToggle() {
+    setPrivacyLoading(true)
+    try {
+      const res = await fetch(`/api/analyses/${analysis.id}/share`, { method: 'PATCH' })
+      if (res.ok) {
+        const data = (await res.json()) as { shared: boolean }
+        setIsShared(data.shared)
+      }
+    } catch {
+      // Silently fail — state stays unchanged
+    } finally {
+      setPrivacyLoading(false)
+    }
+  }
+
+  return (
+    <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 hover:border-gray-700 transition-colors">
+      <div className="flex items-start justify-between gap-3">
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 mb-1.5 flex-wrap">
+            <span className="text-xs font-medium text-orange-400 capitalize bg-orange-950/60 px-2 py-0.5 rounded-full">
+              {analysis.analysisType}
+            </span>
+            <span className="text-xs text-gray-600">
+              {new Date(analysis.createdAt).toLocaleDateString('en-US', {
+                month: 'short',
+                day: 'numeric',
+                year: 'numeric',
+              })}
+            </span>
+          </div>
+          <p className="text-sm text-gray-300 line-clamp-2">
+            {analysis.offerText.slice(0, 100)}
+            {analysis.offerText.length > 100 ? '…' : ''}
+          </p>
+          {analysis.executiveSummary && (
+            <p className="text-xs text-gray-500 mt-1.5 line-clamp-1 italic">
+              {analysis.executiveSummary}
+            </p>
+          )}
+        </div>
+
+        <div className="flex flex-col gap-1 shrink-0">
+          <Link
+            href={`/share/${analysis.shareToken}`}
+            target="_blank"
+            className="flex items-center gap-1.5 text-xs text-gray-500 hover:text-white transition-colors px-2.5 py-2.5 rounded-lg hover:bg-gray-800 min-h-[44px]"
+          >
+            <ExternalLink className="w-3.5 h-3.5" />
+            <span>View</span>
+          </Link>
+
+          {/* Privacy toggle */}
+          <button
+            onClick={handlePrivacyToggle}
+            disabled={privacyLoading}
+            title={isShared ? 'Make private' : 'Make public'}
+            className={`flex items-center gap-1.5 text-xs transition-colors px-2.5 py-2.5 rounded-lg min-h-[44px] disabled:opacity-50 ${
+              isShared
+                ? 'text-green-500 hover:text-red-400 hover:bg-gray-800'
+                : 'text-gray-600 hover:text-green-400 hover:bg-gray-800'
+            }`}
+          >
+            {isShared ? (
+              <>
+                <Globe className="w-3.5 h-3.5" />
+                <span>Public</span>
+              </>
+            ) : (
+              <>
+                <Lock className="w-3.5 h-3.5" />
+                <span>Private</span>
+              </>
+            )}
+          </button>
+
+          <CopyButton shareToken={analysis.shareToken} disabled={!isShared} />
+        </div>
+      </div>
+    </div>
+  )
 }
 
 export default function HistoryList({ analyses, searchQuery }: HistoryListProps) {
@@ -97,48 +184,7 @@ export default function HistoryList({ analyses, searchQuery }: HistoryListProps)
   return (
     <div className="space-y-3">
       {analyses.map((analysis) => (
-        <div
-          key={analysis.id}
-          className="bg-gray-900 border border-gray-800 rounded-xl p-4 hover:border-gray-700 transition-colors"
-        >
-          <div className="flex items-start justify-between gap-3">
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2 mb-1.5 flex-wrap">
-                <span className="text-xs font-medium text-orange-400 capitalize bg-orange-950/60 px-2 py-0.5 rounded-full">
-                  {analysis.analysisType}
-                </span>
-                <span className="text-xs text-gray-600">
-                  {new Date(analysis.createdAt).toLocaleDateString('en-US', {
-                    month: 'short',
-                    day: 'numeric',
-                    year: 'numeric',
-                  })}
-                </span>
-              </div>
-              <p className="text-sm text-gray-300 line-clamp-2">
-                {analysis.offerText.slice(0, 100)}
-                {analysis.offerText.length > 100 ? '…' : ''}
-              </p>
-              {analysis.executiveSummary && (
-                <p className="text-xs text-gray-500 mt-1.5 line-clamp-1 italic">
-                  {analysis.executiveSummary}
-                </p>
-              )}
-            </div>
-
-            <div className="flex flex-col gap-1 shrink-0">
-              <Link
-                href={`/share/${analysis.shareToken}`}
-                target="_blank"
-                className="flex items-center gap-1.5 text-xs text-gray-500 hover:text-white transition-colors px-2.5 py-2.5 rounded-lg hover:bg-gray-800 min-h-[44px]"
-              >
-                <ExternalLink className="w-3.5 h-3.5" />
-                <span>View</span>
-              </Link>
-              <CopyButton shareToken={analysis.shareToken} />
-            </div>
-          </div>
-        </div>
+        <AnalysisCard key={analysis.id} analysis={analysis} />
       ))}
     </div>
   )

@@ -23,14 +23,16 @@ interface Props {
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { shareToken } = await params
   const analysis = await prisma.analysis.findUnique({
-    where: { shareToken },
-    select: { offerText: true, analysisType: true },
+    where: { shareToken, shared: true },
+    select: { result: true, analysisType: true },
   })
 
   if (!analysis) return { title: 'Analysis Not Found' }
 
-  const title = `${analysis.analysisType.charAt(0).toUpperCase() + analysis.analysisType.slice(1)} Analysis — $100M Sales Team`
-  const description = analysis.offerText.slice(0, 160)
+  const parsed = analysisResultSchema.safeParse(analysis.result)
+  const summary = parsed.success ? parsed.data.synthesis.executiveSummary : ''
+  const description = summary.slice(0, 160)
+  const title = 'See what 8 expert frameworks revealed about this offer'
   const ogImageUrl = `${process.env.NEXTAUTH_URL ?? ''}/api/og/${shareToken}`
 
   return {
@@ -54,8 +56,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function SharePage({ params }: Props) {
   const { shareToken } = await params
 
+  // Only serve analyses the owner has made public
   const analysis = await prisma.analysis.findUnique({
-    where: { shareToken },
+    where: { shareToken, shared: true },
     select: {
       offerText: true,
       analysisType: true,
@@ -74,35 +77,42 @@ export default async function SharePage({ params }: Props) {
   return (
     <div className="min-h-screen bg-gray-950">
       <header className="border-b border-gray-900 px-4 py-4 flex items-center justify-between">
-        <Link href="/" className="text-white font-bold text-base">
-          $100M Sales Team
+        <Link href="/" className="flex items-center gap-2">
+          <div className="w-6 h-6 bg-orange-600 rounded-md flex items-center justify-center">
+            <span className="text-white font-bold text-xs">$</span>
+          </div>
+          <span className="text-white font-semibold text-sm">100M Sales Team</span>
         </Link>
         <Link
           href="/signup"
-          className="text-sm bg-blue-600 hover:bg-blue-700 text-white font-medium px-4 py-2 rounded-lg transition-colors"
+          className="text-sm bg-orange-600 hover:bg-orange-700 text-white font-semibold px-4 py-2 rounded-lg transition-colors"
         >
-          Try Free
+          Try Free →
         </Link>
       </header>
 
       <main className="max-w-3xl mx-auto px-4 py-10 space-y-6">
+        {/* Type + date */}
         <div>
-          <span className="text-xs font-medium text-blue-400 capitalize bg-blue-950 px-2 py-0.5 rounded-full">
+          <span className="text-xs font-medium text-orange-400 capitalize bg-orange-950/60 px-2 py-0.5 rounded-full">
             {analysis.analysisType}
           </span>
           <p className="text-xs text-gray-600 mt-2">
-            Analyzed {new Date(analysis.createdAt).toLocaleDateString('en-US', {
-              month: 'long', day: 'numeric', year: 'numeric',
+            Analyzed{' '}
+            {new Date(analysis.createdAt).toLocaleDateString('en-US', {
+              month: 'long',
+              day: 'numeric',
+              year: 'numeric',
             })}
           </p>
         </div>
 
         {/* Synthesis */}
-        <div className="bg-gray-900 border border-gray-800 rounded-xl p-5">
-          <h2 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">
+        <div className="bg-gray-900 border border-gray-800 rounded-xl p-5 space-y-4">
+          <h2 className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
             Integrated Strategy
           </h2>
-          <p className="text-white text-sm leading-relaxed mb-4">{synthesis.overview}</p>
+          <p className="text-white text-sm leading-relaxed">{synthesis.overview}</p>
 
           {synthesis.immediateActions.length > 0 && (
             <div>
@@ -112,11 +122,19 @@ export default async function SharePage({ params }: Props) {
               <ol className="space-y-1.5">
                 {synthesis.immediateActions.map((action, i) => (
                   <li key={i} className="flex items-start gap-2 text-sm text-gray-300">
-                    <span className="text-blue-400 font-mono shrink-0">{i + 1}.</span>
+                    <span className="text-orange-500 font-mono font-bold shrink-0">{i + 1}.</span>
                     {action}
                   </li>
                 ))}
               </ol>
+            </div>
+          )}
+
+          {synthesis.executiveSummary && (
+            <div className="border-l-4 border-orange-600 pl-4">
+              <p className="text-sm text-gray-300 italic leading-relaxed">
+                {synthesis.executiveSummary}
+              </p>
             </div>
           )}
         </div>
@@ -142,20 +160,30 @@ export default async function SharePage({ params }: Props) {
         </div>
 
         {/* CTA */}
-        <div className="bg-gradient-to-r from-blue-950 to-gray-900 border border-blue-800/50 rounded-xl p-6 text-center">
+        <div className="bg-gradient-to-r from-orange-950/60 to-gray-900 border border-orange-800/40 rounded-xl p-6 text-center">
           <h3 className="text-lg font-bold text-white mb-2">
-            Analyze your own offer in 90 seconds
+            Analyze your own offer free — takes 90 seconds
           </h3>
           <p className="text-gray-400 text-sm mb-4">
-            3 free analyses. No credit card required.
+            3 free analyses · No credit card required · 8 expert frameworks
           </p>
           <Link
             href="/signup"
-            className="inline-block bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-3 rounded-xl transition-colors text-sm"
+            className="inline-block bg-orange-600 hover:bg-orange-700 text-white font-semibold px-6 py-3 rounded-xl transition-colors text-sm"
           >
-            Analyze My Offer Free
+            Analyze My Offer Free →
           </Link>
         </div>
+
+        {/* Footer */}
+        <footer className="pt-4 border-t border-gray-900 text-center">
+          <p className="text-xs text-gray-600">
+            Generated by{' '}
+            <Link href="/" className="text-gray-500 hover:text-gray-400 transition-colors">
+              $100M AI Sales Team
+            </Link>
+          </p>
+        </footer>
       </main>
     </div>
   )

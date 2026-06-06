@@ -1,12 +1,48 @@
-import { ImageResponse } from '@vercel/og'
-import { NextRequest } from 'next/server'
+import { ImageResponse } from 'next/og'
+import type { NextRequest } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { analysisResultSchema } from '@/lib/schemas'
 
 export const runtime = 'nodejs'
 
+const EXPERTS = [
+  { name: 'Hormozi', color: '#4F46E5' },
+  { name: 'GaryVee', color: '#9333EA' },
+  { name: 'Cardone', color: '#DC2626' },
+  { name: 'Belfort', color: '#D97706' },
+  { name: 'Kennedy', color: '#0891B2' },
+  { name: 'Brunson', color: '#059669' },
+  { name: 'Godin',   color: '#DB2777' },
+  { name: 'Robbins', color: '#EA580C' },
+]
+
 interface Props {
   params: Promise<{ shareToken: string }>
+}
+
+function GenericImage() {
+  return (
+    <div
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        width: '100%',
+        height: '100%',
+        background: '#17171A',
+        padding: '48px 56px',
+        fontFamily: 'system-ui, -apple-system, sans-serif',
+        justifyContent: 'center',
+        alignItems: 'center',
+        gap: '16px',
+      }}
+    >
+      <div style={{ fontSize: '64px', fontWeight: 900, color: '#EA580C' }}>$100M</div>
+      <div style={{ fontSize: '24px', color: '#9CA3AF' }}>AI Sales Team</div>
+      <div style={{ fontSize: '16px', color: '#6B7280', marginTop: '8px' }}>
+        8 expert frameworks. One integrated strategy.
+      </div>
+    </div>
+  )
 }
 
 export async function GET(_req: NextRequest, { params }: Props) {
@@ -14,164 +50,124 @@ export async function GET(_req: NextRequest, { params }: Props) {
 
   const analysis = await prisma.analysis.findUnique({
     where: { shareToken },
-    select: { offerText: true, analysisType: true, result: true },
+    select: { analysisType: true, result: true },
   })
 
   if (!analysis) {
-    return new Response('Not found', { status: 404 })
+    return new ImageResponse(<GenericImage />, { width: 1200, height: 630 })
   }
 
   const parsed = analysisResultSchema.safeParse(analysis.result)
   const overview = parsed.success ? parsed.data.synthesis.overview : ''
-  const immediateActions = parsed.success ? parsed.data.synthesis.immediateActions.slice(0, 3) : []
+  const typeLabel = analysis.analysisType.toUpperCase() + ' ANALYSIS'
 
-  const offerPreview =
-    analysis.offerText.length > 120
-      ? analysis.offerText.slice(0, 117) + '...'
-      : analysis.offerText
-
-  return new ImageResponse(
-    (
+  const image = (
+    <div
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        width: '100%',
+        height: '100%',
+        background: '#17171A',
+        padding: '48px 56px',
+        fontFamily: 'system-ui, -apple-system, sans-serif',
+      }}
+    >
+      {/* Header: $100M + subtitle + type chip */}
       <div
         style={{
           display: 'flex',
-          flexDirection: 'column',
-          width: '100%',
-          height: '100%',
-          background: 'linear-gradient(135deg, #030712 0%, #0f172a 50%, #1e1b4b 100%)',
-          padding: '48px 56px',
-          fontFamily: 'system-ui, -apple-system, sans-serif',
+          alignItems: 'flex-start',
+          justifyContent: 'space-between',
+          marginBottom: '36px',
         }}
       >
-        {/* Header */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '36px' }}>
-          <div
-            style={{
-              width: '36px',
-              height: '36px',
-              background: '#2563eb',
-              borderRadius: '8px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}
-          >
-            <div style={{ color: 'white', fontSize: '18px', fontWeight: 'bold' }}>$</div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+          <div style={{ fontSize: '52px', fontWeight: 900, color: '#EA580C', lineHeight: 1 }}>
+            $100M
           </div>
-          <div style={{ color: '#94a3b8', fontSize: '16px', fontWeight: '500' }}>
-            $100M AI Sales Team
-          </div>
-          <div
-            style={{
-              marginLeft: 'auto',
-              background: '#1e3a5f',
-              color: '#60a5fa',
-              fontSize: '13px',
-              fontWeight: '600',
-              padding: '4px 12px',
-              borderRadius: '999px',
-              textTransform: 'uppercase',
-              letterSpacing: '0.05em',
-            }}
-          >
-            {analysis.analysisType} Analysis
-          </div>
+          <div style={{ fontSize: '20px', color: '#9CA3AF', fontWeight: 500 }}>AI Sales Team</div>
         </div>
 
-        {/* Offer text */}
         <div
           style={{
-            color: '#f1f5f9',
-            fontSize: '22px',
-            fontWeight: '600',
-            lineHeight: '1.45',
-            marginBottom: '28px',
-            maxWidth: '820px',
+            background: '#431407',
+            border: '1px solid #7C2D12',
+            color: '#FB923C',
+            fontSize: '13px',
+            fontWeight: 700,
+            padding: '6px 18px',
+            borderRadius: '999px',
+            letterSpacing: '0.08em',
+            alignSelf: 'flex-start',
           }}
         >
-          &ldquo;{offerPreview}&rdquo;
-        </div>
-
-        {/* Overview */}
-        {overview && (
-          <div
-            style={{
-              color: '#94a3b8',
-              fontSize: '16px',
-              lineHeight: '1.6',
-              marginBottom: '32px',
-              maxWidth: '860px',
-            }}
-          >
-            {overview.length > 200 ? overview.slice(0, 197) + '...' : overview}
-          </div>
-        )}
-
-        {/* Immediate actions */}
-        {immediateActions.length > 0 && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '40px' }}>
-            {immediateActions.map((action, i) => (
-              <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: '10px' }}>
-                <div
-                  style={{
-                    width: '22px',
-                    height: '22px',
-                    background: '#2563eb',
-                    borderRadius: '50%',
-                    color: 'white',
-                    fontSize: '12px',
-                    fontWeight: 'bold',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    flexShrink: 0,
-                    marginTop: '1px',
-                  }}
-                >
-                  {i + 1}
-                </div>
-                <div style={{ color: '#cbd5e1', fontSize: '15px', lineHeight: '1.5' }}>
-                  {action.length > 120 ? action.slice(0, 117) + '...' : action}
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-
-        {/* Footer */}
-        <div
-          style={{
-            marginTop: 'auto',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-          }}
-        >
-          <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-            {['Hormozi', 'GaryVee', 'Cardone', 'Belfort', 'Kennedy', 'Brunson', 'Godin', 'Robbins'].map(
-              (name) => (
-                <div
-                  key={name}
-                  style={{
-                    background: '#1e293b',
-                    color: '#64748b',
-                    fontSize: '12px',
-                    padding: '3px 10px',
-                    borderRadius: '999px',
-                  }}
-                >
-                  {name}
-                </div>
-              )
-            )}
-          </div>
-          <div style={{ color: '#475569', fontSize: '13px' }}>8 frameworks · 1 strategy</div>
+          {typeLabel}
         </div>
       </div>
-    ),
-    {
-      width: 1200,
-      height: 630,
-    }
+
+      {/* Overview — first 100 chars in white */}
+      <div
+        style={{
+          flex: 1,
+          display: 'flex',
+          alignItems: 'center',
+        }}
+      >
+        <p
+          style={{
+            color: '#F9FAFB',
+            fontSize: '28px',
+            fontWeight: 500,
+            lineHeight: 1.5,
+            maxWidth: '1000px',
+            margin: 0,
+          }}
+        >
+          {overview.slice(0, 160)}
+          {overview.length > 160 ? '…' : ''}
+        </p>
+      </div>
+
+      {/* Bottom: 8 colored expert dots + domain */}
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          paddingTop: '28px',
+          borderTop: '1px solid #27272A',
+        }}
+      >
+        <div style={{ display: 'flex', gap: '18px', alignItems: 'center' }}>
+          {EXPERTS.map(({ name, color }) => (
+            <div key={name} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <div
+                style={{
+                  width: '10px',
+                  height: '10px',
+                  borderRadius: '50%',
+                  background: color,
+                  flexShrink: 0,
+                }}
+              />
+              <span style={{ color: '#6B7280', fontSize: '13px', fontWeight: 500 }}>{name}</span>
+            </div>
+          ))}
+        </div>
+
+        <div style={{ color: '#EA580C', fontSize: '14px', fontWeight: 600, flexShrink: 0 }}>
+          100msalesteam.com
+        </div>
+      </div>
+    </div>
   )
+
+  return new ImageResponse(image, {
+    width: 1200,
+    height: 630,
+    headers: {
+      'Cache-Control': 'public, max-age=86400, stale-while-revalidate=3600',
+    },
+  })
 }

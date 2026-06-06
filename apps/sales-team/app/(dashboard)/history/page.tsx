@@ -37,6 +37,7 @@ export default async function HistoryPage({
       offerText: true,
       analysisType: true,
       shareToken: true,
+      shared: true,
       createdAt: true,
       result: true,
     },
@@ -48,6 +49,7 @@ export default async function HistoryPage({
     offerText: row.offerText,
     analysisType: row.analysisType,
     shareToken: row.shareToken,
+    shared: row.shared,
     createdAt: row.createdAt.toISOString(),
     executiveSummary: extractSummary(row.result),
   }))

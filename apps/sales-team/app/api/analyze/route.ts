@@ -77,7 +77,7 @@ export async function POST(req: NextRequest) {
 
         const result = JSON.parse(fullText) as Prisma.InputJsonValue
         const analysis = await prisma.analysis.create({
-          data: { userId, offerText, analysisType, result },
+          data: { userId, offerText, analysisType, result, shared: true },
         })
 
         await prisma.user.update({
