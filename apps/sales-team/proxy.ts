@@ -17,7 +17,7 @@ function applySecurityHeaders(res: NextResponse) {
       "script-src 'self' 'unsafe-eval' 'unsafe-inline' https://challenges.cloudflare.com",
       // Turnstile renders in an iframe
       "frame-src https://challenges.cloudflare.com",
-      "connect-src 'self' https://*.anthropic.com https://*.supabase.co https://*.stripe.com wss://*.supabase.co",
+      "connect-src 'self' https://api.anthropic.com https://*.supabase.co https://api.stripe.com wss://*.supabase.co",
       "img-src 'self' data: https: blob:",
       "style-src 'self' 'unsafe-inline'",
       "font-src 'self' data:",

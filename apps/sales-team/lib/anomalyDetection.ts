@@ -1,6 +1,7 @@
 // SERVER-ONLY — never import from client components
 import { Redis } from '@upstash/redis'
 import { writeAuditLog } from '@/lib/audit'
+import { captureSecurityEvent, captureHighSeverityEvent } from '@/lib/securityAlerts'
 
 export type AnomalySignal = { type: string; value: number; threshold: number }
 
@@ -69,6 +70,7 @@ export async function checkAnomalySignals(
   const flagged = signals.length > 0
 
   if (flagged) {
+    captureSecurityEvent({ type: 'ANOMALY', userId, metadata: { signals, ipAddress } })
     void writeAuditLog({
       userId,
       action: 'ANOMALY_DETECTED',
@@ -84,6 +86,7 @@ export async function checkAnomalySignals(
       const [consecutive] = await pc.exec()
       if ((consecutive as number) >= 3) {
         await getRedis().set(`anomaly:blocked:${userId}`, '1', { ex: 900 })
+        captureHighSeverityEvent({ type: 'REPEATED_ATTACKER', userId, metadata: { consecutiveFlags: consecutive as number } })
       }
     } catch (err) {
       console.error('[anomalyDetection] Failed to update consecutive counter:', err)

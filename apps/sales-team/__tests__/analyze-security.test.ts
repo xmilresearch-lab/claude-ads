@@ -53,6 +53,11 @@ vi.mock('@/lib/anomalyDetection', () => ({
   recordSecurityViolation: vi.fn().mockResolvedValue(undefined),
 }))
 
+vi.mock('@/lib/securityAlerts', () => ({
+  captureSecurityEvent: vi.fn(),
+  captureHighSeverityEvent: vi.fn(),
+}))
+
 // ─── Imports after mocks ───────────────────────────────────────────────────────
 
 import { POST } from '@/app/api/analyze/route'

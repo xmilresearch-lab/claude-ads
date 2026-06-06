@@ -48,6 +48,11 @@ vi.mock('@/lib/anomalyDetection', () => ({
   recordSecurityViolation: vi.fn().mockResolvedValue(undefined),
 }))
 
+vi.mock('@/lib/securityAlerts', () => ({
+  captureSecurityEvent: vi.fn(),
+  captureHighSeverityEvent: vi.fn(),
+}))
+
 vi.mock('@/lib/tokenBudget', () => ({
   checkTokenBudget: vi.fn().mockResolvedValue({ allowed: true, remaining: 999_000, resetAt: new Date() }),
   recordTokenUsage: vi.fn().mockResolvedValue(undefined),

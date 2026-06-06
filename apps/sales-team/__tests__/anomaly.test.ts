@@ -27,6 +27,11 @@ vi.mock('@upstash/redis', () => ({
 
 vi.mock('@/lib/audit', () => ({ writeAuditLog: vi.fn().mockResolvedValue(undefined) }))
 
+vi.mock('@/lib/securityAlerts', () => ({
+  captureSecurityEvent: vi.fn(),
+  captureHighSeverityEvent: vi.fn(),
+}))
+
 // ─── Imports ──────────────────────────────────────────────────────────────────
 
 import { checkAnomalySignals, isUserBlocked } from '@/lib/anomalyDetection'

@@ -283,6 +283,7 @@ export const TIER_LIMITS = {
 - [ ] New DB table: RLS policy written and tested
 - [ ] Mobile: tested at 375px viewport width
 - [ ] `npm run build` passes locally before push
+- [ ] `npm run audit:ai-security` passes (10/10 checks) before any PR touching `lib/ai.ts`, `app/api/analyze`, or `app/api/assistant`
 
 ---
 

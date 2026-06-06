@@ -9,7 +9,8 @@
     "lint": "eslint",
     "test": "vitest run",
     "test:watch": "vitest",
-    "audit:prompts": "npx tsx lib/systemPromptAudit.ts"
+    "audit:prompts": "npx tsx lib/systemPromptAudit.ts",
+    "audit:ai-security": "npx tsx scripts/aiSecurityAudit.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.100.1",

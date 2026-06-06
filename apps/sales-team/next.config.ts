@@ -6,6 +6,17 @@ const withPWA = require('next-pwa') as (opts: Record<string, unknown>) => (cfg: 
 
 const nextConfig: NextConfig = {
   turbopack: {},
+  async headers() {
+    const aiRouteHeaders = [
+      { key: 'X-Content-Type-Options', value: 'nosniff' },
+      { key: 'Cache-Control', value: 'no-store, no-cache, must-revalidate' },
+      { key: 'Pragma', value: 'no-cache' },
+    ]
+    return [
+      { source: '/api/analyze', headers: aiRouteHeaders },
+      { source: '/api/assistant', headers: aiRouteHeaders },
+    ]
+  },
 }
 
 export default withPWA({

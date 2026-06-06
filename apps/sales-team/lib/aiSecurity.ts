@@ -1,6 +1,7 @@
 // SERVER-ONLY — never import from client components
 import { analysisResultSchema } from '@/lib/schemas'
 import { ANALYSIS_SYSTEM_PROMPT, CANARY } from '@/lib/ai'
+import { captureHighSeverityEvent } from '@/lib/securityAlerts'
 
 // ── Enums ────────────────────────────────────────────────────────────────────
 
@@ -161,6 +162,9 @@ export function sanitizeInput(
 
   for (const [patterns, flag] of blockingChecks) {
     if (matchesAny(rawText, patterns)) {
+      if (flag === ThreatFlag.JAILBREAK_ATTEMPT) {
+        captureHighSeverityEvent({ type: 'JAILBREAK', userId: '', metadata: { inputLength: rawText.length } })
+      }
       throw new AISecurityError(`Blocked: ${flag}`, flag)
     }
   }
@@ -241,6 +245,7 @@ export function validateOutput(
 ): { valid: boolean; sanitized: string; violations: OutputViolation[] } {
   // SCRIPT_INJECTION — throw immediately, never return
   if (SCRIPT_PATTERNS.some((p) => p.test(rawOutput))) {
+    captureHighSeverityEvent({ type: 'SCRIPT_INJECTION', userId: '', metadata: { outputLength: rawOutput.length } })
     throw new AISecurityError('Script injection detected in AI output', OutputViolation.SCRIPT_INJECTION)
   }
 
@@ -252,10 +257,12 @@ export function validateOutput(
     console.error('[aiSecurity] SECURITY_EVENT: canary token detected in output — system prompt leaked')
     violations.push(OutputViolation.SYSTEM_PROMPT_LEAKED)
     sanitized = sanitized.replaceAll(CANARY, '[REDACTED]')
+    captureHighSeverityEvent({ type: 'SYSTEM_PROMPT_LEAK', userId: '', metadata: { detectionMethod: 'canary' } })
   } else if (detectSystemPromptLeak(rawOutput)) {
     console.error('[aiSecurity] SECURITY_EVENT: system prompt content detected in output')
     violations.push(OutputViolation.SYSTEM_PROMPT_LEAKED)
     sanitized = stripSystemPromptLeaks(rawOutput)
+    captureHighSeverityEvent({ type: 'SYSTEM_PROMPT_LEAK', userId: '', metadata: { detectionMethod: 'sliding-window' } })
   }
 
   // EXCESSIVE_REFUSAL — check before parsing (affects both schemas)
