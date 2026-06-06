@@ -1,0 +1,120 @@
+rules:
+  - id: anthropic-key-client-exposure
+    patterns:
+      - pattern: ANTHROPIC_API_KEY
+      - pattern-not-inside: |
+          process.env.$VAR
+    message: "CRITICAL: Anthropic API key may be exposed client-side"
+    languages: [typescript, javascript]
+    severity: ERROR
+    paths:
+      exclude:
+        - "app/api/**"
+        - "lib/**"
+        - "*.env*"
+
+  - id: missing-auth-check
+    patterns:
+      - pattern: |
+          export async function POST(req: $T) {
+            ...
+            await prisma.$M(...)
+            ...
+          }
+      - pattern-not: |
+          export async function POST(req: $T) {
+            ...
+            getServerSession(...)
+            ...
+          }
+    message: "API route performs DB operation without auth check"
+    languages: [typescript]
+    severity: WARNING
+
+  - id: missing-zod-validation
+    patterns:
+      - pattern: |
+          export async function POST(req: $T) {
+            ...
+            await req.json()
+            ...
+          }
+      - pattern-not: |
+          export async function POST(req: $T) {
+            ...
+            .safeParse(...)
+            ...
+          }
+    message: "API route reads request body without Zod validation"
+    languages: [typescript]
+    severity: WARNING
+
+  - id: raw-anthropic-call-missing-guard
+    patterns:
+      - pattern: anthropic.messages.stream(...)
+      - pattern-not-inside: |
+          sanitizeInput(...)
+          ...
+          anthropic.messages.stream(...)
+    message: "Anthropic API called without sanitizeInput() guard upstream"
+    languages: [typescript]
+    severity: ERROR
+
+  - id: direct-user-input-to-ai
+    patterns:
+      - pattern: |
+          messages: [..., {role: "user", content: $REQ.body.$F}]
+      - pattern-not: |
+          messages: [..., {role: "user", content: sanitized$X}]
+    message: "Raw request body field passed directly to AI messages array"
+    languages: [typescript]
+    severity: ERROR
+
+  - id: missing-output-validation
+    patterns:
+      - pattern: |
+          $STREAM.finalMessage()
+          ...
+          JSON.parse(...)
+      - pattern-not: |
+          validateOutput(...)
+    message: "AI stream output parsed without validateOutput() guard"
+    languages: [typescript]
+    severity: WARNING
+
+  - id: idor-missing-ownership-check
+    patterns:
+      - pattern: |
+          prisma.$MODEL.update({where: {id: $ID}, ...})
+      - pattern-not: |
+          prisma.$MODEL.findUnique({where: {id: $ID, userId: $UID}})
+    message: "DB mutation without verifying resource ownership (IDOR risk)"
+    languages: [typescript]
+    severity: ERROR
+
+  - id: audit-log-missing
+    patterns:
+      - pattern: |
+          prisma.$MODEL.create(...)
+      - pattern-not-inside: |
+          writeAuditLog(...)
+    message: "DB mutation without audit log — compliance gap"
+    languages: [typescript]
+    severity: INFO
+
+  - id: raw-error-to-client
+    patterns:
+      - pattern: Response.json({error: $E.message})
+    message: "Raw error message returned to client — may expose internals"
+    languages: [typescript]
+    severity: WARNING
+
+  - id: console-log-sensitive
+    patterns:
+      - pattern: console.log(..., $X, ...)
+      - metavariable-regex:
+          metavariable: $X
+          regex: ".*(password|token|key|secret|apiKey|api_key).*"
+    message: "Potentially sensitive value passed to console.log"
+    languages: [typescript]
+    severity: WARNING

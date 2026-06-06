@@ -42,3 +42,9 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# AI security scanner
+security/scanner/reports/
+security/scanner/venv/
+security/scanner/__pycache__/
+security/scanner/static/__pycache__/
