@@ -47,7 +47,7 @@ export default function ShareCard({ shareToken }: ShareCardProps) {
 
       <button
         onClick={handleCopy}
-        className="flex items-center gap-2 text-sm font-medium px-4 py-2 rounded-lg transition-colors w-full justify-center bg-gray-800 hover:bg-gray-700 text-gray-300 hover:text-white"
+        className="flex items-center gap-2 text-sm font-medium px-4 py-3 rounded-lg transition-colors w-full justify-center bg-gray-800 hover:bg-gray-700 text-gray-300 hover:text-white min-h-[44px]"
       >
         {copied ? (
           <>

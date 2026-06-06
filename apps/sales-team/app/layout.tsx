@@ -16,12 +16,12 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "$100M AI Sales Team",
-  description: "Analyze any sales offer through 8 elite frameworks and synthesize a complete strategy.",
+  description: "8 expert frameworks. One integrated strategy. In 90 seconds.",
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
-    statusBarStyle: "black-translucent",
-    title: "$100M AI Sales Team",
+    statusBarStyle: "default",
+    title: "$100M Sales",
   },
   formatDetection: { telephone: false },
 };
@@ -29,8 +29,9 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
+  maximumScale: 1,
   viewportFit: "cover",
-  themeColor: "#2563eb",
+  themeColor: "#EA580C",
 };
 
 export default function RootLayout({

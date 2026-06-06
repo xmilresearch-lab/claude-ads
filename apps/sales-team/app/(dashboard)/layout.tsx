@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation'
 import { auth } from '@/lib/auth'
 import BottomNav from '@/components/mobile/BottomNav'
+import InstallPrompt from '@/components/pwa/InstallPrompt'
 import Link from 'next/link'
 import { BarChart2, Clock, BookOpen, MessageSquare, Settings } from 'lucide-react'
 
@@ -101,6 +102,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
       </main>
 
       <BottomNav />
+      <InstallPrompt />
     </div>
   )
 }

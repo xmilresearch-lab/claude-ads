@@ -131,6 +131,13 @@ export default function StreamingResult({
     }
   }, [isStreaming, streamedText, synthesis, parsedFrameworks.length])
 
+  // Fire install prompt event when analysis fully completes
+  useEffect(() => {
+    if (!isStreaming && synthesis !== null) {
+      window.dispatchEvent(new Event('analysis:complete'))
+    }
+  }, [isStreaming, synthesis])
+
   if (error) {
     return (
       <div className="space-y-4">

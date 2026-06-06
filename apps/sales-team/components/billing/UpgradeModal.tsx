@@ -47,13 +47,13 @@ export default function UpgradeModal() {
         <button
           onClick={handleUpgrade}
           disabled={loading}
-          className="flex-1 bg-orange-600 hover:bg-orange-700 disabled:opacity-60 disabled:cursor-not-allowed text-white font-semibold text-sm py-2.5 px-5 rounded-xl transition-colors"
+          className="flex-1 bg-orange-600 hover:bg-orange-700 disabled:opacity-60 disabled:cursor-not-allowed text-white font-semibold text-sm py-3 px-5 rounded-xl transition-colors min-h-[44px]"
         >
           {loading ? 'Redirecting...' : 'Upgrade to Pro — $149/mo →'}
         </button>
         <Link
           href="/pricing"
-          className="text-center text-sm text-gray-400 hover:text-white py-2.5 px-5 rounded-xl border border-gray-700 hover:border-gray-600 transition-colors"
+          className="text-center text-sm text-gray-400 hover:text-white py-3 px-5 rounded-xl border border-gray-700 hover:border-gray-600 transition-colors min-h-[44px] flex items-center justify-center"
         >
           See all plans →
         </Link>

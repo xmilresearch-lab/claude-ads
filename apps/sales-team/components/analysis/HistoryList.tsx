@@ -35,7 +35,7 @@ function CopyButton({ shareToken }: { shareToken: string }) {
   return (
     <button
       onClick={handleCopy}
-      className="flex items-center gap-1.5 text-xs text-gray-500 hover:text-white transition-colors px-2.5 py-1.5 rounded-lg hover:bg-gray-800"
+      className="flex items-center gap-1.5 text-xs text-gray-500 hover:text-white transition-colors px-2.5 py-2.5 rounded-lg hover:bg-gray-800 min-h-[44px]"
     >
       {copied ? (
         <>
@@ -130,7 +130,7 @@ export default function HistoryList({ analyses, searchQuery }: HistoryListProps)
               <Link
                 href={`/share/${analysis.shareToken}`}
                 target="_blank"
-                className="flex items-center gap-1.5 text-xs text-gray-500 hover:text-white transition-colors px-2.5 py-1.5 rounded-lg hover:bg-gray-800"
+                className="flex items-center gap-1.5 text-xs text-gray-500 hover:text-white transition-colors px-2.5 py-2.5 rounded-lg hover:bg-gray-800 min-h-[44px]"
               >
                 <ExternalLink className="w-3.5 h-3.5" />
                 <span>View</span>

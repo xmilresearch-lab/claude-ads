@@ -147,7 +147,7 @@ export default function AnalysisInput({ onChunk, onComplete, onError }: Analysis
           rows={6}
           maxLength={5000}
           disabled={isStreaming}
-          className="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-sm text-white placeholder-gray-600 resize-none focus:outline-none focus:border-orange-500 transition-colors disabled:opacity-50"
+          className="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-[16px] md:text-sm text-white placeholder-gray-600 resize-none focus:outline-none focus:border-orange-500 transition-colors disabled:opacity-50"
         />
         <span
           className={`absolute bottom-3 right-3 text-xs pointer-events-none ${
