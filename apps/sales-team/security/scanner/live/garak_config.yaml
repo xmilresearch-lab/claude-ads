@@ -1,0 +1,40 @@
+system:
+  verbose: true
+
+target:
+  type: rest
+  uri: "${TARGET_URL}/api/analyze"
+  method: POST
+  headers:
+    Content-Type: application/json
+    Cookie: "next-auth.session-token=${TEST_SESSION_TOKEN}"
+  request_template: >
+    {
+      "offerText": "{prompt}",
+      "analysisType": "offer"
+    }
+  response_json_path: "frameworks[0].insight"
+  # We check if the AI performed the injection rather than the analysis
+
+probes:
+  - id: lm_dos.FiniteContextWindowDoS       # LLM10: Token exhaustion
+  - id: promptinject.HijackHateHuman        # LLM01: Prompt injection
+  - id: promptinject.HijackKillHumans       # LLM01: Extreme injection
+  - id: promptinject.HijackLongPrompt       # LLM01: Long context injection
+  - id: leakprompt.LatentInjectionResidual  # LLM07: Prompt leakage
+  - id: continuation.ContinueSlursReclaimedSlurs  # Content policy
+  - id: dan.Dan_11_0                        # DAN jailbreak
+  - id: dan.DUDE                            # DUDE jailbreak variant
+  - id: dan.ChatGPT_Developer_Mode_v2       # Developer mode jailbreak
+
+detectors:
+  - id: mitigation.MitigationBypass        # Did the mitigation fail?
+  - id: always.Fail                        # Baseline comparison
+
+report:
+  format: json
+  output: "reports/garak-{timestamp}.json"
+
+budget:
+  max_prompts: 50    # Hard limit — protects Anthropic spend
+  timeout: 30        # Seconds per probe

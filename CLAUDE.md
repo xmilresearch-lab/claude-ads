@@ -669,3 +669,75 @@ test or npm run build to confirm nothing is broken before moving to the
 next file. End the session with a git commit and tell me exactly what
 was completed and what the next session should start with.
 ```
+
+---
+
+## AI Security Scanner
+
+Three layers of automated security scanning are built into this project:
+
+| Layer | Command | When to run | Cost |
+|-------|---------|-------------|------|
+| Static (Semgrep + npm audit) | `npm run scan:static` | Every PR | Free |
+| Adversarial (Vitest, mocked) | `npm run scan:adversarial` | Every PR | Free |
+| Live probes (Garak, real API) | `npm run scan:live` | Monthly, staging only | ~$0.05–0.20 |
+
+### LIVE PROBE BUDGET
+
+`npm run scan:live` makes ~50 real Anthropic API calls via Garak.
+
+- Run **monthly only**, against **staging only**
+- **Never run against production**
+- Estimated cost per run: $0.05–0.20 USD
+- Output saved to `security/scanner/reports/` (gitignored)
+- Requires `TEST_SESSION_TOKEN` env var (see `npm run scanner:create-test-user`)
+
+### Scanner file layout
+
+```
+security/scanner/
+  static/
+    run_static.py            # Semgrep + npm audit (no server needed)
+    semgrep-ai-security.yml  # 10 custom AI security rules
+  adversarial/
+    payloads.ts              # 80+ attack payloads across 9 categories
+    run_adversarial.test.ts  # Vitest suite — zero real API calls
+  live/
+    garak_config.yaml        # Garak REST target config (9 probes)
+    run_garak.py             # Live runner with staging safety check
+  reports/                   # All scan outputs (gitignored)
+  requirements.txt           # garak, semgrep, colorama, ...
+  setup.sh                   # Creates venv and installs requirements
+```
+
+### Garak probe coverage
+
+| Probe | OWASP LLM | What it tests |
+|-------|-----------|---------------|
+| `lm_dos.FiniteContextWindowDoS` | LLM10 | Token exhaustion |
+| `promptinject.HijackHateHuman` | LLM01 | Prompt injection |
+| `promptinject.HijackKillHumans` | LLM01 | Extreme injection |
+| `promptinject.HijackLongPrompt` | LLM01 | Long-context injection |
+| `leakprompt.LatentInjectionResidual` | LLM07 | System prompt leakage |
+| `continuation.ContinueSlursReclaimedSlurs` | — | Content policy |
+| `dan.Dan_11_0` | LLM01 | DAN jailbreak |
+| `dan.DUDE` | LLM01 | DUDE jailbreak variant |
+| `dan.ChatGPT_Developer_Mode_v2` | LLM01 | Developer mode jailbreak |
+
+### Rotating the scanner test user
+
+```bash
+# Provision once (idempotent):
+npm run scanner:create-test-user
+
+# Then in your DB, create a Session row for that user and export its token:
+export TEST_SESSION_TOKEN=<session-token-from-db>
+
+# Run live probes against localhost (dev server must be running):
+npm run scan:live:localhost
+
+# Run against staging:
+TARGET_URL=https://staging.yourdomain.com npm run scan:live
+```
+
+Rotate `TEST_SESSION_TOKEN` monthly — delete the old Session row and create a new one.
