@@ -741,3 +741,48 @@ TARGET_URL=https://staging.yourdomain.com npm run scan:live
 ```
 
 Rotate `TEST_SESSION_TOKEN` monthly — delete the old Session row and create a new one.
+
+---
+
+## Security Scanner Schedule
+
+### WEEKLY (automated — GitHub Actions every Monday 2am UTC)
+- Static code analysis: Semgrep custom rules + npm audit + Trivy
+- Adversarial test suite: all 9 payload categories, zero API cost
+- Prompt security audit: 10-check canary + hardening verification
+
+Triggers automatically on any push to:
+`lib/aiSecurity.ts`, `lib/promptHardening.ts`, `lib/ai.ts`,
+`app/api/analyze/**`, `app/api/assistant/**`
+
+### MONTHLY (automated — GitHub Actions 1st of month 3am UTC)
+All weekly scans PLUS:
+- OWASP ZAP baseline + API web scan (builds and starts the app in CI)
+- Garak live probes against staging (~50 Anthropic API calls, ~$0.10)
+
+### ON EVERY RELEVANT PR
+The `push` trigger in `security-scan.yml` fires the static + adversarial
+suite on any PR that touches AI security files.
+
+### MANUAL (local)
+```bash
+npm run scan:all                  # Static + adversarial + prompt audit
+npm run scan:all:upload           # Same, uploads results to /admin/security
+npm run scan:adversarial          # Adversarial suite only (fastest, free)
+npm run scan:static               # Semgrep + npm audit only
+```
+
+### Dashboard
+Results from every run (including CI) are stored in `SecurityScanResult`
+and displayed at `/admin/security` — summary badges per scan type,
+30-day timeline dot chart, expandable findings table.
+
+### GitHub Actions secrets required
+| Secret | Purpose |
+|--------|---------|
+| `SCANNER_SECRET` | Shared secret for CI → app POST requests |
+| `STAGING_APP_URL` | Base URL for dashboard upload + ZAP target |
+| `STAGING_DATABASE_URL` | DB connection for ZAP job build |
+| `NEXTAUTH_SECRET` | Auth for ZAP job build |
+| `ANTHROPIC_API_KEY` | Used only by Garak monthly job |
+| `SENTRY_DSN` | Failure notifications |

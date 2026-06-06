@@ -51,3 +51,16 @@ export const analysisResultSchema = z.object({
 })
 
 export type AnalysisResult = z.infer<typeof analysisResultSchema>
+
+export const scanResultSchema = z.object({
+  scanType:      z.enum(['static', 'adversarial', 'garak', 'zap', 'full']),
+  runId:         z.string().min(1).max(100),
+  status:        z.enum(['pass', 'warn', 'fail']),
+  findings:      z.unknown().transform((v): Record<string, unknown> => (v ?? {}) as Record<string, unknown>),
+  criticalCount: z.number().int().min(0).default(0),
+  warnCount:     z.number().int().min(0).default(0),
+  passCount:     z.number().int().min(0).default(0),
+  triggeredBy:   z.enum(['scheduled', 'push', 'workflow_dispatch', 'manual']),
+})
+
+export type ScanResultInput = z.infer<typeof scanResultSchema>

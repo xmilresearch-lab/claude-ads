@@ -17,7 +17,9 @@
     "scan:adversarial:watch": "vitest security/scanner/adversarial/",
     "scan:live": "security/scanner/venv/bin/python security/scanner/live/run_garak.py",
     "scan:live:localhost": "security/scanner/venv/bin/python security/scanner/live/run_garak.py --target http://localhost:3000",
-    "scanner:create-test-user": "npx tsx scripts/create-scanner-test-user.ts"
+    "scanner:create-test-user": "npx tsx scripts/create-scanner-test-user.ts",
+    "scan:all": "cd security/scanner && bash scan_all.sh",
+    "scan:all:upload": "cd security/scanner && bash scan_all.sh --upload"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.100.1",

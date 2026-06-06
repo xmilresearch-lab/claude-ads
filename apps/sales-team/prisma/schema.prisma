@@ -131,3 +131,19 @@ model VerificationToken {
 
   @@unique([identifier, token])
 }
+
+model SecurityScanResult {
+  id            String   @id @default(cuid())
+  scanType      String   // 'static' | 'adversarial' | 'garak' | 'zap' | 'full'
+  runId         String   // GitHub Actions run ID or 'manual-<timestamp>'
+  status        String   // 'pass' | 'warn' | 'fail'
+  findings      Json     @default("{}")
+  criticalCount Int      @default(0)
+  warnCount     Int      @default(0)
+  passCount     Int      @default(0)
+  triggeredBy   String   // 'scheduled' | 'push' | 'workflow_dispatch' | 'manual'
+  createdAt     DateTime @default(now())
+
+  @@index([scanType, createdAt])
+  @@index([status, createdAt])
+}
