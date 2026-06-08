@@ -1,0 +1,1013 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>$100M Sales Blueprint — Campaign Tracker</title>
+<style>
+  :root {
+    --green: #22c55e;
+    --yellow: #eab308;
+    --red: #ef4444;
+    --orange: #f97316;
+    --bg: #0f1115;
+    --card: #181b22;
+    --card-2: #1f232c;
+    --border: #2a2f3a;
+    --text: #f4f5f7;
+    --muted: #9aa1ad;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 960px; margin: 0 auto; padding: 16px; }
+  h1, h2, h3 { margin: 0 0 8px; }
+  h1 { font-size: 1.4rem; }
+  h2 { font-size: 1.1rem; color: var(--orange); text-transform: uppercase; letter-spacing: 0.04em; }
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 16px;
+    margin-bottom: 16px;
+  }
+  .hero {
+    text-align: center;
+    background: linear-gradient(160deg, #1c2030, #15171f);
+    border: 1px solid var(--border);
+  }
+  .big-number { font-size: 3rem; font-weight: 800; line-height: 1.1; letter-spacing: -0.02em; }
+  .sub { color: var(--muted); margin-top: 4px; font-size: 1rem; }
+  .badges { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin: 14px 0; }
+  .badge {
+    display: inline-block;
+    padding: 8px 16px;
+    border-radius: 999px;
+    font-weight: 700;
+    font-size: 0.95rem;
+  }
+  .badge.green { background: rgba(34,197,94,0.15); color: var(--green); border: 1px solid var(--green); }
+  .badge.yellow { background: rgba(234,179,8,0.15); color: var(--yellow); border: 1px solid var(--yellow); }
+  .badge.red { background: rgba(239,68,68,0.15); color: var(--red); border: 1px solid var(--red); }
+  .stat-row { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin-top: 8px; }
+  .stat-pill {
+    background: var(--card-2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 10px 14px;
+    min-width: 140px;
+  }
+  .stat-pill .v { font-size: 1.25rem; font-weight: 700; }
+  .stat-pill .l { font-size: 0.75rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; }
+  .progress-outer {
+    background: var(--card-2);
+    border-radius: 999px;
+    height: 28px;
+    overflow: hidden;
+    border: 1px solid var(--border);
+    margin-top: 16px;
+  }
+  .progress-inner {
+    height: 100%;
+    border-radius: 999px;
+    transition: width 0.6s ease;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    color: #0f1115;
+    font-weight: 800;
+    font-size: 0.8rem;
+    padding-right: 10px;
+    white-space: nowrap;
+  }
+  .pace-line { margin-top: 10px; font-size: 0.95rem; color: var(--muted); }
+  .pace-line strong { color: var(--text); }
+
+  form { display: grid; gap: 10px; }
+  label { font-size: 0.85rem; color: var(--muted); display: block; margin-bottom: 4px; }
+  input, select, textarea, button {
+    font-family: inherit;
+    font-size: 1rem;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    background: var(--card-2);
+    color: var(--text);
+    padding: 12px;
+    width: 100%;
+  }
+  textarea { resize: vertical; min-height: 70px; }
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  @media (min-width: 640px) {
+    .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+  }
+  button.primary {
+    background: var(--orange);
+    color: #15171f;
+    font-weight: 800;
+    border: none;
+    cursor: pointer;
+    padding: 14px;
+    font-size: 1.05rem;
+    margin-top: 4px;
+  }
+  button.primary:active { transform: scale(0.99); }
+  button.secondary {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text);
+    cursor: pointer;
+    font-weight: 600;
+  }
+  button.danger {
+    background: transparent;
+    border: 1px solid var(--red);
+    color: var(--red);
+    cursor: pointer;
+    font-weight: 600;
+  }
+  .actions-row { display: flex; gap: 10px; flex-wrap: wrap; }
+  .actions-row > button { flex: 1; min-width: 140px; }
+
+  table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+  th, td { text-align: left; padding: 8px 6px; border-bottom: 1px solid var(--border); white-space: nowrap; }
+  th { color: var(--muted); font-weight: 600; text-transform: uppercase; font-size: 0.7rem; letter-spacing: 0.03em; }
+  .table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+
+  .week-row { display: flex; justify-content: space-between; gap: 8px; padding: 10px 0; border-bottom: 1px solid var(--border); flex-wrap: wrap; }
+  .week-row:last-child { border-bottom: none; }
+  .week-name { font-weight: 700; min-width: 110px; }
+  .week-stats { color: var(--muted); font-size: 0.85rem; }
+
+  .bars { display: flex; align-items: flex-end; gap: 14px; height: 160px; padding: 10px 0 0; }
+  .bar-col { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; height: 100%; }
+  .bar { width: 100%; max-width: 56px; background: linear-gradient(180deg, var(--orange), #c2410c); border-radius: 6px 6px 0 0; min-height: 2px; transition: height 0.5s ease; }
+  .bar-label { font-size: 0.7rem; color: var(--muted); margin-top: 6px; text-align: center; }
+  .bar-value { font-size: 0.75rem; font-weight: 700; margin-top: 4px; }
+
+  .checklist { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+  .checklist li {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: var(--card-2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px;
+  }
+  .checklist input[type="checkbox"] { width: 22px; height: 22px; flex: none; accent-color: var(--orange); }
+  .checklist li.done span { text-decoration: line-through; color: var(--muted); }
+
+  .metrics-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  @media (min-width: 640px) { .metrics-grid { grid-template-columns: repeat(3, 1fr); } }
+  .metric-box { background: var(--card-2); border: 1px solid var(--border); border-radius: 10px; padding: 12px; }
+  .metric-box .l { font-size: 0.72rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.03em; }
+  .metric-box .v { font-size: 1.15rem; font-weight: 700; margin-top: 4px; }
+
+  footer { text-align: center; color: var(--muted); font-size: 0.78rem; padding: 18px 0 30px; }
+
+  .confetti-piece {
+    position: fixed;
+    top: -10px;
+    width: 8px;
+    height: 14px;
+    opacity: 0.9;
+    z-index: 9999;
+    animation: fall linear forwards;
+  }
+  @keyframes fall {
+    to { transform: translateY(110vh) rotate(540deg); opacity: 0.2; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- SECTION 1: MISSION STATUS -->
+  <section class="card hero">
+    <h1>$100M Sales Blueprint — Mission Control</h1>
+    <div class="big-number" id="bigCounter">$0 of $2,000 TARGET</div>
+    <div class="sub" id="salesSub">0 sales toward 21 customer target</div>
+
+    <div class="badges">
+      <span class="badge" id="statusBadge">—</span>
+    </div>
+
+    <div class="stat-row">
+      <div class="stat-pill">
+        <div class="v" id="daysLeft">—</div>
+        <div class="l">Days Left</div>
+      </div>
+      <div class="stat-pill">
+        <div class="v" id="revPerDay">—</div>
+        <div class="l">Needed / Day</div>
+      </div>
+      <div class="stat-pill">
+        <div class="v" id="pctToGoal">0%</div>
+        <div class="l">To Goal</div>
+      </div>
+    </div>
+
+    <div class="progress-outer">
+      <div class="progress-inner" id="progressBar" style="width:0%; background:#ef4444;">0%</div>
+    </div>
+    <div class="pace-line" id="paceLine">At current rate, you'll hit $2,000 on: <strong>—</strong></div>
+  </section>
+
+  <!-- SECTION 2: DAILY LOG -->
+  <section class="card">
+    <h2>Daily Log</h2>
+    <form id="dailyLogForm">
+      <div>
+        <label for="logDate">Date</label>
+        <input type="date" id="logDate" required>
+      </div>
+      <div class="grid-2">
+        <div>
+          <label for="logSegment">Segment</label>
+          <select id="logSegment">
+            <option>SaaS Founders</option>
+            <option>Digital Agencies</option>
+            <option>Info Creators</option>
+            <option>E-commerce</option>
+            <option>Coaches</option>
+            <option>B2B</option>
+            <option>Membership</option>
+          </select>
+        </div>
+        <div>
+          <label for="logPlatform">Platform</label>
+          <select id="logPlatform">
+            <option>LinkedIn</option>
+            <option>Twitter</option>
+            <option>Reddit</option>
+            <option>ProductHunt</option>
+            <option>Indie Hackers</option>
+            <option>Facebook Groups</option>
+            <option>Other</option>
+          </select>
+        </div>
+      </div>
+      <div class="grid-3">
+        <div>
+          <label for="logPosts">Posts published today</label>
+          <input type="number" id="logPosts" min="0" value="0">
+        </div>
+        <div>
+          <label for="logReach">Reach today</label>
+          <input type="number" id="logReach" min="0" value="0">
+        </div>
+        <div>
+          <label for="logClicks">Clicks to Gumroad today</label>
+          <input type="number" id="logClicks" min="0" value="0">
+        </div>
+      </div>
+      <div class="grid-3">
+        <div>
+          <label for="logSubmissions">Form submissions today</label>
+          <input type="number" id="logSubmissions" min="0" value="0">
+        </div>
+        <div>
+          <label for="logSales">Sales today</label>
+          <input type="number" id="logSales" min="0" value="0">
+        </div>
+        <div>
+          <label for="logRevenue">Revenue today ($)</label>
+          <input type="number" id="logRevenue" min="0" step="0.01" value="0">
+        </div>
+      </div>
+      <div>
+        <label for="logNotes">Notes — what worked? what didn't?</label>
+        <textarea id="logNotes" placeholder="Optional notes..."></textarea>
+      </div>
+      <button type="submit" class="primary">Log Today's Activity</button>
+    </form>
+  </section>
+
+  <!-- SECTION 3: WEEKLY SUMMARY -->
+  <section class="card">
+    <h2>Weekly Summary</h2>
+    <div id="weeklySummary"></div>
+    <h3 style="margin-top:16px;">Weekly Revenue</h3>
+    <div class="bars" id="weeklyBars"></div>
+  </section>
+
+  <!-- SECTION 4: SEGMENT PERFORMANCE -->
+  <section class="card">
+    <h2>Segment Performance</h2>
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr><th>Segment</th><th>Posts</th><th>Reach</th><th>Clicks</th><th>CTR%</th><th>Sales</th><th>Revenue</th></tr>
+        </thead>
+        <tbody id="segmentTable"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- SECTION 5: PLATFORM BREAKDOWN -->
+  <section class="card">
+    <h2>Platform Breakdown</h2>
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr><th>Platform</th><th>Posts</th><th>Reach</th><th>Clicks</th><th>CTR%</th><th>Sales</th><th>Revenue</th></tr>
+        </thead>
+        <tbody id="platformTable"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- SECTION 6: SALES LOG -->
+  <section class="card">
+    <h2>Sales Log</h2>
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr><th>Date</th><th>Name</th><th>Email</th><th>Segment</th><th>Platform</th><th>Amount</th><th>Status</th></tr>
+        </thead>
+        <tbody id="salesTable"></tbody>
+      </table>
+    </div>
+
+    <h3 style="margin-top:16px;">Add Sale</h3>
+    <form id="salesForm">
+      <div class="grid-2">
+        <div>
+          <label for="saleDate">Date</label>
+          <input type="date" id="saleDate" required>
+        </div>
+        <div>
+          <label for="saleAmount">Amount ($)</label>
+          <input type="number" id="saleAmount" min="0" step="0.01" required>
+        </div>
+      </div>
+      <div class="grid-2">
+        <div>
+          <label for="saleName">Customer name</label>
+          <input type="text" id="saleName" required>
+        </div>
+        <div>
+          <label for="saleEmail">Email</label>
+          <input type="email" id="saleEmail" required>
+        </div>
+      </div>
+      <div class="grid-2">
+        <div>
+          <label for="saleSegment">Segment</label>
+          <select id="saleSegment">
+            <option>SaaS Founders</option>
+            <option>Digital Agencies</option>
+            <option>Info Creators</option>
+            <option>E-commerce</option>
+            <option>Coaches</option>
+            <option>B2B</option>
+            <option>Membership</option>
+          </select>
+        </div>
+        <div>
+          <label for="salePlatform">Platform they came from</label>
+          <select id="salePlatform">
+            <option>LinkedIn</option>
+            <option>Twitter</option>
+            <option>Reddit</option>
+            <option>ProductHunt</option>
+            <option>Indie Hackers</option>
+            <option>Facebook Groups</option>
+            <option>Other</option>
+          </select>
+        </div>
+      </div>
+      <div>
+        <label for="saleStatus">Status</label>
+        <select id="saleStatus">
+          <option>Paid</option>
+          <option>Delivered</option>
+          <option>Testimonial Received</option>
+        </select>
+      </div>
+      <button type="submit" class="primary">Add Sale</button>
+    </form>
+  </section>
+
+  <!-- SECTION 7: DAILY CHECKLIST -->
+  <section class="card">
+    <h2>Daily Checklist</h2>
+    <ul class="checklist" id="checklist"></ul>
+  </section>
+
+  <!-- SECTION 8: MOMENTUM METRICS -->
+  <section class="card">
+    <h2>Momentum Metrics</h2>
+    <div class="metrics-grid" id="momentumMetrics"></div>
+  </section>
+
+  <!-- DATA ACTIONS -->
+  <section class="card">
+    <h2>Data</h2>
+    <div class="actions-row">
+      <button class="secondary" id="exportBtn">Export to CSV</button>
+      <button class="danger" id="resetBtn">Reset All Data</button>
+    </div>
+  </section>
+
+  <footer>
+    Last updated: <span id="lastUpdated">never</span>
+  </footer>
+</div>
+
+<script>
+(function () {
+  'use strict';
+
+  var TARGET = 2000;
+  var CUSTOMER_TARGET = 21;
+  var CAMPAIGN_START = new Date(2026, 5, 7);   // Jun 7, 2026
+  var CAMPAIGN_END = new Date(2026, 5, 30);    // Jun 30, 2026
+
+  var SEGMENTS = ['SaaS Founders', 'Digital Agencies', 'Info Creators', 'E-commerce', 'Coaches', 'B2B', 'Membership'];
+  var PLATFORMS = ['LinkedIn', 'Twitter', 'Reddit', 'ProductHunt', 'Indie Hackers', 'Facebook Groups', 'Other'];
+  var CHECKLIST_ITEMS = [
+    { id: 'post', label: '1 content post published' },
+    { id: 'engage', label: '10 minutes engagement (reply to comments)' },
+    { id: 'review', label: 'Review form submissions' },
+    { id: 'dms', label: 'DMs sent (if Week 2+): 30 DMs' },
+    { id: 'log', label: "Log metrics in tracker" }
+  ];
+
+  var STORE_KEYS = { logs: 'dailyLogs', sales: 'salesLog', updated: 'lastUpdated', checklist: 'dailyChecklist' };
+
+  // ---------- storage helpers ----------
+  function load(key, fallback) {
+    try {
+      var raw = localStorage.getItem(key);
+      return raw ? JSON.parse(raw) : fallback;
+    } catch (e) {
+      return fallback;
+    }
+  }
+  function save(key, value) {
+    localStorage.setItem(key, JSON.stringify(value));
+  }
+  function touchUpdated() {
+    var ts = new Date().toISOString();
+    localStorage.setItem(STORE_KEYS.updated, ts);
+    document.getElementById('lastUpdated').textContent = new Date(ts).toLocaleString();
+  }
+
+  function getDailyLogs() { return load(STORE_KEYS.logs, []); }
+  function getSalesLog() { return load(STORE_KEYS.sales, []); }
+
+  // ---------- formatting ----------
+  function formatCurrency(amount) {
+    var n = Number(amount) || 0;
+    return '$' + n.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+  }
+  function todayStr() {
+    var d = new Date();
+    var m = String(d.getMonth() + 1).padStart(2, '0');
+    var day = String(d.getDate()).padStart(2, '0');
+    return d.getFullYear() + '-' + m + '-' + day;
+  }
+  function parseDate(str) {
+    var parts = str.split('-');
+    return new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
+  }
+  function dayDiff(a, b) {
+    var msPerDay = 24 * 60 * 60 * 1000;
+    return Math.round((b - a) / msPerDay);
+  }
+
+  // ---------- calculations ----------
+  function totalRevenue() {
+    return getDailyLogs().reduce(function (sum, l) { return sum + (Number(l.revenue) || 0); }, 0);
+  }
+  function totalSalesCount() {
+    return getDailyLogs().reduce(function (sum, l) { return sum + (Number(l.sales) || 0); }, 0);
+  }
+
+  function calculateDaysLeft() {
+    var now = new Date();
+    var today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    var diff = dayDiff(today, CAMPAIGN_END);
+    return Math.max(diff, 0);
+  }
+
+  function calculateWeeklyTotals(weekIndex) {
+    // weekIndex 0..3, weeks defined by CAMPAIGN_START offsets
+    var weekStart = new Date(CAMPAIGN_START);
+    weekStart.setDate(weekStart.getDate() + weekIndex * 7);
+    var weekEnd = new Date(weekStart);
+    weekEnd.setDate(weekEnd.getDate() + (weekIndex === 3 ? 2 : 6));
+
+    var totals = { revenue: 0, sales: 0, posts: 0, clicks: 0, start: weekStart, end: weekEnd };
+    getDailyLogs().forEach(function (log) {
+      if (!log.date) return;
+      var d = parseDate(log.date);
+      if (d >= weekStart && d <= weekEnd) {
+        totals.revenue += Number(log.revenue) || 0;
+        totals.sales += Number(log.sales) || 0;
+        totals.posts += Number(log.posts) || 0;
+        totals.clicks += Number(log.clicks) || 0;
+      }
+    });
+    return totals;
+  }
+
+  function calculateSegmentStats(segment) {
+    var stats = { posts: 0, reach: 0, clicks: 0, sales: 0, revenue: 0 };
+    getDailyLogs().forEach(function (log) {
+      if (log.segment !== segment) return;
+      stats.posts += Number(log.posts) || 0;
+      stats.reach += Number(log.reach) || 0;
+      stats.clicks += Number(log.clicks) || 0;
+      stats.sales += Number(log.sales) || 0;
+      stats.revenue += Number(log.revenue) || 0;
+    });
+    return stats;
+  }
+
+  function calculatePlatformStats(platform) {
+    var stats = { posts: 0, reach: 0, clicks: 0, sales: 0, revenue: 0 };
+    getDailyLogs().forEach(function (log) {
+      if (log.platform !== platform) return;
+      stats.posts += Number(log.posts) || 0;
+      stats.reach += Number(log.reach) || 0;
+      stats.clicks += Number(log.clicks) || 0;
+      stats.sales += Number(log.sales) || 0;
+      stats.revenue += Number(log.revenue) || 0;
+    });
+    return stats;
+  }
+
+  function ctr(clicks, reach) {
+    if (!reach) return '0.0';
+    return ((clicks / reach) * 100).toFixed(1);
+  }
+
+  function calculatePaceDate() {
+    var logs = getDailyLogs().filter(function (l) { return l.date; });
+    if (!logs.length) return null;
+    var revenue = totalRevenue();
+    if (revenue <= 0) return null;
+
+    var dates = logs.map(function (l) { return parseDate(l.date); });
+    var earliest = new Date(Math.min.apply(null, dates));
+    var now = new Date();
+    var daysActive = Math.max(dayDiff(earliest, now), 1);
+    var dailyAvg = revenue / daysActive;
+    if (dailyAvg <= 0) return null;
+
+    var remaining = TARGET - revenue;
+    if (remaining <= 0) return now;
+
+    var daysToGo = Math.ceil(remaining / dailyAvg);
+    var hitDate = new Date(now);
+    hitDate.setDate(hitDate.getDate() + daysToGo);
+    return hitDate;
+  }
+
+  // ---------- render: mission status ----------
+  function updateMissionStatus() {
+    var revenue = totalRevenue();
+    var salesCount = totalSalesCount();
+    var pct = Math.min((revenue / TARGET) * 100, 100);
+    var daysLeft = calculateDaysLeft();
+    var totalCampaignDays = dayDiff(CAMPAIGN_START, CAMPAIGN_END) + 1;
+    var daysElapsed = Math.max(totalCampaignDays - daysLeft, 1);
+
+    document.getElementById('bigCounter').textContent = formatCurrency(revenue) + ' of $2,000 TARGET';
+    document.getElementById('salesSub').textContent = salesCount + ' sales toward ' + CUSTOMER_TARGET + ' customer target';
+    document.getElementById('daysLeft').textContent = daysLeft + (daysLeft === 1 ? ' day' : ' days');
+    document.getElementById('pctToGoal').textContent = pct.toFixed(1) + '%';
+
+    var remaining = Math.max(TARGET - revenue, 0);
+    var perDay = daysLeft > 0 ? remaining / daysLeft : remaining;
+    document.getElementById('revPerDay').textContent = formatCurrency(perDay) + '/day';
+
+    // status: compare actual pace vs needed pace
+    var expectedPctByNow = (daysElapsed / totalCampaignDays) * 100;
+    var statusEl = document.getElementById('statusBadge');
+    statusEl.className = 'badge';
+    if (pct >= 100) {
+      statusEl.classList.add('green');
+      statusEl.textContent = 'AHEAD 🎉';
+      maybeCelebrate();
+    } else if (pct + 5 >= expectedPctByNow) {
+      var ahead = pct > expectedPctByNow + 10;
+      statusEl.classList.add('green');
+      statusEl.textContent = ahead ? 'AHEAD' : 'ON PACE';
+    } else if (pct + 20 >= expectedPctByNow) {
+      statusEl.classList.add('yellow');
+      statusEl.textContent = 'BEHIND';
+    } else {
+      statusEl.classList.add('red');
+      statusEl.textContent = 'BEHIND';
+    }
+
+    // progress bar
+    var bar = document.getElementById('progressBar');
+    bar.style.width = pct + '%';
+    bar.textContent = pct >= 8 ? pct.toFixed(0) + '%' : '';
+    var barColor;
+    if (pct < 25) barColor = '#ef4444';
+    else if (pct < 75) barColor = '#eab308';
+    else barColor = '#22c55e';
+    bar.style.background = barColor;
+
+    // pace
+    var paceDate = calculatePaceDate();
+    var paceEl = document.getElementById('paceLine');
+    if (paceDate) {
+      paceEl.innerHTML = "At current rate, you'll hit $2,000 on: <strong>" +
+        paceDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) + '</strong>';
+    } else {
+      paceEl.innerHTML = "At current rate, you'll hit $2,000 on: <strong>not enough data yet</strong>";
+    }
+  }
+
+  var celebrated = false;
+  function maybeCelebrate() {
+    if (celebrated) return;
+    celebrated = true;
+    launchConfetti();
+  }
+  function launchConfetti() {
+    var colors = ['#22c55e', '#eab308', '#f97316', '#ef4444', '#60a5fa'];
+    for (var i = 0; i < 60; i++) {
+      (function () {
+        var piece = document.createElement('div');
+        piece.className = 'confetti-piece';
+        piece.style.left = Math.random() * 100 + 'vw';
+        piece.style.background = colors[Math.floor(Math.random() * colors.length)];
+        piece.style.animationDuration = (2 + Math.random() * 2) + 's';
+        piece.style.animationDelay = (Math.random() * 1.5) + 's';
+        document.body.appendChild(piece);
+        setTimeout(function () { piece.remove(); }, 5000);
+      })();
+    }
+  }
+
+  // ---------- render: weekly summary ----------
+  var WEEK_LABELS = ['Week 1 (Jun 7-13)', 'Week 2 (Jun 14-20)', 'Week 3 (Jun 21-27)', 'Week 4 (Jun 28-30)'];
+
+  function renderWeeklySummary() {
+    var container = document.getElementById('weeklySummary');
+    var bars = document.getElementById('weeklyBars');
+    container.innerHTML = '';
+    bars.innerHTML = '';
+
+    var weekTotals = [];
+    for (var i = 0; i < 4; i++) weekTotals.push(calculateWeeklyTotals(i));
+    var maxRevenue = Math.max.apply(null, weekTotals.map(function (w) { return w.revenue; }).concat([1]));
+
+    weekTotals.forEach(function (w, i) {
+      var row = document.createElement('div');
+      row.className = 'week-row';
+      row.innerHTML =
+        '<span class="week-name">' + WEEK_LABELS[i] + '</span>' +
+        '<span class="week-stats">' + formatCurrency(w.revenue) + ' &nbsp;|&nbsp; ' +
+        w.sales + ' sales &nbsp;|&nbsp; ' + w.posts + ' posts &nbsp;|&nbsp; ' + w.clicks + ' clicks</span>';
+      container.appendChild(row);
+
+      var col = document.createElement('div');
+      col.className = 'bar-col';
+      var barHeightPct = (w.revenue / maxRevenue) * 100;
+      col.innerHTML =
+        '<div class="bar-value">' + formatCurrency(w.revenue) + '</div>' +
+        '<div class="bar" style="height:' + Math.max(barHeightPct, 2) + '%"></div>' +
+        '<div class="bar-label">' + WEEK_LABELS[i].split(' (')[0] + '</div>';
+      bars.appendChild(col);
+    });
+  }
+
+  // ---------- render: segment & platform tables ----------
+  function renderStatsTable(tbodyId, names, statsFn) {
+    var tbody = document.getElementById(tbodyId);
+    tbody.innerHTML = '';
+    names.forEach(function (name) {
+      var s = statsFn(name);
+      var tr = document.createElement('tr');
+      tr.innerHTML =
+        '<td>' + name + '</td>' +
+        '<td>' + s.posts + '</td>' +
+        '<td>' + s.reach + '</td>' +
+        '<td>' + s.clicks + '</td>' +
+        '<td>' + ctr(s.clicks, s.reach) + '%</td>' +
+        '<td>' + s.sales + '</td>' +
+        '<td>' + formatCurrency(s.revenue) + '</td>';
+      tbody.appendChild(tr);
+    });
+  }
+
+  function renderSegmentTable() { renderStatsTable('segmentTable', SEGMENTS, calculateSegmentStats); }
+  function renderPlatformTable() { renderStatsTable('platformTable', PLATFORMS, calculatePlatformStats); }
+
+  // ---------- render: sales log ----------
+  function renderSalesTable() {
+    var tbody = document.getElementById('salesTable');
+    tbody.innerHTML = '';
+    var sales = getSalesLog().slice().sort(function (a, b) { return (a.date < b.date) ? 1 : -1; });
+    sales.forEach(function (sale, idx) {
+      var tr = document.createElement('tr');
+      tr.innerHTML =
+        '<td>' + escapeHtml(sale.date) + '</td>' +
+        '<td>' + escapeHtml(sale.name) + '</td>' +
+        '<td>' + escapeHtml(sale.email) + '</td>' +
+        '<td>' + escapeHtml(sale.segment) + '</td>' +
+        '<td>' + escapeHtml(sale.platform) + '</td>' +
+        '<td>' + formatCurrency(sale.amount) + '</td>' +
+        '<td></td>';
+      var statusTd = tr.lastElementChild;
+      var select = document.createElement('select');
+      ['Paid', 'Delivered', 'Testimonial Received'].forEach(function (opt) {
+        var o = document.createElement('option');
+        o.value = opt;
+        o.textContent = opt;
+        if (opt === sale.status) o.selected = true;
+        select.appendChild(o);
+      });
+      select.addEventListener('change', function () {
+        var all = getSalesLog();
+        var realIndex = all.findIndex(function (s) {
+          return s.date === sale.date && s.email === sale.email && s.amount === sale.amount && s.name === sale.name;
+        });
+        if (realIndex > -1) {
+          all[realIndex].status = select.value;
+          save(STORE_KEYS.sales, all);
+          touchUpdated();
+        }
+      });
+      statusTd.appendChild(select);
+      tbody.appendChild(tr);
+    });
+  }
+
+  function escapeHtml(str) {
+    var div = document.createElement('div');
+    div.textContent = str == null ? '' : String(str);
+    return div.innerHTML;
+  }
+
+  // ---------- render: checklist ----------
+  function getChecklistState() {
+    var state = load(STORE_KEYS.checklist, {});
+    var today = todayStr();
+    if (state.date !== today) {
+      state = { date: today, items: {} };
+      save(STORE_KEYS.checklist, state);
+    }
+    return state;
+  }
+
+  function renderChecklist() {
+    var state = getChecklistState();
+    var ul = document.getElementById('checklist');
+    ul.innerHTML = '';
+    CHECKLIST_ITEMS.forEach(function (item) {
+      var li = document.createElement('li');
+      var checked = !!state.items[item.id];
+      if (checked) li.classList.add('done');
+
+      var checkbox = document.createElement('input');
+      checkbox.type = 'checkbox';
+      checkbox.checked = checked;
+      checkbox.id = 'chk-' + item.id;
+      checkbox.addEventListener('change', function () {
+        var s = getChecklistState();
+        s.items[item.id] = checkbox.checked;
+        save(STORE_KEYS.checklist, s);
+        li.classList.toggle('done', checkbox.checked);
+        touchUpdated();
+      });
+
+      var span = document.createElement('span');
+      span.textContent = item.label;
+
+      var label = document.createElement('label');
+      label.style.display = 'flex';
+      label.style.alignItems = 'center';
+      label.style.gap = '12px';
+      label.style.flex = '1';
+      label.style.cursor = 'pointer';
+      label.htmlFor = checkbox.id;
+      label.appendChild(checkbox);
+      label.appendChild(span);
+
+      li.appendChild(label);
+      ul.appendChild(li);
+    });
+  }
+
+  // ---------- render: momentum metrics ----------
+  function renderMomentumMetrics() {
+    var logs = getDailyLogs();
+    var revenue = totalRevenue();
+    var salesCount = totalSalesCount();
+
+    var thisWeek = calculateWeeklyTotals(currentWeekIndex());
+    var lastWeekIdx = currentWeekIndex() - 1;
+    var lastWeek = lastWeekIdx >= 0 ? calculateWeeklyTotals(lastWeekIdx) : null;
+    var wow = '—';
+    if (lastWeek && lastWeek.revenue > 0) {
+      wow = (((thisWeek.revenue - lastWeek.revenue) / lastWeek.revenue) * 100).toFixed(0) + '%';
+      wow = (thisWeek.revenue >= lastWeek.revenue ? '+' : '') + wow;
+    } else if (thisWeek.revenue > 0) {
+      wow = 'new';
+    }
+
+    var activeDays = uniqueDates(logs).length || 1;
+    var dailyAvg = revenue / activeDays;
+    var avgSale = salesCount > 0 ? revenue / salesCount : 0;
+
+    var bestSegment = bestBy(SEGMENTS, calculateSegmentStats);
+    var bestPlatform = bestBy(PLATFORMS, calculatePlatformStats);
+
+    var metrics = [
+      { l: 'Week-over-Week Growth', v: wow + ' vs last week' },
+      { l: 'Daily Average Revenue', v: formatCurrency(dailyAvg) + '/day' },
+      { l: 'Average Sale Value', v: formatCurrency(avgSale) },
+      { l: 'Cost per Customer', v: '$0 (organic)' },
+      { l: 'Best Performing Segment', v: bestSegment.name + ' — ' + bestSegment.value + ' clicks' },
+      { l: 'Best Performing Platform', v: bestPlatform.name + ' — ' + bestPlatform.value + ' clicks' }
+    ];
+
+    var grid = document.getElementById('momentumMetrics');
+    grid.innerHTML = '';
+    metrics.forEach(function (m) {
+      var box = document.createElement('div');
+      box.className = 'metric-box';
+      box.innerHTML = '<div class="l">' + m.l + '</div><div class="v">' + m.v + '</div>';
+      grid.appendChild(box);
+    });
+  }
+
+  function uniqueDates(logs) {
+    var seen = {};
+    logs.forEach(function (l) { if (l.date) seen[l.date] = true; });
+    return Object.keys(seen);
+  }
+
+  function currentWeekIndex() {
+    var now = new Date();
+    var diff = dayDiff(CAMPAIGN_START, now);
+    return Math.min(Math.max(Math.floor(diff / 7), 0), 3);
+  }
+
+  function bestBy(names, statsFn) {
+    var best = { name: '—', value: 0 };
+    names.forEach(function (name) {
+      var s = statsFn(name);
+      if (s.clicks > best.value) best = { name: name, value: s.clicks };
+    });
+    if (best.value === 0) best.name = '—';
+    return best;
+  }
+
+  // ---------- render all ----------
+  function renderAll() {
+    updateMissionStatus();
+    renderWeeklySummary();
+    renderSegmentTable();
+    renderPlatformTable();
+    renderSalesTable();
+    renderChecklist();
+    renderMomentumMetrics();
+    var ts = localStorage.getItem(STORE_KEYS.updated);
+    document.getElementById('lastUpdated').textContent = ts ? new Date(ts).toLocaleString() : 'never';
+  }
+
+  // ---------- export / reset ----------
+  function exportToCSV() {
+    var lines = [];
+    lines.push('=== DAILY LOGS ===');
+    lines.push('Date,Posts,Reach,Clicks,Submissions,Sales,Revenue,Segment,Platform,Notes');
+    getDailyLogs().forEach(function (l) {
+      lines.push([l.date, l.posts, l.reach, l.clicks, l.submissions, l.sales, l.revenue, l.segment, l.platform, csvEscape(l.notes)].join(','));
+    });
+    lines.push('');
+    lines.push('=== SALES LOG ===');
+    lines.push('Date,Name,Email,Segment,Platform,Amount,Status');
+    getSalesLog().forEach(function (s) {
+      lines.push([s.date, csvEscape(s.name), csvEscape(s.email), s.segment, s.platform, s.amount, s.status].join(','));
+    });
+
+    var blob = new Blob([lines.join('\n')], { type: 'text/csv;charset=utf-8;' });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = 'campaign-tracker-export-' + todayStr() + '.csv';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+
+  function csvEscape(value) {
+    var str = value == null ? '' : String(value);
+    if (str.indexOf(',') > -1 || str.indexOf('"') > -1 || str.indexOf('\n') > -1) {
+      str = '"' + str.replace(/"/g, '""') + '"';
+    }
+    return str;
+  }
+
+  function resetData() {
+    if (!confirm('This will permanently delete all logged activity, sales, and checklist data. Are you sure?')) return;
+    localStorage.removeItem(STORE_KEYS.logs);
+    localStorage.removeItem(STORE_KEYS.sales);
+    localStorage.removeItem(STORE_KEYS.checklist);
+    localStorage.removeItem(STORE_KEYS.updated);
+    celebrated = false;
+    renderAll();
+  }
+
+  // ---------- form handlers ----------
+  function setupDailyLogForm() {
+    var form = document.getElementById('dailyLogForm');
+    document.getElementById('logDate').value = todayStr();
+
+    form.addEventListener('submit', function (e) {
+      e.preventDefault();
+      var entry = {
+        date: document.getElementById('logDate').value,
+        posts: Number(document.getElementById('logPosts').value) || 0,
+        reach: Number(document.getElementById('logReach').value) || 0,
+        clicks: Number(document.getElementById('logClicks').value) || 0,
+        submissions: Number(document.getElementById('logSubmissions').value) || 0,
+        sales: Number(document.getElementById('logSales').value) || 0,
+        revenue: Number(document.getElementById('logRevenue').value) || 0,
+        segment: document.getElementById('logSegment').value,
+        platform: document.getElementById('logPlatform').value,
+        notes: document.getElementById('logNotes').value.trim()
+      };
+      var logs = getDailyLogs();
+      logs.push(entry);
+      save(STORE_KEYS.logs, logs);
+      touchUpdated();
+
+      form.reset();
+      document.getElementById('logDate').value = todayStr();
+      ['logPosts', 'logReach', 'logClicks', 'logSubmissions', 'logSales', 'logRevenue'].forEach(function (id) {
+        document.getElementById(id).value = 0;
+      });
+
+      renderAll();
+    });
+  }
+
+  function setupSalesForm() {
+    var form = document.getElementById('salesForm');
+    document.getElementById('saleDate').value = todayStr();
+
+    form.addEventListener('submit', function (e) {
+      e.preventDefault();
+      var sale = {
+        date: document.getElementById('saleDate').value,
+        name: document.getElementById('saleName').value.trim(),
+        email: document.getElementById('saleEmail').value.trim(),
+        segment: document.getElementById('saleSegment').value,
+        platform: document.getElementById('salePlatform').value,
+        amount: Number(document.getElementById('saleAmount').value) || 0,
+        status: document.getElementById('saleStatus').value
+      };
+      var sales = getSalesLog();
+      sales.push(sale);
+      save(STORE_KEYS.sales, sales);
+      touchUpdated();
+
+      form.reset();
+      document.getElementById('saleDate').value = todayStr();
+
+      renderAll();
+    });
+  }
+
+  // ---------- init ----------
+  document.addEventListener('DOMContentLoaded', function () {
+    setupDailyLogForm();
+    setupSalesForm();
+    document.getElementById('exportBtn').addEventListener('click', exportToCSV);
+    document.getElementById('resetBtn').addEventListener('click', resetData);
+    renderAll();
+
+    // Re-render at local midnight so the checklist resets for the new day
+    scheduleMidnightRefresh();
+  });
+
+  function scheduleMidnightRefresh() {
+    var now = new Date();
+    var nextMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 0, 0, 5);
+    var ms = nextMidnight - now;
+    setTimeout(function () {
+      renderAll();
+      scheduleMidnightRefresh();
+    }, ms);
+  }
+})();
+</script>
+</body>
+</html>
