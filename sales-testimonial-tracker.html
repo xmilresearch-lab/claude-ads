@@ -1,0 +1,677 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sales Log + Testimonial Manager</title>
+<style>
+  :root {
+    --orange: #FF6B35;
+    --orange-dark: #e0552a;
+    --bg: #f4f4f5;
+    --card: #ffffff;
+    --text: #1a1a1a;
+    --muted: #6b7280;
+    --border: #e5e7eb;
+    --green: #16a34a;
+    --green-bg: #ecfdf3;
+    --blue: #2563eb;
+    --blue-bg: #eff6ff;
+    --orange-bg: #fff1ea;
+    --gray: #6b7280;
+    --gray-bg: #f3f4f6;
+    --red: #ef4444;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    -webkit-font-smoothing: antialiased;
+    line-height: 1.5;
+  }
+  .page { max-width: 980px; margin: 0 auto; padding: 20px 16px 60px; }
+  h1 { font-size: 1.5rem; font-weight: 800; letter-spacing: -0.02em; margin: 0 0 4px; }
+  h1 .accent { color: var(--orange); }
+  .lede { color: var(--muted); margin: 0 0 24px; font-size: 0.95rem; }
+  h2 {
+    font-size: 1.05rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--orange-dark);
+    margin: 0 0 14px;
+  }
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+  }
+
+  form { display: grid; gap: 12px; }
+  label { display: block; font-weight: 600; font-size: 0.85rem; margin-bottom: 5px; color: var(--text); }
+  input, select, textarea, button {
+    font-family: inherit;
+    font-size: 1rem;
+    border-radius: 10px;
+    border: 1.5px solid var(--border);
+    padding: 12px;
+    width: 100%;
+    background: #fafafa;
+    color: var(--text);
+  }
+  textarea { resize: vertical; min-height: 70px; }
+  input:focus, select:focus, textarea:focus { outline: none; border-color: var(--orange); background: #fff; }
+  .grid-2 { display: grid; grid-template-columns: 1fr; gap: 12px; }
+  @media (min-width: 640px) { .grid-2 { grid-template-columns: 1fr 1fr; } }
+
+  button.primary {
+    background: var(--orange);
+    color: #fff;
+    border: none;
+    font-weight: 800;
+    cursor: pointer;
+    padding: 14px;
+    font-size: 1.02rem;
+    transition: background 0.15s ease;
+  }
+  button.primary:hover { background: var(--orange-dark); }
+  button.secondary {
+    background: #fff;
+    border: 1.5px solid var(--border);
+    color: var(--text);
+    font-weight: 600;
+    cursor: pointer;
+  }
+  button.secondary:hover { border-color: var(--orange); color: var(--orange-dark); }
+  button.danger {
+    background: #fff;
+    border: 1.5px solid var(--red);
+    color: var(--red);
+    font-weight: 600;
+    cursor: pointer;
+    padding: 8px 12px;
+    width: auto;
+    font-size: 0.82rem;
+  }
+  .toast {
+    display: none;
+    margin-top: 4px;
+    background: var(--green-bg);
+    border: 1px solid var(--green);
+    color: var(--green);
+    border-radius: 10px;
+    padding: 10px 14px;
+    font-size: 0.9rem;
+    font-weight: 600;
+  }
+  .toast.show { display: block; }
+
+  /* Sales table */
+  .table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  table { width: 100%; border-collapse: collapse; font-size: 0.85rem; min-width: 640px; }
+  th, td { text-align: left; padding: 10px 8px; border-bottom: 1px solid var(--border); white-space: nowrap; }
+  th { color: var(--muted); font-weight: 700; text-transform: uppercase; font-size: 0.7rem; letter-spacing: 0.03em; }
+  tr.received { background: var(--green-bg); }
+  tr.received td { color: #166534; }
+  select.status-select { width: auto; min-width: 170px; padding: 8px; font-size: 0.85rem; }
+  .empty-row td { text-align: center; color: var(--muted); padding: 24px 8px; white-space: normal; }
+
+  /* Testimonial gallery */
+  .gallery-grid { display: grid; grid-template-columns: 1fr; gap: 14px; }
+  @media (min-width: 640px) { .gallery-grid { grid-template-columns: 1fr 1fr; } }
+  .t-card {
+    border-radius: 14px;
+    padding: 16px;
+    border: 1.5px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .t-card.seg-saas { background: var(--blue-bg); border-color: var(--blue); }
+  .t-card.seg-agencies { background: var(--green-bg); border-color: var(--green); }
+  .t-card.seg-coaches { background: var(--orange-bg); border-color: var(--orange); }
+  .t-card.seg-other { background: var(--gray-bg); border-color: var(--gray); }
+  .t-quote { font-style: italic; font-size: 0.98rem; margin: 0; }
+  .t-meta { font-size: 0.82rem; color: var(--muted); display: flex; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+  .t-meta strong { color: var(--text); }
+  .seg-pill {
+    display: inline-block;
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    padding: 3px 9px;
+    border-radius: 999px;
+  }
+  .seg-saas .seg-pill { background: var(--blue); color: #fff; }
+  .seg-agencies .seg-pill { background: var(--green); color: #fff; }
+  .seg-coaches .seg-pill { background: var(--orange); color: #fff; }
+  .seg-other .seg-pill { background: var(--gray); color: #fff; }
+  .t-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+  .t-actions button {
+    flex: 1;
+    min-width: 110px;
+    width: auto;
+    padding: 9px 10px;
+    font-size: 0.78rem;
+    font-weight: 700;
+    background: rgba(255,255,255,0.7);
+    border: 1.5px solid rgba(0,0,0,0.12);
+    color: var(--text);
+    cursor: pointer;
+    border-radius: 8px;
+  }
+  .t-actions button.copied { background: var(--green); color: #fff; border-color: var(--green); }
+  .empty-state {
+    text-align: center;
+    color: var(--muted);
+    padding: 30px 10px;
+    border: 1.5px dashed var(--border);
+    border-radius: 12px;
+  }
+
+  /* Export + stats */
+  .actions-row { display: grid; gap: 10px; }
+  @media (min-width: 640px) { .actions-row { grid-template-columns: 1fr 1fr 1fr; } }
+  .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  @media (min-width: 640px) { .stats-grid { grid-template-columns: repeat(4, 1fr); } }
+  .stat-box { background: var(--gray-bg); border: 1px solid var(--border); border-radius: 12px; padding: 14px; }
+  .stat-box .v { font-size: 1.4rem; font-weight: 800; }
+  .stat-box .l { font-size: 0.72rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.03em; margin-top: 2px; }
+  .seg-breakdown { margin-top: 12px; display: grid; gap: 6px; font-size: 0.85rem; }
+  .seg-breakdown .row { display: flex; justify-content: space-between; padding: 6px 10px; background: var(--gray-bg); border-radius: 8px; }
+
+  footer { text-align: center; color: var(--muted); font-size: 0.78rem; margin-top: 30px; }
+</style>
+</head>
+<body>
+<div class="page">
+  <h1>Sales Log <span class="accent">&amp;</span> Testimonial Manager</h1>
+  <p class="lede">Log every sale, request testimonials, and turn them into ready-to-post social proof.</p>
+
+  <!-- 1. QUICK SALE LOG -->
+  <section class="card">
+    <h2>Log a Sale</h2>
+    <form id="saleForm">
+      <div class="grid-2">
+        <div>
+          <label for="saleDate">Date</label>
+          <input type="date" id="saleDate" required>
+        </div>
+        <div>
+          <label for="saleAmount">Amount paid ($)</label>
+          <input type="number" id="saleAmount" min="0" step="0.01" placeholder="97" required>
+        </div>
+      </div>
+      <div class="grid-2">
+        <div>
+          <label for="saleName">Customer name</label>
+          <input type="text" id="saleName" required>
+        </div>
+        <div>
+          <label for="saleEmail">Email</label>
+          <input type="email" id="saleEmail" required>
+        </div>
+      </div>
+      <div>
+        <label for="saleSegment">Segment</label>
+        <select id="saleSegment">
+          <option>SaaS Founders</option>
+          <option>Agencies</option>
+          <option>Coaches</option>
+          <option>Other</option>
+        </select>
+      </div>
+      <button type="submit" class="primary">Log Sale</button>
+      <div class="toast" id="saleToast">Sale logged! Send them a testimonial request email.</div>
+    </form>
+  </section>
+
+  <!-- 2. SALES TABLE -->
+  <section class="card">
+    <h2>Sales Log</h2>
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr><th>Date</th><th>Name</th><th>Email</th><th>Segment</th><th>Amount</th><th>Status</th><th>Actions</th></tr>
+        </thead>
+        <tbody id="salesTbody"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- 3. TESTIMONIAL COLLECTION FORM -->
+  <section class="card">
+    <h2>Collect a Testimonial</h2>
+    <form id="testimonialForm">
+      <div>
+        <label for="tCustomer">Select customer</label>
+        <select id="tCustomer" required></select>
+      </div>
+      <div>
+        <label for="tQuote">Paste their testimonial</label>
+        <textarea id="tQuote" placeholder="e.g. This audit showed me exactly where I was leaving money on the table..." required></textarea>
+      </div>
+      <div>
+        <label for="tPermission">Permission granted for public use? (yes/no)</label>
+        <textarea id="tPermission" rows="1" placeholder="yes" required style="min-height:44px;"></textarea>
+      </div>
+      <button type="submit" class="primary">Add Testimonial</button>
+      <div class="toast" id="testimonialToast">Testimonial added to the gallery below.</div>
+    </form>
+  </section>
+
+  <!-- 4. TESTIMONIAL GALLERY -->
+  <section class="card">
+    <h2>Testimonial Gallery</h2>
+    <div id="galleryWrap"></div>
+  </section>
+
+  <!-- 5. EXPORT -->
+  <section class="card">
+    <h2>Export</h2>
+    <div class="actions-row">
+      <button class="secondary" id="exportJsonBtn">Export All Testimonials (JSON)</button>
+      <button class="secondary" id="exportCsvBtn">Export for LinkedIn (CSV)</button>
+      <button class="secondary" id="exportHtmlBtn">Export for Website (HTML)</button>
+    </div>
+  </section>
+
+  <!-- 6. STATS -->
+  <section class="card">
+    <h2>Stats</h2>
+    <div class="stats-grid">
+      <div class="stat-box"><div class="v" id="statTotalSales">0</div><div class="l">Total Sales Logged</div></div>
+      <div class="stat-box"><div class="v" id="statTotalTestimonials">0</div><div class="l">Testimonials Collected</div></div>
+      <div class="stat-box"><div class="v" id="statConversion">0%</div><div class="l">% With Testimonial</div></div>
+      <div class="stat-box"><div class="v" id="statRevenue">$0</div><div class="l">Total Revenue Logged</div></div>
+    </div>
+    <div class="seg-breakdown" id="segBreakdown"></div>
+  </section>
+
+  <footer>All data stored locally in your browser (localStorage). Nothing is sent anywhere.</footer>
+</div>
+
+<script>
+(function () {
+  'use strict';
+
+  var SEGMENTS = ['SaaS Founders', 'Agencies', 'Coaches', 'Other'];
+  var STATUSES = ['Lead Captured', 'Paid', 'Delivered', 'Testimonial Received'];
+  var STORE = { sales: 'sales', testimonials: 'testimonials' };
+
+  function load(key, fallback) {
+    try {
+      var raw = localStorage.getItem(key);
+      return raw ? JSON.parse(raw) : fallback;
+    } catch (e) { return fallback; }
+  }
+  function save(key, value) { localStorage.setItem(key, JSON.stringify(value)); }
+  function getSales() { return load(STORE.sales, []); }
+  function getTestimonials() { return load(STORE.testimonials, []); }
+
+  function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 8); }
+  function todayStr() {
+    var d = new Date();
+    return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+  }
+  function formatCurrency(n) {
+    n = Number(n) || 0;
+    return '$' + n.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+  }
+  function escapeHtml(str) {
+    var div = document.createElement('div');
+    div.textContent = str == null ? '' : String(str);
+    return div.innerHTML;
+  }
+  function segClass(segment) {
+    switch (segment) {
+      case 'SaaS Founders': return 'seg-saas';
+      case 'Agencies': return 'seg-agencies';
+      case 'Coaches': return 'seg-coaches';
+      default: return 'seg-other';
+    }
+  }
+  function showToast(el) {
+    el.classList.add('show');
+    clearTimeout(el._hideTimer);
+    el._hideTimer = setTimeout(function () { el.classList.remove('show'); }, 4000);
+  }
+
+  // ---------- Sales ----------
+  function renderSalesTable() {
+    var tbody = document.getElementById('salesTbody');
+    tbody.innerHTML = '';
+    var sales = getSales().slice().sort(function (a, b) { return a.date < b.date ? 1 : (a.date > b.date ? -1 : 0); });
+
+    if (!sales.length) {
+      tbody.innerHTML = '<tr class="empty-row"><td colspan="7">No sales logged yet. Add your first sale above.</td></tr>';
+      return;
+    }
+
+    sales.forEach(function (sale) {
+      var tr = document.createElement('tr');
+      if (sale.status === 'Testimonial Received') tr.classList.add('received');
+
+      tr.innerHTML =
+        '<td>' + escapeHtml(sale.date) + '</td>' +
+        '<td>' + escapeHtml(sale.name) + '</td>' +
+        '<td>' + escapeHtml(sale.email) + '</td>' +
+        '<td>' + escapeHtml(sale.segment) + '</td>' +
+        '<td>' + formatCurrency(sale.amount) + '</td>' +
+        '<td></td>' +
+        '<td></td>';
+
+      var statusTd = tr.children[5];
+      var select = document.createElement('select');
+      select.className = 'status-select';
+      STATUSES.forEach(function (s) {
+        var o = document.createElement('option');
+        o.value = s; o.textContent = s;
+        if (s === sale.status) o.selected = true;
+        select.appendChild(o);
+      });
+      select.addEventListener('change', function () {
+        var all = getSales();
+        var idx = all.findIndex(function (s) { return s.id === sale.id; });
+        if (idx > -1) {
+          all[idx].status = select.value;
+          save(STORE.sales, all);
+          renderSalesTable();
+          renderStats();
+        }
+      });
+      statusTd.appendChild(select);
+
+      var actionsTd = tr.children[6];
+      var delBtn = document.createElement('button');
+      delBtn.className = 'danger';
+      delBtn.textContent = 'Delete';
+      delBtn.addEventListener('click', function () {
+        if (!confirm('Delete the sale for ' + sale.name + '? This cannot be undone.')) return;
+        var all = getSales().filter(function (s) { return s.id !== sale.id; });
+        save(STORE.sales, all);
+        renderSalesTable();
+        renderStats();
+        populateCustomerDropdown();
+      });
+      actionsTd.appendChild(delBtn);
+
+      tbody.appendChild(tr);
+    });
+  }
+
+  function setupSaleForm() {
+    var form = document.getElementById('saleForm');
+    var toast = document.getElementById('saleToast');
+    document.getElementById('saleDate').value = todayStr();
+
+    form.addEventListener('submit', function (e) {
+      e.preventDefault();
+      var sale = {
+        id: uid(),
+        date: document.getElementById('saleDate').value,
+        name: document.getElementById('saleName').value.trim(),
+        email: document.getElementById('saleEmail').value.trim(),
+        segment: document.getElementById('saleSegment').value,
+        amount: Number(document.getElementById('saleAmount').value) || 0,
+        status: 'Paid'
+      };
+      var sales = getSales();
+      sales.push(sale);
+      save(STORE.sales, sales);
+
+      form.reset();
+      document.getElementById('saleDate').value = todayStr();
+      showToast(toast);
+
+      renderSalesTable();
+      renderStats();
+      populateCustomerDropdown();
+    });
+  }
+
+  // ---------- Testimonials ----------
+  function populateCustomerDropdown() {
+    var select = document.getElementById('tCustomer');
+    var current = select.value;
+    select.innerHTML = '';
+    var sales = getSales();
+    if (!sales.length) {
+      var opt = document.createElement('option');
+      opt.value = '';
+      opt.textContent = 'No customers yet — log a sale first';
+      select.appendChild(opt);
+      select.disabled = true;
+      return;
+    }
+    select.disabled = false;
+    sales.slice().sort(function (a, b) { return a.date < b.date ? 1 : -1; }).forEach(function (sale) {
+      var opt = document.createElement('option');
+      opt.value = sale.id;
+      opt.textContent = sale.name + ' (' + sale.segment + ', ' + sale.date + ')';
+      select.appendChild(opt);
+    });
+    if (current) select.value = current;
+  }
+
+  function setupTestimonialForm() {
+    var form = document.getElementById('testimonialForm');
+    var toast = document.getElementById('testimonialToast');
+
+    form.addEventListener('submit', function (e) {
+      e.preventDefault();
+      var customerSelect = document.getElementById('tCustomer');
+      var saleId = customerSelect.value;
+      if (!saleId) return;
+      var sale = getSales().find(function (s) { return s.id === saleId; });
+      if (!sale) return;
+
+      var permissionRaw = document.getElementById('tPermission').value.trim().toLowerCase();
+      var permission = (permissionRaw === 'yes' || permissionRaw === 'y' || permissionRaw === 'true') ? 'yes' : 'no';
+
+      var testimonial = {
+        id: uid(),
+        saleId: sale.id,
+        customerName: sale.name,
+        segment: sale.segment,
+        quote: document.getElementById('tQuote').value.trim(),
+        permission: permission,
+        dateAdded: todayStr()
+      };
+
+      var testimonials = getTestimonials();
+      testimonials.push(testimonial);
+      save(STORE.testimonials, testimonials);
+
+      form.reset();
+      showToast(toast);
+
+      renderGallery();
+      renderStats();
+    });
+  }
+
+  function shortQuote(quote) {
+    var sentences = quote.match(/[^.!?]+[.!?]+/g);
+    if (sentences && sentences.length) {
+      return sentences.slice(0, 2).map(function (s) { return s.trim(); }).join(' ').trim();
+    }
+    return quote;
+  }
+  function socialFormat(t) {
+    return '"' + t.quote.trim() + '"\n\n— ' + t.customerName + ', ' + t.segment + '\n\n#testimonial #' + t.segment.replace(/\s+/g, '');
+  }
+
+  function copyToClipboard(text, btn) {
+    function done(ok) {
+      var original = btn.dataset.label || btn.textContent;
+      btn.dataset.label = original;
+      btn.textContent = ok ? 'Copied!' : 'Copy failed';
+      btn.classList.toggle('copied', ok);
+      setTimeout(function () {
+        btn.textContent = original;
+        btn.classList.remove('copied');
+      }, 1800);
+    }
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(function () { done(true); }, function () { done(false); });
+    } else {
+      try {
+        var ta = document.createElement('textarea');
+        ta.value = text;
+        ta.style.position = 'fixed';
+        ta.style.opacity = '0';
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+        done(true);
+      } catch (e) { done(false); }
+    }
+  }
+
+  function renderGallery() {
+    var wrap = document.getElementById('galleryWrap');
+    var testimonials = getTestimonials().slice().sort(function (a, b) { return a.dateAdded < b.dateAdded ? 1 : -1; });
+
+    if (!testimonials.length) {
+      wrap.innerHTML = '<div class="empty-state">No testimonials collected yet. Make your first sale!</div>';
+      return;
+    }
+
+    var grid = document.createElement('div');
+    grid.className = 'gallery-grid';
+
+    testimonials.forEach(function (t) {
+      var card = document.createElement('div');
+      card.className = 't-card ' + segClass(t.segment);
+      card.innerHTML =
+        '<span class="seg-pill">' + escapeHtml(t.segment) + '</span>' +
+        '<p class="t-quote">&ldquo;' + escapeHtml(t.quote) + '&rdquo;</p>' +
+        '<div class="t-meta"><span><strong>' + escapeHtml(t.customerName) + '</strong></span>' +
+        '<span>Added ' + escapeHtml(t.dateAdded) + (t.permission === 'yes' ? ' &middot; ✓ OK to publish' : ' &middot; permission not confirmed') + '</span></div>' +
+        '<div class="t-actions"></div>';
+
+      var actions = card.querySelector('.t-actions');
+
+      var fullBtn = document.createElement('button');
+      fullBtn.textContent = 'Copy Full Quote';
+      fullBtn.addEventListener('click', function () { copyToClipboard(t.quote, fullBtn); });
+
+      var shortBtn = document.createElement('button');
+      shortBtn.textContent = 'Copy Short Quote';
+      shortBtn.addEventListener('click', function () { copyToClipboard(shortQuote(t.quote), shortBtn); });
+
+      var socialBtn = document.createElement('button');
+      socialBtn.textContent = 'Copy Social Format';
+      socialBtn.addEventListener('click', function () { copyToClipboard(socialFormat(t), socialBtn); });
+
+      actions.appendChild(fullBtn);
+      actions.appendChild(shortBtn);
+      actions.appendChild(socialBtn);
+
+      grid.appendChild(card);
+    });
+
+    wrap.innerHTML = '';
+    wrap.appendChild(grid);
+  }
+
+  // ---------- Export ----------
+  function downloadBlob(content, filename, mime) {
+    var blob = new Blob([content], { type: mime });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+
+  function exportJson() {
+    var data = JSON.stringify(getTestimonials(), null, 2);
+    downloadBlob(data, 'testimonials-' + todayStr() + '.json', 'application/json;charset=utf-8;');
+  }
+
+  function csvEscape(value) {
+    var str = value == null ? '' : String(value);
+    if (/[",\n]/.test(str)) str = '"' + str.replace(/"/g, '""') + '"';
+    return str;
+  }
+
+  function exportCsv() {
+    var rows = [['Quote', 'Customer Name', 'Segment', 'Date Added', 'Permission', 'Social Format']];
+    getTestimonials().forEach(function (t) {
+      rows.push([t.quote, t.customerName, t.segment, t.dateAdded, t.permission, socialFormat(t)]);
+    });
+    var csv = rows.map(function (r) { return r.map(csvEscape).join(','); }).join('\n');
+    downloadBlob(csv, 'testimonials-linkedin-' + todayStr() + '.csv', 'text/csv;charset=utf-8;');
+  }
+
+  function exportHtml() {
+    var testimonials = getTestimonials();
+    var cards = testimonials.map(function (t) {
+      return '  <blockquote class="testimonial">\n' +
+             '    <p>&ldquo;' + escapeHtml(t.quote) + '&rdquo;</p>\n' +
+             '    <footer>&mdash; ' + escapeHtml(t.customerName) + ', ' + escapeHtml(t.segment) + '</footer>\n' +
+             '  </blockquote>';
+    }).join('\n');
+
+    var html = '<!DOCTYPE html>\n<html lang="en">\n<head>\n<meta charset="UTF-8">\n<title>Testimonials</title>\n' +
+      '<style>\n  .testimonial { border-left: 4px solid #FF6B35; margin: 0 0 24px; padding: 8px 16px; font-family: sans-serif; }\n' +
+      '  .testimonial p { font-style: italic; margin: 0 0 6px; font-size: 1.05rem; }\n' +
+      '  .testimonial footer { color: #6b7280; font-size: 0.9rem; }\n</style>\n</head>\n<body>\n' +
+      cards + '\n</body>\n</html>\n';
+
+    downloadBlob(html, 'testimonials-website-' + todayStr() + '.html', 'text/html;charset=utf-8;');
+  }
+
+  // ---------- Stats ----------
+  function renderStats() {
+    var sales = getSales();
+    var testimonials = getTestimonials();
+
+    document.getElementById('statTotalSales').textContent = sales.length;
+    document.getElementById('statTotalTestimonials').textContent = testimonials.length;
+
+    var pct = sales.length ? Math.round((testimonials.length / sales.length) * 100) : 0;
+    document.getElementById('statConversion').textContent = pct + '%';
+
+    var revenue = sales.reduce(function (sum, s) { return sum + (Number(s.amount) || 0); }, 0);
+    document.getElementById('statRevenue').textContent = formatCurrency(revenue);
+
+    var breakdown = document.getElementById('segBreakdown');
+    breakdown.innerHTML = '';
+    SEGMENTS.forEach(function (seg) {
+      var count = testimonials.filter(function (t) { return t.segment === seg; }).length;
+      var row = document.createElement('div');
+      row.className = 'row';
+      row.innerHTML = '<span>' + escapeHtml(seg) + '</span><strong>' + count + ' testimonial' + (count === 1 ? '' : 's') + '</strong>';
+      breakdown.appendChild(row);
+    });
+  }
+
+  // ---------- init ----------
+  document.addEventListener('DOMContentLoaded', function () {
+    setupSaleForm();
+    setupTestimonialForm();
+    populateCustomerDropdown();
+    renderSalesTable();
+    renderGallery();
+    renderStats();
+
+    document.getElementById('exportJsonBtn').addEventListener('click', exportJson);
+    document.getElementById('exportCsvBtn').addEventListener('click', exportCsv);
+    document.getElementById('exportHtmlBtn').addEventListener('click', exportHtml);
+  });
+})();
+</script>
+</body>
+</html>
