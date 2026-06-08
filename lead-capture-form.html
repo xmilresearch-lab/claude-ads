@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Get Your Free 1-Framework Offer Audit</title>
+<style>
+  :root {
+    --orange: #FF6B35;
+    --orange-dark: #e0552a;
+    --bg: #f4f4f5;
+    --card: #ffffff;
+    --text: #1a1a1a;
+    --muted: #6b7280;
+    --border: #e5e7eb;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    -webkit-font-smoothing: antialiased;
+    line-height: 1.5;
+  }
+  .page {
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 24px 20px 60px;
+  }
+
+  /* Hero */
+  .hero { text-align: center; padding: 28px 0 8px; }
+  .hero h1 {
+    font-size: 2rem;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    margin: 0 0 12px;
+    line-height: 1.15;
+  }
+  .hero p.sub {
+    font-size: 1.05rem;
+    color: var(--muted);
+    margin: 0 auto 16px;
+    max-width: 460px;
+  }
+  .guarantee {
+    display: inline-block;
+    background: rgba(255,107,53,0.12);
+    color: var(--orange-dark);
+    border: 1px solid var(--orange);
+    border-radius: 999px;
+    font-weight: 700;
+    font-size: 0.85rem;
+    padding: 8px 16px;
+  }
+
+  /* Card / form */
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 24px;
+    margin-top: 24px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+  }
+  form { display: grid; gap: 16px; }
+  label {
+    display: block;
+    font-weight: 600;
+    font-size: 0.92rem;
+    margin-bottom: 6px;
+  }
+  input {
+    width: 100%;
+    font-family: inherit;
+    font-size: 1rem;
+    padding: 14px;
+    border-radius: 10px;
+    border: 1.5px solid var(--border);
+    background: #fafafa;
+    color: var(--text);
+  }
+  input:focus {
+    outline: none;
+    border-color: var(--orange);
+    background: #fff;
+  }
+  button.submit {
+    background: var(--orange);
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    font-weight: 800;
+    font-size: 1.05rem;
+    padding: 16px;
+    cursor: pointer;
+    transition: background 0.15s ease, transform 0.05s ease;
+  }
+  button.submit:hover { background: var(--orange-dark); }
+  button.submit:active { transform: scale(0.99); }
+  button.submit:disabled { opacity: 0.6; cursor: default; }
+
+  .form-error {
+    display: none;
+    background: rgba(239,68,68,0.08);
+    border: 1px solid #ef4444;
+    color: #b91c1c;
+    border-radius: 10px;
+    padding: 12px 14px;
+    font-size: 0.9rem;
+  }
+  .form-error.show { display: block; }
+
+  /* Confirmation */
+  .confirmation { display: none; text-align: center; padding: 12px 0; }
+  .confirmation.show { display: block; }
+  .confirmation .check {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: var(--orange);
+    color: #fff;
+    font-size: 1.6rem;
+    line-height: 56px;
+    margin: 0 auto 16px;
+  }
+  .confirmation h2 {
+    font-size: 1.3rem;
+    margin: 0 0 8px;
+  }
+  .confirmation p {
+    color: var(--muted);
+    margin: 0;
+  }
+
+  /* Social proof */
+  .proof { text-align: center; margin-top: 40px; }
+  .proof .label {
+    font-weight: 700;
+    color: var(--orange-dark);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-size: 0.8rem;
+    margin-bottom: 16px;
+  }
+  .testimonials { display: grid; gap: 12px; }
+  .testimonial {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px;
+    text-align: left;
+    font-size: 0.95rem;
+  }
+  .testimonial p { margin: 0 0 8px; font-style: italic; }
+  .testimonial .who { font-weight: 700; font-size: 0.85rem; color: var(--muted); font-style: normal; }
+
+  /* What they get */
+  .get-section { margin-top: 40px; }
+  .get-section h2 {
+    text-align: center;
+    font-size: 1.3rem;
+    margin: 0 0 20px;
+  }
+  .get-grid { display: grid; gap: 14px; }
+  .get-item {
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px;
+  }
+  .get-icon {
+    flex: none;
+    width: 44px;
+    height: 44px;
+    border-radius: 10px;
+    background: rgba(255,107,53,0.12);
+    color: var(--orange-dark);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.3rem;
+  }
+  .get-text strong { display: block; font-size: 1rem; margin-bottom: 2px; }
+  .get-text span { color: var(--muted); font-size: 0.9rem; }
+
+  /* CTA */
+  .cta {
+    margin-top: 40px;
+    text-align: center;
+    background: linear-gradient(160deg, #fff3ee, #ffffff);
+    border: 1.5px solid var(--orange);
+    border-radius: 16px;
+    padding: 24px;
+  }
+  .cta h2 { font-size: 1.15rem; margin: 0 0 8px; }
+  .cta p { color: var(--muted); margin: 0 0 16px; font-size: 0.92rem; }
+  .cta a.button {
+    display: inline-block;
+    background: var(--orange);
+    color: #fff;
+    text-decoration: none;
+    font-weight: 800;
+    border-radius: 10px;
+    padding: 14px 28px;
+    font-size: 1rem;
+  }
+  .cta a.button:hover { background: var(--orange-dark); }
+
+  footer { text-align: center; color: var(--muted); font-size: 0.78rem; margin-top: 36px; }
+
+  @media (min-width: 480px) {
+    .hero h1 { font-size: 2.3rem; }
+    .testimonials, .get-grid { gap: 16px; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <!-- HERO -->
+  <section class="hero">
+    <h1>Get Your Free 1-Framework Offer Audit</h1>
+    <p class="sub">Answer 4 quick questions. We'll identify your biggest revenue gap.</p>
+    <span class="guarantee">100% free. No credit card. Instant results.</span>
+  </section>
+
+  <!-- FORM CARD -->
+  <section class="card">
+    <form id="auditForm" action="https://formspree.io/f/YOUR_FORMSPREE_ID" method="POST">
+      <div>
+        <label for="offer">What are you selling?</label>
+        <input type="text" id="offer" name="offer" placeholder="e.g. A course on cold outreach" required>
+      </div>
+      <div>
+        <label for="price">Price point?</label>
+        <input type="number" id="price" name="price" placeholder="$997" min="0" step="0.01" required>
+      </div>
+      <div>
+        <label for="customer">Who's your ideal customer?</label>
+        <input type="text" id="customer" name="customer" placeholder="e.g. SaaS founders doing $10-50K/mo" required>
+      </div>
+      <div>
+        <label for="email">Email address</label>
+        <input type="email" id="email" name="email" placeholder="you@example.com" required>
+      </div>
+
+      <div class="form-error" id="formError">
+        Something went wrong submitting your audit. Please check your connection and try again.
+      </div>
+
+      <button type="submit" class="submit" id="submitBtn">Get My Free Audit</button>
+    </form>
+
+    <div class="confirmation" id="confirmation">
+      <div class="check">&#10003;</div>
+      <h2>You're all set!</h2>
+      <p>Check your email for your audit results.</p>
+    </div>
+  </section>
+
+  <!-- SOCIAL PROOF -->
+  <section class="proof">
+    <div class="label">Trusted by 500+ entrepreneurs</div>
+    <div class="testimonials">
+      <div class="testimonial">
+        <p>"Found 3 gaps in my offer I didn't see. Worth $10K in insights."</p>
+        <div class="who">— Sarah, SaaS</div>
+      </div>
+      <div class="testimonial">
+        <p>"This analysis saved me from a pricing mistake."</p>
+        <div class="who">— Mike, Coach</div>
+      </div>
+      <div class="testimonial">
+        <p>"I'm charging 50% more now."</p>
+        <div class="who">— James, Agency</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- WHAT THEY GET -->
+  <section class="get-section">
+    <h2>What you'll get</h2>
+    <div class="get-grid">
+      <div class="get-item">
+        <div class="get-icon">&#128202;</div>
+        <div class="get-text">
+          <strong>Framework Breakdown</strong>
+          <span>See your offer through 8 expert lenses</span>
+        </div>
+      </div>
+      <div class="get-item">
+        <div class="get-icon">&#128269;</div>
+        <div class="get-text">
+          <strong>Specific Gaps</strong>
+          <span>3-5 concrete problems we identify</span>
+        </div>
+      </div>
+      <div class="get-item">
+        <div class="get-icon">&#128176;</div>
+        <div class="get-text">
+          <strong>Revenue Impact</strong>
+          <span>Estimated $ increase from each fix</span>
+        </div>
+      </div>
+      <div class="get-item">
+        <div class="get-icon">&#128221;</div>
+        <div class="get-text">
+          <strong>Next Steps</strong>
+          <span>Clear implementation roadmap</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section class="cta">
+    <h2>Want the full analysis with implementation plan?</h2>
+    <p>You'll get 24-hour turnaround on a detailed 8-framework breakdown ($97)</p>
+    <a class="button" href="https://researcherxmil.gumroad.com/l/xgzoq" target="_blank" rel="noopener">Get the Full 8-Framework Breakdown</a>
+  </section>
+
+  <footer>
+    Free Offer Audit &mdash; no spam, unsubscribe anytime.
+  </footer>
+</div>
+
+<script>
+(function () {
+  'use strict';
+
+  var form = document.getElementById('auditForm');
+  var submitBtn = document.getElementById('submitBtn');
+  var formError = document.getElementById('formError');
+  var confirmation = document.getElementById('confirmation');
+  var card = form.closest('.card');
+
+  form.addEventListener('submit', function (e) {
+    e.preventDefault();
+    formError.classList.remove('show');
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Sending...';
+
+    var data = new FormData(form);
+
+    fetch(form.action, {
+      method: 'POST',
+      body: data,
+      headers: { 'Accept': 'application/json' }
+    }).then(function (response) {
+      if (response.ok) {
+        form.style.display = 'none';
+        confirmation.classList.add('show');
+      } else {
+        return response.json().then(function (body) {
+          throw new Error((body && body.error) || 'Request failed');
+        });
+      }
+    }).catch(function () {
+      formError.classList.add('show');
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Get My Free Audit';
+    });
+  });
+})();
+</script>
+</body>
+</html>
