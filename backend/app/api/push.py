@@ -5,9 +5,9 @@ from pydantic import BaseModel
 from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.deps import get_current_user
 from app.core.config import settings
 from app.core.database import get_db
+from app.core.security import get_current_user
 from app.middleware.rate_limiter import LIMIT_WRITE, limiter
 from app.models.push_subscription import PushSubscription
 from app.models.user import User

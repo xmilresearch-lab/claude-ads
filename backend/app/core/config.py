@@ -1,8 +1,8 @@
 from functools import lru_cache
-from typing import Any
+from typing import Annotated, Any
 
 from pydantic import field_validator
-from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic_settings import BaseSettings, NoDecode, SettingsConfigDict
 
 
 class Settings(BaseSettings):
@@ -33,7 +33,7 @@ class Settings(BaseSettings):
     OAUTH_REDIRECT_URI: str = "http://localhost:3000/oauth/callback"
 
     # CORS
-    ALLOWED_ORIGINS: list[str] = ["http://localhost:3000"]
+    ALLOWED_ORIGINS: Annotated[list[str], NoDecode] = ["http://localhost:3000"]
 
     @field_validator("ALLOWED_ORIGINS", mode="before")
     @classmethod
