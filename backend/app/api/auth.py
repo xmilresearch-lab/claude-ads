@@ -30,6 +30,7 @@ from app.schemas.auth import (
 )
 from app.schemas.base import COMMON_ERROR_RESPONSES, DataResponse, ok
 from app.schemas.user import UserResponse
+from app.services.role_service import build_default_roles
 
 router = APIRouter()
 
@@ -75,12 +76,18 @@ async def register(
     db.add(user)
     await db.flush()
 
+    workspace_id = uuid.uuid4()
     workspace = Workspace(
-        id=uuid.uuid4(),
+        id=workspace_id,
         user_id=user.id,
         name=payload.workspace_name,
     )
     db.add(workspace)
+
+    roles = build_default_roles(workspace_id)
+    db.add_all(roles)
+    user.role_id = next(role.id for role in roles if role.name == "admin")
+
     return ok(_tokens_for_user(user), request)
 
 
