@@ -1,0 +1,206 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ─── CSS Design Tokens ─────────────────────────────────────────── */
+:root {
+  /* Backgrounds */
+  --bg-void:     #080C0C;
+  --bg-surface:  #0C1414;
+  --bg-raised:   #112020;
+
+  /* Borders */
+  --border:       rgba(0, 255, 200, 0.08);
+  --border-hover: rgba(0, 255, 200, 0.18);
+
+  /* Text */
+  --text-primary:   #F0FAF8;
+  --text-secondary: #7AADA0;
+  --text-muted:     #3D6660;
+
+  /* Accent 1 — Neon Teal */
+  --teal:      #00FFD1;
+  --teal-dim:  rgba(0, 255, 209, 0.15);
+  --teal-glow: 0 0 30px rgba(0, 255, 209, 0.25), 0 0 80px rgba(0, 255, 209, 0.1);
+
+  /* Accent 2 — Neon Orange */
+  --orange:      #FF6B00;
+  --orange-dim:  rgba(255, 107, 0, 0.15);
+  --orange-glow: 0 0 30px rgba(255, 107, 0, 0.25), 0 0 80px rgba(255, 107, 0, 0.1);
+
+  /* Semantic */
+  --success: #00FFD1;
+  --warning: #FF6B00;
+  --danger:  #FF3B3B;
+}
+
+/* ─── Global Reset ───────────────────────────────────────────────── */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background-color: var(--bg-void);
+  color: var(--text-primary);
+  font-family: "Outfit", sans-serif;
+  font-weight: 400;
+  line-height: 1.75;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  min-height: 100svh;
+}
+
+#root {
+  min-height: 100svh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ─── Typography ─────────────────────────────────────────────────── */
+h1 {
+  font-family: "Outfit", sans-serif;
+  font-weight: 800;
+  font-size: clamp(2.5rem, 6vw, 5rem);
+  letter-spacing: -0.03em;
+  line-height: 1.05;
+  color: var(--text-primary);
+}
+
+h2 {
+  font-family: "Outfit", sans-serif;
+  font-weight: 700;
+  font-size: clamp(1.5rem, 3vw, 2.5rem);
+  letter-spacing: -0.02em;
+  color: var(--text-primary);
+}
+
+h3 {
+  font-family: "Outfit", sans-serif;
+  font-weight: 700;
+  font-size: clamp(1.1rem, 2vw, 1.4rem);
+  color: var(--text-primary);
+}
+
+p {
+  color: var(--text-secondary);
+  font-size: 1rem;
+  line-height: 1.75;
+}
+
+/* ─── Section Labels ─────────────────────────────────────────────── */
+.section-label {
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  color: var(--teal);
+  font-weight: 600;
+}
+
+/* ─── Financial Numbers ──────────────────────────────────────────── */
+.mono, .financial {
+  font-family: "JetBrains Mono", monospace;
+  font-weight: 400;
+}
+
+/* ─── Glassmorphism Panel ────────────────────────────────────────── */
+.glass {
+  background: rgba(0, 255, 209, 0.03);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--border);
+}
+
+/* ─── Scrollbar Styling ──────────────────────────────────────────── */
+::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+::-webkit-scrollbar-track {
+  background: var(--bg-surface);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--text-muted);
+  border-radius: 2px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--teal);
+}
+
+/* ─── Animated Particle Field (Landing Hero) ─────────────────────── */
+@keyframes drift {
+  0%   { transform: translateY(0) translateX(0); opacity: 0; }
+  10%  { opacity: 1; }
+  90%  { opacity: 0.6; }
+  100% { transform: translateY(-100vh) translateX(30px); opacity: 0; }
+}
+
+.particle {
+  position: absolute;
+  width: 2px;
+  height: 2px;
+  background: var(--teal);
+  border-radius: 50%;
+  animation: drift linear infinite;
+  opacity: 0;
+}
+
+/* ─── Confetti Burst (Onboarding) ────────────────────────────────── */
+@keyframes confettiBurst {
+  0%   { transform: scale(0) rotate(0deg); opacity: 1; }
+  100% { transform: scale(3) rotate(720deg); opacity: 0; }
+}
+
+.confetti-piece {
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+  animation: confettiBurst 1s ease-out forwards;
+}
+
+/* ─── Reduced Motion ─────────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ─── Utility Overrides ──────────────────────────────────────────── */
+.text-teal    { color: var(--teal); }
+.text-orange  { color: var(--orange); }
+.text-muted   { color: var(--text-muted); }
+.text-secondary-color { color: var(--text-secondary); }
+.bg-surface   { background-color: var(--bg-surface); }
+.bg-raised    { background-color: var(--bg-raised); }
+.border-token { border-color: var(--border); }
+
+/* ─── Remove default button/input styles ─────────────────────────── */
+button { cursor: pointer; }
+input, textarea, select {
+  background: transparent;
+  color: var(--text-primary);
+  border: none;
+  outline: none;
+}
+input::placeholder, textarea::placeholder {
+  color: var(--text-muted);
+}
+
+/* ─── Page wrapper with bottom nav padding on mobile ─────────────── */
+.page-wrapper {
+  padding-bottom: 80px;
+}
+@media (min-width: 1024px) {
+  .page-wrapper {
+    padding-bottom: 0;
+    padding-left: 260px;
+  }
+}
