@@ -1,0 +1,30 @@
+title = "gitleaks config — xmilresearch-lab/claude-ads"
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Confirmed non-secret values only: DLP/PII test fixtures, OpenAPI example JWTs, CI-only test values, and the ALREADY-ROTATED-AND-DEAD VAPID key (kept in history / PR-refs). Verified 2026-07-10. Anything else is blocked."
+regexes = [
+  # ── DLP / PII scanner test fixtures ──
+  '''AKIAIOSFODNN7EXAMPLE''',
+  '''sk-abcdefghijklmnopqrstuvwxyz1234''',
+  '''mysql://user:pass@localhost/db''',
+  '''(postgres(ql)?|postgresql\+asyncpg)://user:pass@''',
+  # ── OpenAPI schema example JWT (truncated placeholder, not a real token) ──
+  '''eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9\.\.\.''',
+  # ── CI-only test values (public in .github/workflows/ci.yml; NOT production secrets) ──
+  '''test-secret-key-minimum-32-characters-long''',
+  '''test-encryption-key-32-characters-long''',
+  '''df84be46e60087e88a161631c9bf1eed45f77ebe31a8b3554d022b537844f182''',
+  '''test-mcp-token''',
+  # ── DEAD credential: the OLD VAPID keypair, ROTATED 2026-07-10 and worthless.
+  #    Retained only in pre-rewrite history / GitHub PR-refs. Exempted so scans
+  #    stay green; any NEW/different secret in the same files is still caught. ──
+  '''geaQEgcsqiFpYJ2yYRdznQTVN7-KFMLoOyc-zrWpRFk''',
+  '''BBWouitioeUSFDsNu0t-qeYt7kKqd1uTH6C8ZawO8W1gYK6Ocm8ZcxkGr_VSHsRyzOl0O2XDpkKJO8nas4oPWCQ''',
+]
+paths = [
+  '''backend/tests/contract/openapi_snapshot\.json''',   # generated OpenAPI snapshot — example data only
+]
+stopwords = ["example", "changeme", "placeholder", "yourdomain", "yourplatform", "your-support", "test_pass", "test-secret", "test-encryption"]

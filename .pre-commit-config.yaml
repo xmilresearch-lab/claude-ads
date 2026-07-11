@@ -1,0 +1,7 @@
+# Optional: for teams using the pre-commit framework (https://pre-commit.com).
+# The primary mechanism is the tracked hook in .githooks/ (see CLAUDE.md).
+repos:
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.30.0
+    hooks:
+      - id: gitleaks
