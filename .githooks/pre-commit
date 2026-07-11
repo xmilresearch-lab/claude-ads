@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+# Secret tripwire — blocks any commit whose staged changes contain a credential.
+# DO NOT bypass with `git commit --no-verify`. See CLAUDE.md "SECRET HANDLING".
+set -euo pipefail
+
+if ! command -v gitleaks >/dev/null 2>&1; then
+  echo "❌ pre-commit: gitleaks is not installed — cannot scan for secrets."
+  echo "   Install it: https://github.com/gitleaks/gitleaks#installing"
+  echo "   (This hook must not be skipped. Fix the install, don't use --no-verify.)"
+  exit 1
+fi
+
+# 'git --staged' is the current form of the legacy 'gitleaks protect --staged'.
+exec gitleaks git --staged --redact --no-banner --config .gitleaks.toml .

@@ -1,0 +1,26 @@
+# ── Secret material — never commit real credentials ──
+.env
+.env.*
+!.env.example
+!.env*.example
+*.pem
+*.key
+*credentials*
+*secret*
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+
+# Node / Next
+node_modules/
+.next/
+out/
+dist/
+build/
+
+# OS / editor
+.DS_Store
+*.log
+!.github/workflows/secret-scan.yml
